@@ -215,3 +215,6 @@ clouds.yaml
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
+
+# SSH
+.ssh/*config.*
