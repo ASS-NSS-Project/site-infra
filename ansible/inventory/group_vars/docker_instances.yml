@@ -1,4 +1,5 @@
 docker_users:
+  - debian
   - agurina
   - jkaderka
   - jkuzel
