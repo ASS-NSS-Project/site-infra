@@ -1,51 +1,21 @@
----
-- name: Manage internal research users
-  hosts: instances
+- name:         Manage Instances System
+  hosts:        openstack_instances
   gather_facts: false
-  become: true
-  tasks:
-    - name: Create the user groups
-      ansible.builtin.group:
-        name: "{{ item.name }}"
-        state: present
-      loop: "{{ instance_users }}"
+  become:       true
+  roles: 
+    - { role: local.system, tags: system }
 
-    - name: Create the user accounts (Non-Sudoers)
-      ansible.builtin.user:
-        name: "{{ item.name }}"
-        group: "{{ item.name }}"
-        shell: /bin/bash
-        create_home: true
-        state: present
-      loop: "{{ instance_users }}"
-      # Check the boolean directly, default to false if missing
-      when: not (item.sudoer | default(false))
+- name:         Setup GlusterFS for NFS Shares for Docker Swarm Volumes Persistency
+  hosts:        network_share_instances
+  gather_facts: false
+  become:       true
+  roles:
+    - { role: local.glusterfs, tags: glusterfs }
 
-    - name: Create the sudo user accounts
-      ansible.builtin.user:
-        name: "{{ item.name }}"
-        group: "{{ item.name }}"
-        groups: sudo
-        append: true
-        shell: /bin/bash
-        create_home: true
-        state: present
-      loop: "{{ instance_users }}"
-      when: item.sudoer | default(false)
-
-    - name: Configure passwordless sudo for new sudoers
-      ansible.builtin.copy:
-        content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
-        dest: "/etc/sudoers.d/{{ item.name }}"
-        mode: '0440'
-        validate: '/usr/sbin/visudo -cf %s'
-      loop: "{{ instance_users }}"
-      when: item.sudoer | default(false)
-
-    - name: Inject SSH public keys
-      ansible.builtin.authorized_key:
-        user: "{{ item.name }}"
-        state: present
-        # No lookup needed here since the string is already in memory
-        key: "{{ item.ssh_key }}"
-      loop: "{{ instance_users }}"
+- name:         Setup Docker on the Instances
+  hosts:        docker_instances
+  gather_facts: true
+  become:       true
+  roles:
+    - { role: local.docker, tags: docker }
+    

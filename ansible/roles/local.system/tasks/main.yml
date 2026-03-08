@@ -1,0 +1,44 @@
+- name: Create the user groups
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ system_users }}"
+
+- name: Create the user accounts (Non-Sudoers)
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    group: "{{ item.name }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+  loop: "{{ system_users }}"
+  when: not ( item.sudoer | default(false) )
+
+- name: Create the sudo user accounts
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    group: "{{ item.name }}"
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    create_home: true
+    state: present
+  loop: "{{ system_users }}"
+  when: item.sudoer | default(false)
+
+- name: Configure passwordless sudo for new sudoers
+  ansible.builtin.copy:
+    content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+  loop: "{{ system_users }}"
+  when: item.sudoer | default(false)
+
+- name: Inject SSH public keys
+  ansible.builtin.authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    # No lookup needed here since the string is already in memory
+    key: "{{ item.ssh_pub_key }}"
+  loop: "{{ system_users }}"

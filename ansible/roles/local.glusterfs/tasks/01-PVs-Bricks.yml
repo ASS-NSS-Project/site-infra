@@ -1,0 +1,20 @@
+- name: Install XFS tools
+  ansible.builtin.apt:
+    name: xfsprogs
+    state: present
+    update_cache: true
+    install_recommends: false
+
+- name: Create XFS filesystem on /dev/sdb
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/sdb
+    # -i size=512 is the Gluster recommended inode size for XFS
+    opts: "-i size=512"
+
+- name: Mount the volume
+  ansible.builtin.mount:
+    path: "{{ glusterfs_brick_path }}"
+    src: /dev/sdb
+    fstype: xfs
+    state: mounted

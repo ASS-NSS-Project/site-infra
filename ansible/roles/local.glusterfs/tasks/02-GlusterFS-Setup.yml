@@ -1,0 +1,19 @@
+- name: Install GlusterFS and NFS-Ganesha
+  ansible.builtin.apt:
+    name:
+      - glusterfs-server
+      - nfs-ganesha-gluster
+    state: present
+    update_cache: true
+
+- name: Ensure GlusterFS is started
+  ansible.builtin.service:
+    name: glusterd
+    state: started
+    enabled: true
+
+- name: Create brick directory
+  ansible.builtin.file:
+    path: "{{ glusterfs_brick_path }}"
+    state: directory
+    mode: '0755'

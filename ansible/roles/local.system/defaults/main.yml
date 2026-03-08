@@ -1,0 +1,12 @@
+system_users: []
+  # - name: user
+  #   sudoer: true
+  #   ssh_pub_key: |
+  #     ssh-ed25519 ...
+  # - name: other-user
+  #   sudoer: false
+  #   ssh_pub_key: |
+  #     ssh-rsa ...
+  # - name: jkuzel
+  #   sudoer: true
+  #   ssh_pub_key: "{{ lookup('url', 'https://raw.githubusercontent.com/jkuzel02/pubkey/refs/heads/main/id.pub') }}"

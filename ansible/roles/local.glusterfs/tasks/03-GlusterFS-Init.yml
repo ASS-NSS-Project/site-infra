@@ -1,0 +1,27 @@
+- name: Peer probe other nodes
+  ansible.builtin.command: "gluster peer probe {{ hostvars[item].ansible_host }}"
+  loop: "{{ groups['network_share_instances'] }}"
+  when: 
+    - inventory_hostname == glusterfs_initiator_node
+    - item != glusterfs_initiator_node
+  register: peer_probe
+  changed_when: "'already in peer list' not in peer_probe.stdout"
+
+- name: Create replicated volume
+  ansible.builtin.command: >
+    gluster volume create {{ glusterfs_volume_name }} replica 3
+    {% for host in groups['network_share_instances'] %}
+    {{ hostvars[host].ansible_host }}:{{ glusterfs_brick_path }}
+    {% endfor %}
+    force
+  when: inventory_hostname == glusterfs_initiator_node
+  register: vol_create
+  failed_when: 
+    - vol_create.rc != 0 
+    - "'already exists' not in vol_create.stderr"
+
+- name: Start Gluster volume
+  ansible.builtin.command: "gluster volume start {{ glusterfs_volume_name }}"
+  when: inventory_hostname == glusterfs_initiator_node
+  register: vol_start
+  changed_when: "'already started' not in vol_start.stderr"

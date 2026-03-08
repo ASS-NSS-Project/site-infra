@@ -1,0 +1,4 @@
+glusterfs_volume_name: "docker_data"
+glusterfs_brick_path:  "/data/gluster/brick1"
+# Single node has to be the Gluster Initiator
+glusterfs_initiator_node: "{{ groups['network_share_instances'][0] }}"
