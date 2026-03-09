@@ -7,11 +7,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_0" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
-    "storage-internal"
+    "external",
+    "storage-internal",
+    "docker-swarm-mgmt"
   ]
 
   network {
@@ -19,10 +17,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_0" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
-    openstack_networking_secgroup_v2.storage_internal
+    openstack_networking_secgroup_v2.external,
+    openstack_networking_secgroup_v2.storage_internal,
+    openstack_networking_secgroup_v2.docker_swarm_mgmt
   ]
 }
 
@@ -33,11 +30,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_1" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
-    "storage-internal"
+    "external",
+    "storage-internal",
+    "docker-swarm-mgmt"
   ]
 
   network {
@@ -45,10 +40,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_1" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
-    openstack_networking_secgroup_v2.storage_internal
+    openstack_networking_secgroup_v2.external,
+    openstack_networking_secgroup_v2.storage_internal,
+    openstack_networking_secgroup_v2.docker_swarm_mgmt
   ]
 }
 
@@ -59,11 +53,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_2" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
-    "storage-internal"
+    "external",
+    "storage-internal",
+    "docker-swarm-mgmt"
   ]
 
   network {
@@ -71,10 +63,9 @@ resource "openstack_compute_instance_v2" "swarm_manager_2" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
-    openstack_networking_secgroup_v2.storage_internal
+    openstack_networking_secgroup_v2.external,
+    openstack_networking_secgroup_v2.storage_internal,
+    openstack_networking_secgroup_v2.docker_swarm_mgmt
   ]
 }
 
@@ -87,11 +78,9 @@ resource "openstack_compute_instance_v2" "swarm_worker_0" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
-    "storage-internal"
+    "external",
+    "storage-internal",
+    "docker-swarm-mgmt"
   ]
 
   network {
@@ -99,10 +88,9 @@ resource "openstack_compute_instance_v2" "swarm_worker_0" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
-    openstack_networking_secgroup_v2.storage_internal
+    openstack_networking_secgroup_v2.external,
+    openstack_networking_secgroup_v2.storage_internal,
+    openstack_networking_secgroup_v2.docker_swarm_mgmt
   ]
 }
 
@@ -113,11 +101,9 @@ resource "openstack_compute_instance_v2" "swarm_worker_1" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
-    "storage-internal"
+    "external",
+    "storage-internal",
+    "docker-swarm-mgmt"
   ]
 
   network {
@@ -125,10 +111,9 @@ resource "openstack_compute_instance_v2" "swarm_worker_1" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
-    openstack_networking_secgroup_v2.storage_internal
+    openstack_networking_secgroup_v2.external,
+    openstack_networking_secgroup_v2.storage_internal,
+    openstack_networking_secgroup_v2.docker_swarm_mgmt
   ]
 }
 
@@ -141,10 +126,7 @@ resource "openstack_compute_instance_v2" "network_share_0" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
+    "external",
     "storage-internal"
   ]
 
@@ -153,9 +135,7 @@ resource "openstack_compute_instance_v2" "network_share_0" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
+    openstack_networking_secgroup_v2.external,
     openstack_networking_secgroup_v2.storage_internal
   ]
 }
@@ -167,10 +147,7 @@ resource "openstack_compute_instance_v2" "network_share_1" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
+    "external",
     "storage-internal"
   ]
 
@@ -179,9 +156,7 @@ resource "openstack_compute_instance_v2" "network_share_1" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
+    openstack_networking_secgroup_v2.external,
     openstack_networking_secgroup_v2.storage_internal
   ]
 }
@@ -193,10 +168,7 @@ resource "openstack_compute_instance_v2" "network_share_2" {
   key_pair    = "jkuzel"
 
   security_groups = [
-    "ssh",
-    "icmp",
-    "http",
-    "https",
+    "external",
     "storage-internal"
   ]
 
@@ -205,9 +177,7 @@ resource "openstack_compute_instance_v2" "network_share_2" {
   }
 
   depends_on = [
-    openstack_networking_secgroup_v2.icmp,
-    openstack_networking_secgroup_v2.http,
-    openstack_networking_secgroup_v2.https,
+    openstack_networking_secgroup_v2.external,
     openstack_networking_secgroup_v2.storage_internal
   ]
 }

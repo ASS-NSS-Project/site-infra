@@ -1,0 +1,7 @@
+- name: Join Swarm as Worker
+  ansible.builtin.command: |
+    docker swarm join --token {{ swarm_worker_token }} {{ swarm_primary_mgr_ip }}:2377
+  register: join_result
+  failed_when: 
+    - join_result.rc != 0 
+    - "'already part of a swarm' not in join_result.stderr"

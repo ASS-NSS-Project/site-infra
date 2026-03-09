@@ -12,10 +12,18 @@
   roles:
     - { role: local.glusterfs, tags: glusterfs }
 
-- name:         Setup Docker on the Instances
+- name:         Setup GlusterFS Clients on the Docker Instances for HA Volume Access
   hosts:        docker_instances
-  gather_facts: true
+  gather_facts: false
   become:       true
   roles:
-    - { role: local.docker, tags: docker }
+    - { role: local.glusterfs-client, tags: [ glusterfs, glusterfs-client ] }
+
+- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
+  hosts:        docker_instances
+  gather_facts: true
+  become:       false
+  roles:
+    - { role: local.docker,           tags: docker }
+    - { role: local.docker-bootstrap, tags: [ docker, bootstrap ] }
     

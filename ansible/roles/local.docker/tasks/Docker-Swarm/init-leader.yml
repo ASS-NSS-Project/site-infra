@@ -1,0 +1,27 @@
+- name: Force leave swarm to reset zombie state
+  ansible.builtin.shell: docker swarm leave --force
+  when: 
+    - inventory_hostname != groups['swarm_managers'][0]
+    - docker_swarm | default(false)
+  failed_when: false
+
+- name: Check if Swarm is already initialized
+  ansible.builtin.shell: docker info --format '{{ '{{' }}.Swarm.LocalNodeState{{ '}}' }}'
+  register: swarm_status
+  changed_when: false
+
+- name: Initialize Swarm Leader
+  ansible.builtin.command: >
+    docker swarm init 
+    --advertise-addr {{ docker_swarm_primary_manager_ipv4_address }}
+  when: swarm_status.stdout == "inactive"
+
+- name: Get Manager Join Token
+  ansible.builtin.command: docker swarm join-token -q manager
+  register: manager_token
+  changed_when: false
+
+- name: Get Worker Join Token
+  ansible.builtin.command: docker swarm join-token -q worker
+  register: worker_token
+  changed_when: false
