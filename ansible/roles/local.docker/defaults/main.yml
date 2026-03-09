@@ -1,4 +1,9 @@
 docker_users: [debian]
   # - user
   # - another-user
+
+docker_swarm_mode: false
+
+# 👇 Has to be the internal IPv4 address of the OpenStack instance (as the nodes communicate on the internal network)
+docker_swarm_primary_manager_ipv4_address: ""
   

@@ -1,0 +1,12 @@
+- name: Install GlusterFS client on all Swarm nodes
+  ansible.builtin.package:
+    name: glusterfs-client
+    state: present
+    update_cache: true
+
+- name: Ensure storage nodes are resolvable
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ item.ip }} {{ item.name }}"
+  loop: "{{ glusterfs_nodes }}"

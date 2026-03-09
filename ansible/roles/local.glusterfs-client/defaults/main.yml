@@ -1,0 +1,4 @@
+glusterfs_nodes: []
+  # - { ip: '172.16.2.192', name: 'network-share-0' }
+  # - { ip: '172.16.2.63',  name: 'network-share-1' }
+  # - { ip: '172.16.3.86',  name: 'network-share-2' }

@@ -1,0 +1,45 @@
+- name: Remove legacy compose network if it exists
+  community.docker.docker_network:
+    name: bootstrap_overlay
+    state: absent
+  when: inventory_hostname == groups['swarm_managers'][0]
+  failed_when: false # Ignore if it's already gone
+
+- name: Install dependencies for Docker Stack module
+  become: true
+  ansible.builtin.apt:
+    name:
+      - python3-docker
+      - python3-jsondiff
+      - python3-yaml
+    state: present
+    update_cache: true
+  when: inventory_hostname == groups['swarm_managers'][0]
+
+- name: Create Portainer Admin Secret
+  community.docker.docker_secret:
+    name: portainer_ce_admin_password
+    data: "{{ portainer_ce_admin_password }}"
+    state: present
+  when: inventory_hostname == groups['swarm_managers'][0]
+
+- name: Create Bootstrap Directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/bootstrap"
+    state: directory
+    mode: '0750'
+  when: inventory_hostname == groups['swarm_managers'][0]
+
+- name: Copy Bootstrap Compose File to Node
+  ansible.builtin.template:
+    src: files/docker-compose.yml.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/bootstrap/docker-compose.yml"
+  when: inventory_hostname == groups['swarm_managers'][0]
+
+- name: Deploy Bootstrap Stack (Traefik + Portainer)
+  community.docker.docker_stack:
+    name: bootstrap
+    state: present
+    compose:
+      - "{{ ansible_facts['env']['HOME'] }}/bootstrap/docker-compose.yml"
+  when: inventory_hostname == groups['swarm_managers'][0]

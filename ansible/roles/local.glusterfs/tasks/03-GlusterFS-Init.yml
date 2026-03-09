@@ -20,8 +20,16 @@
     - vol_create.rc != 0 
     - "'already exists' not in vol_create.stderr"
 
+- name: Set Gluster volume security (Allow Swarm Subnet)
+  ansible.builtin.command: "gluster volume set {{ glusterfs_volume_name }} auth.allow '172.16.*'"
+  when: inventory_hostname == glusterfs_initiator_node
+  register: auth_set
+  changed_when: "'success' in auth_set.stdout"
+
 - name: Start Gluster volume
   ansible.builtin.command: "gluster volume start {{ glusterfs_volume_name }}"
   when: inventory_hostname == glusterfs_initiator_node
   register: vol_start
   changed_when: "'already started' not in vol_start.stderr"
+  failed_when: "'already started' not in vol_start.stderr"
+  

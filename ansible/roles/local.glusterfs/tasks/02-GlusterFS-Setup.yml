@@ -17,3 +17,4 @@
     path: "{{ glusterfs_brick_path }}"
     state: directory
     mode: '0755'
+    

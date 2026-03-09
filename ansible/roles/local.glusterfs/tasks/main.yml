@@ -7,5 +7,5 @@
 - name: Handle GlusterFS Intiatilization
   import_tasks: 03-GlusterFS-Init.yml
 
-- name: Configura Ganesha (NFS Service)
-  import_tasks: 04-NFS-Ganesha.yml
+# - name: Configura Ganesha (NFS Service)
+#   import_tasks: 04-NFS-Ganesha.yml
