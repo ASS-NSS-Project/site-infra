@@ -1,8 +1,6 @@
-- name: Install GlusterFS and NFS-Ganesha
+- name: Install GlusterFS
   ansible.builtin.apt:
-    name:
-      - glusterfs-server
-      - nfs-ganesha-gluster
+    name: glusterfs-server
     state: present
     update_cache: true
 
@@ -18,3 +16,10 @@
     state: directory
     mode: '0755'
     
+- name: Ensure storage nodes are resolvable
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ item.ip }} {{ item.name }}"
+  loop: "{{ glusterfs_nodes }}"
+  

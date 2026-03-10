@@ -1,29 +1,28 @@
 - name:         Manage Instances System
-  hosts:        openstack_instances
+  hosts:        instances
   gather_facts: false
   become:       true
   roles: 
     - { role: local.system, tags: system }
 
-- name:         Setup GlusterFS for NFS Shares for Docker Swarm Volumes Persistency
-  hosts:        network_share_instances
+- name:         Setup GlusterFS Share for Docker Swarm Volumes Persistency
+  hosts:        swarm_managers
   gather_facts: false
   become:       true
   roles:
     - { role: local.glusterfs, tags: glusterfs }
 
-- name:         Setup GlusterFS Clients on the Docker Instances for HA Volume Access
-  hosts:        docker_instances
-  gather_facts: false
+- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
+  hosts:        instances
+  gather_facts: true
   become:       true
   roles:
-    - { role: local.glusterfs-client, tags: [ glusterfs, glusterfs-client ] }
+    - { role: local.docker, tags: docker }
 
-- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
-  hosts:        docker_instances
+- name:         Bootstrap Basic Stack
+  hosts:        swarm_node_0
   gather_facts: true
   become:       false
   roles:
-    - { role: local.docker,           tags: docker }
     - { role: local.docker-bootstrap, tags: [ docker, bootstrap ] }
     

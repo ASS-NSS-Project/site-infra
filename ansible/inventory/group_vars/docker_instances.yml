@@ -1,9 +1,0 @@
-docker_swarm: true
-docker_swarm_primary_manager_ipv4_address: 172.16.0.237
-docker_users:
-  - debian
-  - agurina
-  - jkaderka
-  - jkuzel
-
-

@@ -1,6 +1,6 @@
 - name: Peer probe other nodes
   ansible.builtin.command: "gluster peer probe {{ hostvars[item].ansible_host }}"
-  loop: "{{ groups['network_share_instances'] }}"
+  loop: "{{ groups['glusterfs_share_instances'] }}"
   when: 
     - inventory_hostname == glusterfs_initiator_node
     - item != glusterfs_initiator_node
@@ -10,7 +10,7 @@
 - name: Create replicated volume
   ansible.builtin.command: >
     gluster volume create {{ glusterfs_volume_name }} replica 3
-    {% for host in groups['network_share_instances'] %}
+    {% for host in groups['glusterfs_share_instances'] %}
     {{ hostvars[host].ansible_host }}:{{ glusterfs_brick_path }}
     {% endfor %}
     force

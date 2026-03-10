@@ -1,9 +1,9 @@
-- name: Remove legacy compose network if it exists
+- name: Remove legacy bootstrap stack network if it exists
   community.docker.docker_network:
     name: bootstrap_overlay
     state: absent
   when: inventory_hostname == groups['swarm_managers'][0]
-  failed_when: false # Ignore if it's already gone
+  failed_when: false
 
 - name: Install dependencies for Docker Stack module
   become: true
@@ -19,7 +19,7 @@
 - name: Create Portainer Admin Secret
   community.docker.docker_secret:
     name: portainer_ce_admin_password
-    data: "{{ portainer_ce_admin_password }}"
+    data: "{{ docker_bootstrap_portainer_ce_admin_password }}"
     state: present
   when: inventory_hostname == groups['swarm_managers'][0]
 
@@ -35,6 +35,8 @@
     src: files/docker-compose.yml.j2
     dest: "{{ ansible_facts['env']['HOME'] }}/bootstrap/docker-compose.yml"
   when: inventory_hostname == groups['swarm_managers'][0]
+
+# TODO: Create a dir for volumes
 
 - name: Deploy Bootstrap Stack (Traefik + Portainer)
   community.docker.docker_stack:

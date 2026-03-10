@@ -2,7 +2,7 @@ services:
   traefik:
     image: traefik:v3.6
     command:
-      - --providers.docker.swarm=true
+      - --providers.swarm.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
@@ -11,34 +11,36 @@ services:
       - 443:443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - gluster_root:/letsencrypt/traefik_certs
+      - traefik_letsencrypt:/letsencrypt/traefik_certs
     networks:
       - overlay
     deploy:
       placement:
-        constraints:
-          - node.hostname == swarm-manager-0
-      replicas: 1
+        constraints: [node.role == manager]
+      replicas: 3
 
   portainer_ce:
     image: portainer/portainer-ce:2.39.0
     command: -H unix:///var/run/docker.sock --http-enabled
-    secrets:
-      - portainer_ce_admin_password
+    
+    {# secrets:
+      - portainer_ce_admin_password #}
+      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - gluster_root:/data/portainer_ce_data
+      - portainer_ce_data:/data/portainer_ce_data
     networks:
       - overlay
     deploy:
       labels:
         - traefik.enable=true
-        - traefik.http.routers.portainer.rule=Host(` {{ docker_services_portainer_domain }} `)
+        - traefik.http.routers.portainer.rule=Host(` {{ docker_bootstrap_portainer_ce_domain_name }} `)
         - traefik.http.routers.portainer.entrypoints=websecure
         - traefik.http.routers.portainer.tls=true
         - traefik.http.services.portainer.loadbalancer.server.port=9000
       placement:
         constraints: [node.role == manager]
+      replicas: 3
 
   portainer_agent:
     image: portainer/agent:2.39.0
@@ -53,14 +55,20 @@ networks:
   overlay:
     driver: overlay
 
-secrets:
+{# secrets:
   portainer_ce_admin_password:
-    external: true
+    external: true #}
 
 volumes:
-  gluster_root:
+  portainer_ce_data:
     driver: local
     driver_opts:
-      type: glusterfs
-      # Point to the ROOT of the volume only
-      device: "172.16.2.192:docker_data,172.16.2.63:docker_data,172.16.3.86:docker_data"
+      type: none
+      o: bind
+      device: /mnt/portainer_ce_data
+  traefik_letsencrypt:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/traefik_letsencrypt

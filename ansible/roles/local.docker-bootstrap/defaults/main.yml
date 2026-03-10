@@ -1,5 +1,5 @@
-docker_services_portainer_domain: portainer.example.com
-portainer_ce_admin_password: !vault |
+docker_bootstrap_portainer_ce_domain_name: ""
+docker_bootstrap_portainer_ce_admin_password: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           37306633306630373230333837653237376333396138633866646139663862636138666462323665
           3966653836313936346138323134626239383736623530330a626634343434366131623361653735
