@@ -10,6 +10,9 @@ system_users:
   - name: jkuzel
     sudoer: true
     ssh_pub_key: "{{ lookup('url', 'https://raw.githubusercontent.com/jkuzel02/pubkey/refs/heads/main/id.pub') }}"
+  - name: julc
+    sudoer: true
+    ssh_pub_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDgV31Qu57XzY3a46JmBPB6W+pO4zHSDFwYU7jx0oIOx julc@test
 
 glusterfs_nodes:
   - { ip: '172.16.2.192', name: 'network-share-0' }
