@@ -27,6 +27,10 @@ output "ingress_public_ip" {
 }
 
 # Output Data Source of the Private IPv4 Addresses
+output "ingress_private_ip" {
+  value = openstack_compute_instance_v2.swarm_ingress.network[0].fixed_ip_v4
+}
+
 output "node_0_private_ip" {
   value = openstack_compute_instance_v2.swarm_node_0.network[0].fixed_ip_v4
 }
