@@ -1,0 +1,14 @@
+- name: Mount GlusterFS
+  ansible.posix.mount:
+    src: localhost:/docker_data
+    path: /mnt
+    fstype: glusterfs
+    state: mounted
+    
+- name: Recursively change ownership of a directory
+  ansible.builtin.file:
+    path: /mnt
+    state: directory
+    recurse: yes
+    owner: debian
+    group: docker

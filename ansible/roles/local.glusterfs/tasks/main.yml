@@ -7,4 +7,5 @@
 - name: Handle GlusterFS Intiatilization
   import_tasks: 03-GlusterFS-Init.yml
 
-# TODO: Mount Glusterfs type under /mnt
+- name: Mount GlusterFS
+  import_tasks: 04-Mount-GlusterFS.yml

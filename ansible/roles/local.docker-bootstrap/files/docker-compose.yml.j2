@@ -2,45 +2,44 @@ services:
   traefik:
     image: traefik:v3.6
     command:
-      - --providers.swarm.endpoint=unix:///var/run/docker.sock
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
+        - --providers.swarm=true
+        - --providers.swarm.endpoint=unix:///var/run/docker.sock
+        - --providers.docker.exposedbydefault=false
+        - --entrypoints.web.address=:80
+        - --entrypoints.websecure.address=:443
+        - --entrypoints.web.http.redirections.entrypoint.to=websecure
+        - --entrypoints.web.http.redirections.entrypoint.scheme=https
     ports:
-      - 80:80
       - 443:443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik_letsencrypt:/letsencrypt/traefik_certs
+      - /mnt{{ docker_bootstrap_traefik_letsencrypt_data_path }}:/letsencrypt/traefik_certs
     networks:
       - overlay
     deploy:
       placement:
         constraints: [node.role == manager]
-      replicas: 3
+      replicas: 1
 
   portainer_ce:
     image: portainer/portainer-ce:2.39.0
     command: -H unix:///var/run/docker.sock --http-enabled
-    
-    {# secrets:
-      - portainer_ce_admin_password #}
-      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_ce_data:/data/portainer_ce_data
+      - /mnt{{ docker_bootstrap_portainer_ce_data_path }}:/data/portainer_ce_data
     networks:
       - overlay
     deploy:
       labels:
         - traefik.enable=true
-        - traefik.http.routers.portainer.rule=Host(` {{ docker_bootstrap_portainer_ce_domain_name }} `)
+        - traefik.docker.network=overlay
+        - traefik.http.routers.portainer.rule=Host(`{{ docker_bootstrap_portainer_ce_domain_name }}`)
         - traefik.http.routers.portainer.entrypoints=websecure
         - traefik.http.routers.portainer.tls=true
         - traefik.http.services.portainer.loadbalancer.server.port=9000
       placement:
         constraints: [node.role == manager]
-      replicas: 3
+      replicas: 1
 
   portainer_agent:
     image: portainer/agent:2.39.0
@@ -54,21 +53,3 @@ services:
 networks:
   overlay:
     driver: overlay
-
-{# secrets:
-  portainer_ce_admin_password:
-    external: true #}
-
-volumes:
-  portainer_ce_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt/portainer_ce_data
-  traefik_letsencrypt:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt/traefik_letsencrypt

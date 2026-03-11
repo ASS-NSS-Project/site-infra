@@ -5,6 +5,13 @@
   roles: 
     - { role: local.system, tags: system }
 
+- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
+  hosts:        swarm_managers
+  gather_facts: true
+  become:       true
+  roles:
+    - { role: local.docker, tags: docker }
+
 - name:         Setup GlusterFS Share for Docker Swarm Volumes Persistency
   hosts:        swarm_managers
   gather_facts: false
@@ -12,17 +19,10 @@
   roles:
     - { role: local.glusterfs, tags: glusterfs }
 
-- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
-  hosts:        instances
-  gather_facts: true
-  become:       true
-  roles:
-    - { role: local.docker, tags: docker }
-
 - name:         Bootstrap Basic Stack
-  hosts:        swarm_node_0
+  hosts:        swarm_managers
   gather_facts: true
   become:       false
   roles:
-    - { role: local.docker-bootstrap, tags: [ docker, bootstrap ] }
+    - { role: local.docker-bootstrap, tags: bootstrap }
     
