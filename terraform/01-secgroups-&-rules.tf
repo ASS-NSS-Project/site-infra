@@ -2,7 +2,7 @@
 
 resource "openstack_networking_secgroup_v2" "external" {
   name        = "external"
-  description = "External Traffic Incoming to OpenStack"
+  description = "External Traffic"
 }
 
 resource "openstack_networking_secgroup_v2" "internal" {
@@ -111,7 +111,7 @@ resource "openstack_networking_secgroup_rule_v2" "gluster_bricks" {
 }
 
 # Docker Swarm Cluster Management
-resource "openstack_networking_secgroup_rule_v2" "internal" {
+resource "openstack_networking_secgroup_rule_v2" "docker_swarm_mgmt" {
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "tcp"
