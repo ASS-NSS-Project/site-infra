@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: jkuzel02-prometheus
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [ prometheus.jkuzel02-prometheus.dyn.cloud.e-infra.cz ]
+      secretName: web-ingress-tls
+  rules:
+    - host: prometheus.jkuzel02-prometheus.dyn.cloud.e-infra.cz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-operated
+                port:
+                  number: 9090
