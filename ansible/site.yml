@@ -26,3 +26,21 @@
   roles:
     - { role: local.docker-bootstrap, tags: bootstrap }
     
+- name:         Clone GitHub repo for the RAG System App
+  hosts:        swarm_0
+  gather_facts: true
+  become:       false
+  tags:         rag
+  tasks:
+    - name: Clone the repo
+      ansible.builtin.git:
+        repo: 'https://github.com/jkuzel02/rag_system.git'
+        dest: "{{ ansible_facts['env']['HOME'] }}/rag_system"
+        version: main
+
+    - name: Copy the .env file
+      ansible.builtin.copy:
+        src: "files/.env"
+        dest: "{{ ansible_facts['env']['HOME'] }}/rag_system/.env"
+        owner: "{{ ansible_facts['env']['USER'] }}"
+        group: "{{ ansible_facts['env']['USER'] }}"
