@@ -1,0 +1,20 @@
+# Staging issuer — use this first to verify the setup without hitting
+# Let's Encrypt rate limits. Certificates will be issued but not trusted
+# by browsers (staging CA). Switch to letsencrypt-prod once working.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: jkuzel02@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: traefik-gateway
+                namespace: traefik
+                kind: Gateway

@@ -1,0 +1,39 @@
+---
+- name: Install k3s server
+  ansible.builtin.shell:
+    cmd: >
+      curl -sfL https://get.k3s.io | sh -s - server
+      --tls-san {{ ansible_host }}
+      --disable=traefik
+    creates: /usr/local/bin/k3s
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+
+- name: Wait for k3s node token to be generated
+  ansible.builtin.wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+    timeout: 60
+
+- name: Read node token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token_raw
+
+- name: Expose node token as host fact for workers
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+
+- name: Fetch kubeconfig
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    flat: true
+
+# The kubeconfig has 127.0.0.1 as server — replace with public floating IP
+- name: Fix kubeconfig server address
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://{{ ansible_host }}:6443"
+  delegate_to: localhost
+  become: false

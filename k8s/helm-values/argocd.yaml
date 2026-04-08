@@ -1,0 +1,31 @@
+# ArgoCD
+# Install:
+#   helm repo add argo https://argoproj.github.io/argo-helm
+#   helm repo update
+#   helm install argocd argo/argo-cd \
+#     --namespace argocd --create-namespace \
+#     --version "^7" \
+#     -f k8s/argocd/values.yaml
+
+global:
+  domain: argocd.ass-nss.jkuzel02.online
+
+configs:
+  params:
+    # TLS is terminated at the Traefik Gateway — ArgoCD runs insecure internally
+    server.insecure: "true"
+
+server:
+  replicas: 1
+
+  ingress:
+    enabled: false  # using Gateway API HTTPRoute instead
+
+applicationSet:
+  replicas: 1
+
+redis:
+  enabled: true
+
+repoServer:
+  replicas: 1

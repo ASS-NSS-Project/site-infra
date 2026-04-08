@@ -1,7 +1,7 @@
 terraform {
   # Remote Backend for Terraform State - Stored in GCS Bucket 
   backend "gcs" {
-    bucket = "enc-ass-nss"
+    bucket = "k3s-cluster"
     prefix = "terraform/state"
   }
 

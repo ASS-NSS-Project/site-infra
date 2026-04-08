@@ -1,0 +1,113 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: traefik
+spec:
+  controllerName: traefik.io/gateway-controller
+---
+# Single Gateway for the entire cluster.
+# HTTP listener is open to all namespaces so cert-manager can attach
+# HTTPRoutes for HTTP-01 ACME challenges.
+#
+# TLS termination: one HTTPS listener per hostname (HTTP-01 limitation —
+# wildcard certs require DNS-01).
+#
+# To add a new subdomain (e.g. website.ass-nss.jkuzel02.online):
+#   1. Add a new listener block below (copy the websecure-root example)
+#   2. Add a Certificate resource in k8s/cert-manager/<subdomain>-cert.yaml
+#   3. kubectl apply both, cert-manager handles the rest
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: traefik-gateway
+  namespace: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  gatewayClassName: traefik
+  listeners:
+    # HTTP — ACME HTTP-01 challenges + redirect to HTTPS
+    - name: web
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    # HTTPS — root domain
+    - name: websecure-root
+      port: 443
+      protocol: HTTPS
+      hostname: ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-root-tls
+            namespace: traefik
+
+    - name: websecure-argocd
+      port: 443
+      protocol: HTTPS
+      hostname: argocd.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-argocd-tls
+            namespace: traefik
+
+    - name: websecure-longhorn
+      port: 443
+      protocol: HTTPS
+      hostname: longhorn.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-longhorn-tls
+            namespace: traefik
+
+    # --- Add new subdomain listeners here ---
+    # - name: websecure-<name>
+    #   port: 443
+    #   protocol: HTTPS
+    #   hostname: <name>.ass-nss.jkuzel02.online
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: All
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #       - name: ass-nss-<name>-tls
+    #         namespace: traefik
+---
+# HTTP → HTTPS redirect for the root domain.
+# cert-manager's ACME challenge HTTPRoutes use a more specific path match
+# (/.well-known/acme-challenge/*) so they take priority over this redirect.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-to-https-redirect
+  namespace: traefik
+spec:
+  parentRefs:
+    - name: traefik-gateway
+      namespace: traefik
+      sectionName: web
+  hostnames:
+    - ass-nss.jkuzel02.online
+    - argocd.ass-nss.jkuzel02.online
+    - longhorn.ass-nss.jkuzel02.online
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

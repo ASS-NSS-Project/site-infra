@@ -1,46 +1,55 @@
-- name:         Manage Instances System
-  hosts:        instances
-  gather_facts: false
-  become:       true
-  roles: 
-    - { role: local.system, tags: system }
-
-- name:         Setup Docker on the Instances (Docker Swarm Mode Enabled)
-  hosts:        swarm_managers
-  gather_facts: true
-  become:       true
+# Play 1: System setup on all nodes
+- name: System setup
+  hosts: k3s_cluster
+  become: true
+  tags: system
   roles:
-    - { role: local.docker, tags: docker }
+    - local.system
 
-- name:         Setup GlusterFS Share for Docker Swarm Volumes Persistency
-  hosts:        swarm_managers
-  gather_facts: false
-  become:       true
+# Play 2: Install k3s server on control plane
+- name: Install k3s control plane
+  hosts: control_plane
+  become: true
+  tags: k3s
   roles:
-    - { role: local.glusterfs, tags: glusterfs }
+    - local.k3s
 
-- name:         Bootstrap Basic Stack
-  hosts:        swarm_managers
-  gather_facts: true
-  become:       false
+# Play 3: Install k3s agent on workers
+# Runs after control plane so the token and facts are available via hostvars
+- name: Install k3s workers
+  hosts: workers
+  become: true
+  tags: k3s
   roles:
-    - { role: local.docker-bootstrap, tags: bootstrap }
-    
-- name:         Clone GitHub repo for the RAG System App
-  hosts:        swarm_0
-  gather_facts: true
-  become:       false
-  tags:         rag
+    - local.k3s
+
+# Play 4: Bootstrap ArgoCD + apply root App of Apps
+# Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD
+- name: Bootstrap ArgoCD
+  hosts: control_plane
+  become: true
+  tags: bootstrap
+  roles:
+    - local.argocd
+
+# Play 5: Deploy all ArgoCD Applications
+# Applies every manifest from k8s/apps/ directly — useful for initial bootstrap
+# or forcing re-registration of all applications without waiting for App of Apps sync.
+- name: Deploy ArgoCD applications
+  hosts: control_plane
+  become: true
+  tags: bootstrap
   tasks:
-    - name: Clone the repo
-      ansible.builtin.git:
-        repo: 'https://github.com/jkuzel02/rag_system.git'
-        dest: "{{ ansible_facts['env']['HOME'] }}/rag_system"
-        version: main
-
-    - name: Copy the .env file
+    - name: Copy k8s/apps manifests to control plane
       ansible.builtin.copy:
-        src: "files/.env"
-        dest: "{{ ansible_facts['env']['HOME'] }}/rag_system/.env"
-        owner: "{{ ansible_facts['env']['USER'] }}"
-        group: "{{ ansible_facts['env']['USER'] }}"
+        src: "{{ playbook_dir }}/../k8s/apps/"
+        dest: /tmp/argocd-apps/
+        mode: "0644"
+
+    - name: Apply all ArgoCD Application manifests
+      ansible.builtin.shell:
+        cmd: kubectl apply -f /tmp/argocd-apps/
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      register: apps_apply
+      changed_when: "'configured' in apps_apply.stdout or 'created' in apps_apply.stdout"

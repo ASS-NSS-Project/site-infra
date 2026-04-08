@@ -1,0 +1,27 @@
+# --- Timezone ---
+timezone: "Europe/Prague"
+
+# --- NTP ---
+ntp_servers:
+  - "tik.cesnet.cz"
+  - "tak.cesnet.cz"
+
+# --- Users ---
+users:
+  - name: jkuzel
+    sudoer: true
+    ssh_keys:
+      - "{{ lookup('url', 'https://raw.githubusercontent.com/jkuzel02/pubkey/refs/heads/main/id.pub', validate_certs=false) }}"
+
+  - name: agurina
+    sudoer: true
+    ssh_key: 
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH+pXP/GfTQ60sUU4SIZ0WrfiOfVx7oS7jJwm68lFt9E anicka-key
+
+  - name: jkaderka
+    sudoer: true
+    ssh_key: 
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCoS9PaEFy0xIYQWedkIUGYj6aQoyb/qPlGIZIlZV0foLuAa8hAiFrZ/q7RztiM0SLrCDfIURKlftUO3dQ64AoL7YWWAYFjdY8rqvlLUBQxHrly3fuWH1nG8lUg++Z0c8KofhLYENk7Ca0cwbNsCBj6CWK8xDamsVDi/4Yjoy0BLvy167gsVAxutCyhdK3HAyRu2xTUFwiBzqedXGpNFI1U8j1ZIQiFg/sq5Z7RmzPbWKv4ypSenItdmVghcxjEBALYTeFpuRj2qZ/dGEVei1du/DxsiKoIiARYt9a6wssaJQWr3zgs6hNA4trRhfL1Bo3TRgDjeM43vWGyRktzDP67w7YEDXfEv6V9NQe4vauIFoqECTHYI09eWrQ9vmwGSV4PbocqIVMvLW7xtsPBJUym5DgsTg5EeHh89sllRwnXZyKfWh/5iL74L3I+8FxIswCvi0Dwp9TGZxyYin6lTMrZ3v+u2xlB0jLn0gj4NLjQ5d4+/IIS8p2Sa4Rmb1T61LMeSNZ9Cp4JNWdmQ58+DhzXcD7rA8Befd3hELBVF91JOPpJNiArtXv/e7g7+JU0mJOSdFJELDFhac3pmJx8pZ3+bKzRWf3snzRvvl0x7LVRf7Cw2qhU9HMS36CyKCq97Obs9B3NCxQvhMdVR80hk1PTtTVKAhG0+buwlUZDUfxXBQ== rsa-key-20260306
+
+# --- k3s ---
+k3s_version: "v1.32.3+k3s1"

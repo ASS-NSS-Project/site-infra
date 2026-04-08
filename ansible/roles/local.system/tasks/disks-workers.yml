@@ -1,0 +1,63 @@
+---
+- name: Find root disk name
+  ansible.builtin.shell:
+    cmd: lsblk -no pkname $(df / --output=source | tail -1)
+  register: root_disk_name
+  changed_when: false
+
+- name: Find extra block devices (non-root, non-loop disks)
+  ansible.builtin.shell:
+    cmd: >
+      lsblk -d -n -o NAME,TYPE |
+      awk '$2 == "disk" {print $1}' |
+      grep -v '^{{ root_disk_name.stdout | trim }}$' |
+      sed 's|^|/dev/|'
+  register: extra_disks_raw
+  changed_when: false
+
+- name: Fail if no extra disks found (volumes not attached yet)
+  ansible.builtin.fail:
+    msg: >
+      No extra block devices found on {{ inventory_hostname }}.
+      Make sure Terraform volumes are applied and attached before running Ansible.
+      Run: terraform apply
+  when: extra_disks_raw.stdout_lines | length == 0
+
+- name: Install lvm2
+  ansible.builtin.apt:
+    name: lvm2
+    state: present
+
+- name: Create LVM volume group from discovered disks
+  community.general.lvg:
+    vg: longhorn-vg
+    pvs: "{{ extra_disks_raw.stdout_lines | join(',') }}"
+    state: present
+
+- name: Create logical volume spanning the full volume group
+  community.general.lvol:
+    vg: longhorn-vg
+    lv: longhorn-lv
+    size: 100%FREE
+    state: present
+
+- name: Format logical volume as ext4
+  community.general.filesystem:
+    fstype: ext4
+    dev: /dev/longhorn-vg/longhorn-lv
+
+- name: Create /var/lib/longhorn mount point
+  ansible.builtin.file:
+    path: /var/lib/longhorn
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Mount /var/lib/longhorn and persist in fstab
+  ansible.posix.mount:
+    path: /var/lib/longhorn
+    src: /dev/longhorn-vg/longhorn-lv
+    fstype: ext4
+    opts: defaults
+    state: mounted

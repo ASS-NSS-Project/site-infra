@@ -1,0 +1,6 @@
+k3s_role: agent
+
+# Workers have no floating IP — SSH through control plane as jump host
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=no
+  -o ProxyJump=debian@{{ hostvars[groups['control_plane'][0]]['ansible_host'] }}

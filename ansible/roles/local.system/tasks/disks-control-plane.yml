@@ -1,0 +1,46 @@
+---
+- name: Find root disk name
+  ansible.builtin.shell:
+    cmd: lsblk -no pkname $(df / --output=source | tail -1)
+  register: root_disk_name
+  changed_when: false
+
+- name: Find extra block device (non-root, non-loop disk)
+  ansible.builtin.shell:
+    cmd: >
+      lsblk -d -n -o NAME,TYPE |
+      awk '$2 == "disk" {print $1}' |
+      grep -v '^{{ root_disk_name.stdout | trim }}$' |
+      sed 's|^|/dev/|' |
+      head -1
+  register: cp_extra_disk_discovered
+  changed_when: false
+
+- name: Fail if no extra disk found (volume not attached yet)
+  ansible.builtin.fail:
+    msg: >
+      No extra block device found on {{ inventory_hostname }}.
+      Make sure Terraform volumes are applied and attached before running Ansible.
+      Run: terraform apply
+  when: cp_extra_disk_discovered.stdout | trim == ""
+
+- name: Format control plane extra disk as ext4
+  community.general.filesystem:
+    fstype: ext4
+    dev: "{{ cp_extra_disk_discovered.stdout | trim }}"
+
+- name: Create /var/lib/rancher/k3s mount point
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Mount control plane disk at /var/lib/rancher/k3s and persist in fstab
+  ansible.posix.mount:
+    path: /var/lib/rancher/k3s
+    src: "{{ cp_extra_disk_discovered.stdout | trim }}"
+    fstype: ext4
+    opts: defaults
+    state: mounted

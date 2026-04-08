@@ -1,44 +1,81 @@
-- name: Create the user groups
-  ansible.builtin.group:
-    name: "{{ item.name }}"
-    state: present
-  loop: "{{ system_users }}"
+---
+# --- Timezone ---
 
-- name: Create the user accounts (Non-Sudoers)
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+# --- NTP ---
+
+- name: Install chrony
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+
+- name: Configure chrony NTP servers
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+
+- name: Enable and start chrony
+  ansible.builtin.service:
+    name: chrony
+    state: started
+    enabled: true
+
+# --- Users ---
+
+- name: Create user accounts
   ansible.builtin.user:
     name: "{{ item.name }}"
-    group: "{{ item.name }}"
     shell: /bin/bash
     create_home: true
     state: present
-  loop: "{{ system_users }}"
-  when: not ( item.sudoer | default(false) )
+  loop: "{{ users }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: Create the sudo user accounts
-  ansible.builtin.user:
-    name: "{{ item.name }}"
-    group: "{{ item.name }}"
-    groups: sudo
-    append: true
-    shell: /bin/bash
-    create_home: true
+- name: Set up SSH authorized keys
+  ansible.posix.authorized_key:
+    user: "{{ item.0.name }}"
+    key: "{{ item.1 }}"
     state: present
-  loop: "{{ system_users }}"
-  when: item.sudoer | default(false)
+  loop: "{{ users | subelements('ssh_keys', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.name }}"
 
-- name: Configure passwordless sudo for new sudoers
+# --- Longhorn Prerequisites ---
+
+- name: Install open-iscsi (required by Longhorn on all nodes)
+  ansible.builtin.apt:
+    name: open-iscsi
+    state: present
+
+# --- Disk Setup ---
+
+- name: Set up worker Longhorn storage (LVM)
+  ansible.builtin.import_tasks: disks-workers.yml
+  when: k3s_role == "agent"
+
+- name: Set up control plane extra disk
+  ansible.builtin.import_tasks: disks-control-plane.yml
+  when: k3s_role == "server"
+
+# --- Sudoers ---
+
+- name: Grant passwordless sudo to sudoer users
   ansible.builtin.copy:
-    content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
+    content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL\n"
     dest: "/etc/sudoers.d/{{ item.name }}"
-    mode: '0440'
-    validate: '/usr/sbin/visudo -cf %s'
-  loop: "{{ system_users }}"
-  when: item.sudoer | default(false)
-
-- name: Inject SSH public keys
-  ansible.builtin.authorized_key:
-    user: "{{ item.name }}"
-    state: present
-    # No lookup needed here since the string is already in memory
-    key: "{{ item.ssh_pub_key }}"
-  loop: "{{ system_users }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+  loop: "{{ users | selectattr('sudoer', 'defined') | selectattr('sudoer') | list }}"
+  loop_control:
+    label: "{{ item.name }}"

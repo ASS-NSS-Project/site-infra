@@ -1,0 +1,55 @@
+# Traefik v3 — Gateway API mode
+# Install:
+#   helm repo add traefik https://traefik.github.io/charts
+#   helm repo update
+#   helm install traefik traefik/traefik \
+#     --namespace traefik --create-namespace \
+#     --version "^33" \
+#     -f k8s/traefik/values.yaml
+
+# Pin to control plane — only node with the floating IP and external security group
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: "true"
+
+# Enable Gateway API provider, disable legacy Ingress provider
+providers:
+  kubernetesGateway:
+    enabled: true
+  kubernetesIngress:
+    enabled: false
+
+# Do not create a GatewayClass/Gateway automatically — managed in gateway.yaml
+gateway:
+  enabled: false
+
+gatewayClass:
+  enabled: false
+
+# k3s ServiceLB will bind ports 80/443 on the control plane host
+service:
+  type: LoadBalancer
+
+ports:
+  web:
+    port: 80
+    expose:
+      default: true
+  websecure:
+    port: 443
+    expose:
+      default: true
+
+# cert-manager handles all TLS — no need for Traefik's built-in ACME
+persistence:
+  enabled: false
+
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true

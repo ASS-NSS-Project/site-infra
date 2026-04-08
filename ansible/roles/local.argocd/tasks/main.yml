@@ -1,0 +1,52 @@
+---
+- name: Install Helm
+  ansible.builtin.shell:
+    cmd: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    creates: /usr/local/bin/helm
+
+- name: Install Gateway API CRDs
+  ansible.builtin.shell:
+    cmd: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: gateway_crds
+  changed_when: "'created' in gateway_crds.stdout or 'configured' in gateway_crds.stdout"
+
+- name: Add ArgoCD Helm repo
+  ansible.builtin.shell:
+    cmd: helm repo add argo https://argoproj.github.io/argo-helm && helm repo update
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+
+- name: Copy ArgoCD Helm values to control plane
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../k8s/helm-values/argocd.yaml"
+    dest: /tmp/argocd-values.yaml
+    mode: "0644"
+
+- name: Install ArgoCD via Helm
+  ansible.builtin.shell:
+    cmd: >
+      helm upgrade --install argocd argo/argo-cd
+      --namespace argocd --create-namespace
+      --version ">=7.0.0"
+      -f /tmp/argocd-values.yaml
+      --wait --timeout 5m
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: argocd_install
+  changed_when: "'deployed' in argocd_install.stdout or 'upgraded' in argocd_install.stdout"
+
+- name: Copy root App of Apps manifest to control plane
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../k8s/apps/root.yaml"
+    dest: /tmp/argocd-root-app.yaml
+    mode: "0644"
+
+- name: Apply root App of Apps
+  ansible.builtin.shell:
+    cmd: kubectl apply -f /tmp/argocd-root-app.yaml
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: true

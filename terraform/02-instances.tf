@@ -1,9 +1,9 @@
-# --- Docker Swarm Node Instances ---
+# --- k3s Control-Plane ---
 
-resource "openstack_compute_instance_v2" "swarm_0" {
-  name        = "swarm-0"
+resource "openstack_compute_instance_v2" "control_plane" {
+  name        = "k8s-control-plane"
   image_name  = "debian-13-x86_64"
-  flavor_name = "e1.4core-16ram" # 16 GiB RAM, 4 vCPUs
+  flavor_name = "e1.large" # 4 vCPU, 8 GB RAM
   key_pair    = "jkuzel"
 
   security_groups = [
@@ -12,7 +12,7 @@ resource "openstack_compute_instance_v2" "swarm_0" {
   ]
 
   network {
-    name = "internal-ipv4-general-private"
+    name = "group-project-network"
   }
 
   depends_on = [
@@ -21,52 +21,21 @@ resource "openstack_compute_instance_v2" "swarm_0" {
   ]
 }
 
-resource "openstack_compute_instance_v2" "swarm_1" {
-  name        = "swarm-1"
+# --- k3s Worker Nodes ---
+
+resource "openstack_compute_instance_v2" "worker" {
+  count = 3
+
+  name        = "k8s-worker-${count.index}"
   image_name  = "debian-13-x86_64"
-  flavor_name = "e1.4core-16ram" # 16 GiB RAM, 4 vCPUs
+  flavor_name = "e1.4core-16ram" # 4 vCPU, 16 GB RAM
   key_pair    = "jkuzel"
 
   security_groups = ["internal"]
 
   network {
-    name = "internal-ipv4-general-private"
+    name = "group-project-network"
   }
 
   depends_on = [openstack_networking_secgroup_v2.internal]
-}
-
-resource "openstack_compute_instance_v2" "swarm_2" {
-  name        = "swarm-2"
-  image_name  = "debian-13-x86_64"
-  flavor_name = "e1.4core-16ram" # 16 GiB RAM, 4 vCPUs
-  key_pair    = "jkuzel"
-
-  security_groups = ["internal"]
-
-  network {
-    name = "internal-ipv4-general-private"
-  }
-
-  depends_on = [openstack_networking_secgroup_v2.internal]
-}
-
-# --- Backup Instance ---
-
-resource "openstack_compute_instance_v2" "backup" {
-  name        = "backup"
-  image_name  = "debian-13-x86_64"
-  flavor_name = "e1.tiny" # 2 GiB RAM, 2 vCPUs
-  key_pair    = "jkuzel"
-
-  security_groups = ["internal"]
-
-  network {
-    name = "internal-ipv4-general-private"
-  }
-
-  depends_on = [
-    openstack_networking_secgroup_v2.external,
-    openstack_networking_secgroup_v2.internal
-  ]
 }

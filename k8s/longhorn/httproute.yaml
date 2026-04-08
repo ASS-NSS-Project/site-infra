@@ -1,0 +1,21 @@
+# Exposes the Longhorn UI at https://longhorn.ass-nss.jkuzel02.online
+# Prerequisites:
+#   1. Add DNS A record: longhorn.ass-nss.jkuzel02.online → 147.251.255.48
+#   2. Add listener + cert to k8s/traefik/gateway.yaml for this hostname
+#   3. Add Certificate resource (or copy pattern from cert-manager/clusterissuer-prod.yaml)
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: longhorn-ui
+  namespace: longhorn-system
+spec:
+  parentRefs:
+    - name: traefik-gateway
+      namespace: traefik
+      sectionName: websecure-longhorn
+  hostnames:
+    - longhorn.ass-nss.jkuzel02.online
+  rules:
+    - backendRefs:
+        - name: longhorn-frontend
+          port: 80
