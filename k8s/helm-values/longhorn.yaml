@@ -30,3 +30,8 @@ defaultSettings:
 longhornUI:
   # Exposed via HTTPRoute — see k8s/longhorn/httproute.yaml
   replicas: 1
+
+# Disable the pre-upgrade checker job — it fails on fresh installs via ArgoCD
+# because the longhorn-service-account doesn't exist when the hook runs.
+preUpgradeChecker:
+  jobEnabled: false
