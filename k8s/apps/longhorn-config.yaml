@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/ASS-NSS-Project/site-infra
-    targetRevision: HEAD
+    targetRevision: kost
     path: k8s/longhorn
   destination:
     server: https://kubernetes.default.svc

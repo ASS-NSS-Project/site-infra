@@ -16,7 +16,7 @@ spec:
         valueFiles:
           - $values/k8s/helm-values/cert-manager.yaml
     - repoURL: https://github.com/ASS-NSS-Project/site-infra
-      targetRevision: HEAD
+      targetRevision: kost
       ref: values
   destination:
     server: https://kubernetes.default.svc
