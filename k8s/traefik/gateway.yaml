@@ -74,6 +74,19 @@ spec:
           - name: ass-nss-longhorn-tls
             namespace: traefik
 
+    - name: websecure-harbor
+      port: 443
+      protocol: HTTPS
+      hostname: harbor.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-harbor-tls
+            namespace: traefik
+
     # --- Add new subdomain listeners here ---
     # - name: websecure-<name>
     #   port: 443
@@ -105,6 +118,7 @@ spec:
     - ass-nss.jkuzel02.online
     - argocd.ass-nss.jkuzel02.online
     - longhorn.ass-nss.jkuzel02.online
+    - harbor.ass-nss.jkuzel02.online
   rules:
     - filters:
         - type: RequestRedirect

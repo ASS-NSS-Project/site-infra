@@ -9,33 +9,51 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Infrastructure | OpenStack (Metacentrum MetaVO, Brno) |
 | Provisioning | Terraform |
 | Configuration | Ansible |
-| Kubernetes | k3s v1.32.3 |
+| Kubernetes | k3s v1.32.3 (3-node HA control plane) |
 | GitOps | ArgoCD |
-| Ingress | Traefik v3 (Gateway API) |
+| Ingress | Traefik v3 (Gateway API, DaemonSet on CPs) |
+| Load Balancer | OpenStack Octavia (API LB + Ingress LB) |
 | TLS | cert-manager + Let's Encrypt HTTP-01 |
 | Storage | Longhorn (LVM over Cinder volumes) |
+| Registry | Harbor (container image registry) |
 
 ## Cluster layout
 
-| Node | Flavor | vCPU | RAM | Extra storage |
-|------|--------|------|-----|---------------|
-| k8s-control-plane | e1.large | 4 | 8 GB | 1 × 100 GB → `/var/lib/rancher/k3s` |
-| k8s-worker-0 | e1.4core-16ram | 4 | 16 GB | 3 × 100 GB → LVM → `/var/lib/longhorn` |
-| k8s-worker-1 | e1.4core-16ram | 4 | 16 GB | 3 × 100 GB → LVM → `/var/lib/longhorn` |
-| k8s-worker-2 | e1.4core-16ram | 4 | 16 GB | 3 × 100 GB → LVM → `/var/lib/longhorn` |
+| Node | Flavor | vCPU | RAM | Private IP | Extra storage |
+|------|--------|------|-----|------------|---------------|
+| cp-0 | e1.large | 4 | 8 GB | 192.168.0.10 | 1 × 111 GB → `/var/lib/rancher/k3s` |
+| cp-1 | e1.large | 4 | 8 GB | 192.168.0.11 | 1 × 111 GB → `/var/lib/rancher/k3s` |
+| cp-2 | e1.large | 4 | 8 GB | 192.168.0.12 | 1 × 111 GB → `/var/lib/rancher/k3s` |
+| worker-0 | e1.4core-16ram | 4 | 16 GB | 192.168.0.20 | 3 × 111 GB → LVM → `/var/lib/longhorn` |
+| worker-1 | e1.4core-16ram | 4 | 16 GB | 192.168.0.21 | 3 × 111 GB → LVM → `/var/lib/longhorn` |
 
-**Totals**: 4 instances / 16 vCPU / 56 GB RAM / 10 Cinder volumes / 1000 GB
+**Totals**: 5 instances / 20 vCPU / 56 GB RAM / 9 Cinder volumes / 999 GB
+
+### Load balancers
+
+| Name | Private VIP | Purpose |
+|------|-------------|---------|
+| k8s-api-lb | 192.168.0.100 | k3s API (port 6443) → all 3 CPs |
+| k8s-ingress-lb | 192.168.0.101 | HTTP/HTTPS (→ NodePort 30080/30443 on CPs) |
+
+### Floating IPs
+
+| Assigned to | Used for |
+|-------------|----------|
+| cp-0 | SSH bastion — only node directly reachable from the internet |
+| API LB | kubectl access + k3s node join endpoint |
+| Ingress LB | HTTP/HTTPS traffic — **point all DNS A records here** |
 
 ## Repository structure
 
 ```
-├── terraform/          # OpenStack infrastructure (instances, volumes, security groups, FIP)
+├── terraform/          # OpenStack IaC (network, instances, volumes, LBs, FIPs)
 ├── ansible/
 │   ├── site.yml        # Main playbook
 │   ├── inventory/      # hosts.yml + group_vars
 │   └── roles/
 │       ├── local.system/   # Timezone, NTP, users, SSH keys, disk setup
-│       ├── local.k3s/      # k3s server + agent installation
+│       ├── local.k3s/      # k3s server (init + join) + agent installation
 │       └── local.argocd/   # Helm + Gateway API CRDs + ArgoCD bootstrap
 └── k8s/
     ├── apps/           # ArgoCD App of Apps (one Application per component)
@@ -43,7 +61,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── traefik/        # GatewayClass + Gateway + HTTP→HTTPS redirect
     ├── cert-manager/   # ClusterIssuers (prod, staging, self-signed)
     ├── longhorn/       # Longhorn HTTPRoute
-    └── argocd/         # ArgoCD HTTPRoute
+    ├── argocd/         # ArgoCD HTTPRoute
+    └── harbor/         # Harbor HTTPRoute
 ```
 
 ## Prerequisites
@@ -67,9 +86,14 @@ terraform init
 terraform apply
 ```
 
-Copy the output IPs into `ansible/inventory/hosts.yml`:
+`terraform apply` automatically writes two files from live resource outputs:
+- `ansible/inventory/hosts.yml` — cp-0 floating IP filled in
+- `ansible/inventory/group_vars/all/terraform.yml` — API LB floating IP for kubeconfig + TLS SANs
+
+The only manual step remaining is updating DNS A records:
 ```bash
-terraform output
+terraform output ingress_lb_public_ip
+# → point all hostnames to this IP
 ```
 
 ### 2. Cluster provisioning — Ansible
@@ -84,7 +108,7 @@ Available tags to run individual plays:
 | Tag | What it runs |
 |-----|-------------|
 | `--tags system` | Timezone, NTP, users, SSH keys, LVM disk setup, open-iscsi |
-| `--tags k3s` | k3s server on control plane + k3s agent on workers |
+| `--tags k3s` | k3s HA control plane (init + join) + k3s agents on workers |
 | `--tags bootstrap` | Helm install, Gateway API CRDs, ArgoCD, all ArgoCD Applications |
 
 The full playbook in order:
@@ -92,12 +116,13 @@ The full playbook in order:
 | Play | Hosts | Description |
 |------|-------|-------------|
 | 1 — System setup | all | OS configuration, disk setup |
-| 2 — k3s control plane | control_plane | k3s server, fetches kubeconfig to `artifacts/kubeconfig` |
-| 3 — k3s workers | workers | k3s agents, join cluster via private network through jump host |
-| 4 — Bootstrap ArgoCD | control_plane | Installs Helm, Gateway API CRDs, ArgoCD via Helm, applies root App of Apps |
-| 5 — Deploy ArgoCD applications | control_plane | Applies all `k8s/apps/` manifests directly |
+| 2 — k3s init | cp_primary (cp-0) | `--cluster-init`, fetches kubeconfig to `artifacts/kubeconfig` |
+| 3 — k3s join | cp_followers (cp-1, cp-2) | Join cluster via API LB VIP |
+| 4 — k3s workers | workers | k3s agents, join cluster via API LB VIP |
+| 5 — Bootstrap ArgoCD | cp-0 | Installs Helm, Gateway API CRDs, ArgoCD via Helm, applies root App of Apps |
+| 6 — Deploy ArgoCD applications | cp-0 | Applies all `k8s/apps/` manifests directly |
 
-> **Note**: Workers have no public IP. Ansible reaches them via SSH ProxyJump through the control plane (configured automatically in `group_vars/workers.yml`).
+> **Note**: Only cp-0 has a floating IP. Ansible reaches cp-1, cp-2, and workers via SSH ProxyJump through cp-0 (configured automatically in `group_vars/cp_followers.yml` and `group_vars/workers.yml`).
 
 ### 3. GitOps — ArgoCD takes over
 
@@ -105,9 +130,9 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 
 | Wave | Applications deployed |
 |------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn` (Helm charts) |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor` (Helm charts) |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers) |
-| 3 | `longhorn-config` (HTTPRoute), `argocd-config` (HTTPRoute) |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config` (HTTPRoutes) |
 
 Monitor sync status:
 ```bash
@@ -117,13 +142,14 @@ kubectl -n argocd get applications
 
 ## DNS records
 
-All A records point to the control-plane floating IP (`147.251.255.198`):
+All A records point to the **Ingress LB floating IP** (`terraform output ingress_lb_public_ip`):
 
 | Hostname | Service |
 |----------|---------|
 | `ass-nss.jkuzel02.online` | Root domain |
 | `argocd.ass-nss.jkuzel02.online` | ArgoCD UI |
 | `longhorn.ass-nss.jkuzel02.online` | Longhorn UI |
+| `harbor.ass-nss.jkuzel02.online` | Harbor container registry |
 
 ## ArgoCD
 
@@ -169,15 +195,37 @@ kubectl -n cert-manager get secret selfsigned-ca-tls \
 
 ## Adding a new subdomain
 
-1. Add a DNS A record → `147.251.255.198`
+1. Add a DNS A record → Ingress LB floating IP
 2. Add an HTTPS listener in `k8s/traefik/gateway.yaml`
 3. Add a `Certificate` in `k8s/cert-manager/clusterissuer-prod.yaml`
 4. Add an `HTTPRoute` in your application namespace
-5. Push to `main` — ArgoCD applies automatically
+5. Push to `kost` branch — ArgoCD applies automatically
+
+## Harbor container registry
+
+UI: `https://harbor.ass-nss.jkuzel02.online`
+
+Initial credentials: `admin` / `Harbor12345` — **change on first login**.
+
+To use Harbor as the image registry:
+```bash
+docker login harbor.ass-nss.jkuzel02.online
+docker tag myimage harbor.ass-nss.jkuzel02.online/<project>/myimage:tag
+docker push harbor.ass-nss.jkuzel02.online/<project>/myimage:tag
+```
+
+To pull images in Kubernetes, create an image pull secret:
+```bash
+kubectl create secret docker-registry harbor-credentials \
+  --docker-server=harbor.ass-nss.jkuzel02.online \
+  --docker-username=<user> \
+  --docker-password=<password> \
+  -n <namespace>
+```
 
 ## Longhorn storage
 
-- **Raw capacity**: 300 GB per worker node (3 × 100 GB Cinder volumes via LVM)
-- **Usable capacity**: ~450 GB with 2-replica default (900 GB ÷ 2)
+- **Raw capacity**: 333 GB per worker (3 × 111 GB), 666 GB total
+- **Usable capacity**: ~333 GB with 2-replica default (666 GB ÷ 2)
 - **Default StorageClass**: `longhorn`
 - **UI**: `https://longhorn.ass-nss.jkuzel02.online`

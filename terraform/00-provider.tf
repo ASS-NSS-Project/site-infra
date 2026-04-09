@@ -1,5 +1,5 @@
 terraform {
-  # Remote Backend for Terraform State - Stored in GCS Bucket 
+  # Remote Backend for Terraform State - Stored in GCS Bucket
   backend "gcs" {
     bucket = "k3s-cluster"
     prefix = "terraform/state"
@@ -9,6 +9,10 @@ terraform {
     openstack = {
       source  = "terraform-provider-openstack/openstack"
       version = "~> 3.0.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.0"
     }
   }
 }

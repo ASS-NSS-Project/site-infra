@@ -1,9 +1,11 @@
 ---
-- name: Install k3s server
+- name: Install k3s server (cluster init node)
   ansible.builtin.shell:
     cmd: >
       curl -sfL https://get.k3s.io | sh -s - server
-      --tls-san {{ ansible_host }}
+      --cluster-init
+      --tls-san {{ k3s_api_lb_vip }}
+      --tls-san {{ k3s_api_lb_fip }}
       --disable=traefik
     creates: /usr/local/bin/k3s
   environment:
@@ -19,9 +21,15 @@
     src: /var/lib/rancher/k3s/server/node-token
   register: k3s_token_raw
 
-- name: Expose node token as host fact for workers
+- name: Expose node token as host fact
   ansible.builtin.set_fact:
     k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+
+- name: Wait for k3s API to become ready
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 120
 
 - name: Fetch kubeconfig
   ansible.builtin.fetch:
@@ -29,11 +37,11 @@
     dest: "{{ playbook_dir }}/../artifacts/kubeconfig"
     flat: true
 
-# The kubeconfig has 127.0.0.1 as server — replace with public floating IP
+# Replace 127.0.0.1 with the API LB public FIP so kubectl works from outside
 - name: Fix kubeconfig server address
   ansible.builtin.replace:
     path: "{{ playbook_dir }}/../artifacts/kubeconfig"
     regexp: 'https://127\.0\.0\.1:6443'
-    replace: "https://{{ ansible_host }}:6443"
+    replace: "https://{{ k3s_api_lb_fip }}:6443"
   delegate_to: localhost
   become: false

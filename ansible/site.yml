@@ -6,16 +6,25 @@
   roles:
     - local.system
 
-# Play 2: Install k3s server on control plane
-- name: Install k3s control plane
-  hosts: control_plane
+# Play 2: Bootstrap k3s on CP-0 (cluster-init node)
+# Sets k3s_token fact consumed by plays 3 and 4.
+- name: Install k3s init control plane
+  hosts: cp_primary
   become: true
   tags: k3s
   roles:
     - local.k3s
 
-# Play 3: Install k3s agent on workers
-# Runs after control plane so the token and facts are available via hostvars
+# Play 3: Join CP-1 and CP-2 to the cluster via API LB VIP
+# Runs after CP-0 so the token and etcd quorum are available.
+- name: Join k3s follower control planes
+  hosts: cp_followers
+  become: true
+  tags: k3s
+  roles:
+    - local.k3s
+
+# Play 4: Install k3s agent on workers
 - name: Install k3s workers
   hosts: workers
   become: true
@@ -23,20 +32,20 @@
   roles:
     - local.k3s
 
-# Play 4: Bootstrap ArgoCD + apply root App of Apps
-# Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD
+# Play 5: Bootstrap ArgoCD on CP-0
+# Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD.
 - name: Bootstrap ArgoCD
-  hosts: control_plane
+  hosts: cp_primary
   become: true
   tags: bootstrap
   roles:
     - local.argocd
 
-# Play 5: Deploy all ArgoCD Applications
-# Applies every manifest from k8s/apps/ directly — useful for initial bootstrap
-# or forcing re-registration of all applications without waiting for App of Apps sync.
+# Play 6: Deploy all ArgoCD Applications
+# Applies every manifest from k8s/apps/ — useful for initial bootstrap
+# or forcing re-registration without waiting for App of Apps sync.
 - name: Deploy ArgoCD applications
-  hosts: control_plane
+  hosts: cp_primary
   become: true
   tags: bootstrap
   tasks:

@@ -1,6 +1,4 @@
-k3s_role: agent
-
-# Workers have no FIP — SSH through CP-0 as jump host
+# cp-1 and cp-2 have no FIP — SSH through CP-0 as jump host
 ansible_ssh_common_args: >-
   -o StrictHostKeyChecking=no
   -o ProxyJump=debian@{{ hostvars[groups['cp_primary'][0]]['ansible_host'] }}

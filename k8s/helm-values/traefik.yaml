@@ -1,13 +1,10 @@
 # Traefik v3 — Gateway API mode
-# Install:
-#   helm repo add traefik https://traefik.github.io/charts
-#   helm repo update
-#   helm install traefik traefik/traefik \
-#     --namespace traefik --create-namespace \
-#     --version "^33" \
-#     -f k8s/traefik/values.yaml
+# Runs as a DaemonSet on all control plane nodes.
+# The Octavia Ingress LB (192.168.0.101) forwards:
+#   port 80  → NodePort 30080 on each CP node
+#   port 443 → NodePort 30443 on each CP node
 
-# Pin to control plane — only node with the floating IP and external security group
+# Run on control plane nodes only
 tolerations:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
@@ -16,6 +13,9 @@ tolerations:
 nodeSelector:
   node-role.kubernetes.io/control-plane: "true"
 
+deployment:
+  kind: DaemonSet
+
 # Enable Gateway API provider, disable legacy Ingress provider
 providers:
   kubernetesGateway:
@@ -23,24 +23,27 @@ providers:
   kubernetesIngress:
     enabled: false
 
-# Do not create a GatewayClass/Gateway automatically — managed in gateway.yaml
+# Do not create a GatewayClass/Gateway automatically — managed in k8s/traefik/gateway.yaml
 gateway:
   enabled: false
 
 gatewayClass:
   enabled: false
 
-# k3s ServiceLB will bind ports 80/443 on the control plane host
+# NodePort service — Octavia Ingress LB members target these ports on each CP node.
+# NodePorts are fixed so the LB member configuration in Terraform stays stable.
 service:
-  type: LoadBalancer
+  type: NodePort
 
 ports:
   web:
     port: 80
+    nodePort: 30080
     expose:
       default: true
   websecure:
     port: 443
+    nodePort: 30443
     expose:
       default: true
 

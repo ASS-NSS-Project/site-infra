@@ -1,7 +1,11 @@
 ---
-- name: Install k3s control plane
-  ansible.builtin.import_tasks: control-plane.yml
-  when: k3s_role == "server"
+- name: Install k3s init control plane
+  ansible.builtin.import_tasks: control-plane-init.yml
+  when: k3s_role == "server" and k3s_init_node | default(false) | bool
+
+- name: Join k3s control plane
+  ansible.builtin.import_tasks: control-plane-join.yml
+  when: k3s_role == "server" and not (k3s_init_node | default(false) | bool)
 
 - name: Install k3s worker agent
   ansible.builtin.import_tasks: workers.yml
