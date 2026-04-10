@@ -22,6 +22,8 @@ providers:
     enabled: true
   kubernetesIngress:
     enabled: false
+  kubernetesCRD:
+    enabled: true
 
 # Do not create a GatewayClass/Gateway automatically — managed in k8s/traefik/gateway.yaml
 gateway:

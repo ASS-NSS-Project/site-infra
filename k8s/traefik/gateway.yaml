@@ -61,19 +61,6 @@ spec:
           - name: ass-nss-argocd-tls
             namespace: traefik
 
-    - name: websecure-longhorn
-      port: 443
-      protocol: HTTPS
-      hostname: longhorn.ass-nss.jkuzel02.online
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: ass-nss-longhorn-tls
-            namespace: traefik
-
     - name: websecure-harbor
       port: 443
       protocol: HTTPS

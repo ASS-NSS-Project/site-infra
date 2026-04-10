@@ -50,7 +50,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: ass-nss-longhorn-tls
-  namespace: traefik
+  namespace: longhorn-system
 spec:
   secretName: ass-nss-longhorn-tls
   issuerRef:
