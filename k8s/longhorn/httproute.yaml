@@ -8,6 +8,8 @@ kind: HTTPRoute
 metadata:
   name: longhorn-ui
   namespace: longhorn-system
+  annotations:
+    traefik.io/router.middlewares: longhorn-system-longhorn-auth@kubernetescrd
 spec:
   parentRefs:
     - name: traefik-gateway

@@ -228,3 +228,6 @@ ansible/inventory/group_vars/all/terraform.yml
 
 # SSH
 .ssh/*config.*
+
+# Kubernetes Secrets (never commit plaintext secrets)
+*Secret.yaml
