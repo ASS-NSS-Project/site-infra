@@ -1,0 +1,40 @@
+# HashiCorp Vault
+# TLS is terminated at Traefik — Vault listens on plain HTTP internally.
+# Standalone mode — single pod with file storage on Longhorn.
+#
+# After first deployment Vault must be initialized and unsealed manually:
+#   kubectl exec -n vault vault-0 -- vault operator init
+#   kubectl exec -n vault vault-0 -- vault operator unseal
+
+ui:
+  enabled: true
+  serviceType: ClusterIP
+  externalPort: 8200
+
+server:
+  ha:
+    enabled: false
+
+  standalone:
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable     = 1
+        address         = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+
+      storage "file" {
+        path = "/vault/data"
+      }
+
+  dataStorage:
+    enabled: true
+    size: 2Gi
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+
+# Vault Agent Injector — disable unless injecting secrets into pods
+injector:
+  enabled: false

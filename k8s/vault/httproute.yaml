@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  parentRefs:
+    - name: traefik-gateway
+      namespace: traefik
+      sectionName: websecure-vault
+  hostnames:
+    - vault.ass-nss.jkuzel02.online
+  rules:
+    - backendRefs:
+        - name: vault-ui
+          port: 8200

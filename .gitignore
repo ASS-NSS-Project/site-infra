@@ -231,3 +231,6 @@ ansible/inventory/group_vars/all/terraform.yml
 
 # Kubernetes Secrets (never commit plaintext secrets)
 *Secret.yaml
+
+# Others
+.DS_Store

@@ -16,6 +16,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | TLS | cert-manager + Let's Encrypt HTTP-01 |
 | Storage | Longhorn (LVM over Cinder volumes) |
 | Registry | Harbor (container image registry) |
+| Secrets | HashiCorp Vault |
 
 ## Cluster layout
 
@@ -62,7 +63,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── cert-manager/   # ClusterIssuers (prod, staging, self-signed)
     ├── longhorn/       # Longhorn HTTPRoute
     ├── argocd/         # ArgoCD HTTPRoute
-    └── harbor/         # Harbor HTTPRoute
+    ├── harbor/         # Harbor HTTPRoute
+    └── vault/          # Vault HTTPRoute
 ```
 
 ## Prerequisites
@@ -130,9 +132,9 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 
 | Wave | Applications deployed |
 |------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor` (Helm charts) |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault` (Helm charts) |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers) |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config` (HTTPRoutes) |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config` (HTTPRoutes) |
 
 Monitor sync status:
 ```bash
@@ -150,6 +152,7 @@ All A records point to the **Ingress LB floating IP** (`terraform output ingress
 | `argocd.ass-nss.jkuzel02.online` | ArgoCD UI |
 | `longhorn.ass-nss.jkuzel02.online` | Longhorn UI |
 | `harbor.ass-nss.jkuzel02.online` | Harbor container registry |
+| `vault.ass-nss.jkuzel02.online` | HashiCorp Vault |
 
 ## ArgoCD
 
@@ -183,6 +186,8 @@ Three issuers are available in `k8s/cert-manager/`:
 | `letsencrypt-staging` | Testing — untrusted CA, no rate limits |
 | `letsencrypt-prod` | Production — trusted, rate limited |
 | `selfsigned-ca` | Offline / dev — import `selfsigned-ca-tls` secret as trusted CA |
+
+**Always test with `letsencrypt-staging` first.** Staging has relaxed rate limits — if issuance succeeds (browser will show a warning, that's expected), DNS and port 80 routing are confirmed working. Then switch `issuerRef.name` to `letsencrypt-prod`. Production is rate-limited to 50 certificates per domain per week; repeated failed attempts can lock you out for hours ([Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/)).
 
 cert-manager uses **HTTP-01 challenge** — one certificate per hostname (wildcard requires DNS-01).
 Port 80 must be reachable from the internet during issuance. Renewals are automatic.
@@ -222,6 +227,25 @@ kubectl create secret docker-registry harbor-credentials \
   --docker-password=<password> \
   -n <namespace>
 ```
+
+## HashiCorp Vault
+
+UI: `https://vault.ass-nss.jkuzel02.online`
+
+Vault runs in **standalone mode** (single pod, file storage on Longhorn). TLS is terminated at Traefik; Vault itself listens on plain HTTP internally.
+
+**First-time initialization** (required once after the pod first starts):
+```bash
+kubectl exec -n vault vault-0 -- vault operator init
+```
+
+Save the 5 unseal keys and root token somewhere safe (e.g. a password manager). Then unseal:
+```bash
+# Run 3 times with 3 different unseal keys
+kubectl exec -n vault vault-0 -- vault operator unseal
+```
+
+> Vault re-seals on every pod restart and must be manually unsealed again. For a production setup, configure auto-unseal via a cloud KMS or a transit seal.
 
 ## Longhorn storage
 
