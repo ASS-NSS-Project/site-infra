@@ -60,11 +60,11 @@
 
 - name: Set up worker Longhorn storage (LVM)
   ansible.builtin.import_tasks: disks-workers.yml
-  when: k3s_role == "agent"
+  when: "'workers' in group_names"
 
 - name: Set up control plane extra disk
   ansible.builtin.import_tasks: disks-control-plane.yml
-  when: k3s_role == "server"
+  when: "'control_plane' in group_names"
 
 # --- Sudoers ---
 

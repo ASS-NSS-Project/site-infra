@@ -21,7 +21,7 @@
     cmd: curl -sfL https://get.rke2.io | sh -
     creates: /usr/local/bin/rke2
   environment:
-    INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+    INSTALL_RKE2_CHANNEL: "{{ rke2_channel }}"
 
 - name: Enable and start RKE2 server
   ansible.builtin.systemd:
