@@ -6,8 +6,10 @@ metadata:
 spec:
   instances: 1
   image: quay.io/keycloak/keycloak:26.5.5
+  startOptimized: false
   hostname:
     hostname: keycloak.ass-nss.jkuzel02.online
+    strict: false
   http:
     httpEnabled: true
   proxy:
@@ -27,6 +29,3 @@ spec:
     key: admin-password
   ingress:
     enabled: false
-  additionalOptions:
-    - name: hostname-strict
-      value: "false"
