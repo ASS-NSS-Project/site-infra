@@ -1,10 +1,11 @@
 # HashiCorp Vault
 # TLS is terminated at Traefik — Vault listens on plain HTTP internally.
 # Standalone mode — single pod with file storage on Longhorn.
+# Auto-unseal via GCP KMS — no manual unseal needed after pod restarts.
 #
-# After first deployment Vault must be initialized and unsealed manually:
-#   kubectl exec -n vault vault-0 -- vault operator init
-#   kubectl exec -n vault vault-0 -- vault operator unseal
+# First-time init (once only, after first deployment):
+#   kubectl exec -n vault vault-helm-0 -- vault operator init
+# Save the recovery keys and root token — unseal is automatic from this point.
 
 ui:
   enabled: true
@@ -14,6 +15,19 @@ ui:
 server:
   ha:
     enabled: false
+
+  extraEnvironmentVars:
+    GOOGLE_APPLICATION_CREDENTIALS: /vault/kms/credentials.json
+
+  volumes:
+    - name: kms-creds
+      secret:
+        secretName: vault-kms-sa
+
+  volumeMounts:
+    - name: kms-creds
+      mountPath: /vault/kms
+      readOnly: true
 
   standalone:
     config: |
@@ -27,6 +41,13 @@ server:
 
       storage "file" {
         path = "/vault/data"
+      }
+
+      seal "gcpckms" {
+        project    = "enc-ass-nss-project"
+        region     = "global"
+        key_ring   = "vault-keyring"
+        crypto_key = "vault-unseal-key"
       }
 
   dataStorage:
