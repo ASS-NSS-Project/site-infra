@@ -1,17 +1,17 @@
-# Wave 3 — Keycloak CR + HTTPRoute (operator from wave 1, postgres from wave 2)
+# Wave 1 — Keycloak Operator (CRDs + controller, installed via Kustomize)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: keycloak-config
+  name: keycloak-operator
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
     repoURL: https://github.com/ASS-NSS-Project/site-infra
     targetRevision: kost
-    path: k8s/keycloak
+    path: k8s/keycloak-operator
   destination:
     server: https://kubernetes.default.svc
     namespace: keycloak
@@ -21,3 +21,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

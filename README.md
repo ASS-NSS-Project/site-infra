@@ -18,7 +18,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Registry | Harbor (container image registry) |
 | Secrets | HashiCorp Vault |
 | Database | CloudNativePG (PostgreSQL operator) |
-| Identity | Keycloak |
+| Identity | Keycloak (Keycloak Operator) |
 
 ## Cluster layout
 
@@ -67,7 +67,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── argocd/         # ArgoCD HTTPRoute
     ├── harbor/         # Harbor HTTPRoute
     ├── vault/          # Vault HTTPRoute
-    ├── keycloak/           # Keycloak HTTPRoute
+    ├── keycloak/           # Keycloak CR + HTTPRoute
+    ├── keycloak-operator/  # Keycloak Operator (Kustomize, remote resources)
     └── keycloak-postgres/  # CNPG Cluster resource
 ```
 
@@ -136,9 +137,9 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 
 | Wave | Applications deployed |
 |------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg` (Helm charts) |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg` (Helm charts), `keycloak-operator` (CRDs + controller) |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster) |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (Keycloak Deployment + HTTPRoute) |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (Keycloak CR + HTTPRoute) |
 
 Monitor sync status:
 ```bash
@@ -237,9 +238,9 @@ kubectl create secret docker-registry harbor-credentials \
 
 UI: `https://keycloak.ass-nss.jkuzel02.online`
 
-Uses **CloudNativePG** for PostgreSQL — the operator auto-generates database credentials into secret `keycloak-postgres-app`.
+Deployed via the **official Keycloak Operator** (`k8s.keycloak.org/v2alpha1`) at v26.5.5. Uses **CloudNativePG** for PostgreSQL — the operator auto-generates database credentials into secret `keycloak-postgres-app`.
 
-**Prerequisite** — set the admin password and apply the secret before ArgoCD syncs wave 3:
+**Prerequisite** — create the admin bootstrap secret before ArgoCD syncs wave 3:
 ```bash
 # Edit k8s/keycloak/keycloak-credentialsSecret.yaml (gitignored), then:
 kubectl apply -f k8s/keycloak/keycloak-credentialsSecret.yaml

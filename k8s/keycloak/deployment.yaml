@@ -1,75 +1,30 @@
-apiVersion: v1
-kind: Service
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
 metadata:
   name: keycloak
   namespace: keycloak
 spec:
-  selector:
-    app: keycloak
-  ports:
-    - port: 80
-      targetPort: 8080
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: keycloak
-  namespace: keycloak
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: keycloak
-  template:
-    metadata:
-      labels:
-        app: keycloak
-    spec:
-      containers:
-        - name: keycloak
-          image: quay.io/keycloak/keycloak:26.5.5
-          args: ["start"]
-          env:
-            - name: KC_DB
-              value: postgres
-            - name: KC_DB_URL
-              value: jdbc:postgresql://keycloak-postgres-rw:5432/keycloak
-            - name: KC_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-postgres-app
-                  key: username
-            - name: KC_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-postgres-app
-                  key: password
-            - name: KC_HTTP_ENABLED
-              value: "true"
-            - name: KC_PROXY_HEADERS
-              value: xforwarded
-            - name: KC_HOSTNAME
-              value: keycloak.ass-nss.jkuzel02.online
-            - name: KC_HOSTNAME_STRICT
-              value: "false"
-            - name: KEYCLOAK_ADMIN
-              value: admin
-            - name: KEYCLOAK_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-credentials
-                  key: admin-password
-          ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 9000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 9000
-            initialDelaySeconds: 60
-            periodSeconds: 30
+  instances: 1
+  image: quay.io/keycloak/keycloak:26.5.5
+  hostname:
+    hostname: keycloak.ass-nss.jkuzel02.online
+  http:
+    httpEnabled: true
+  proxy:
+    headers: xforwarded
+  db:
+    vendor: postgres
+    url: jdbc:postgresql://keycloak-postgres-rw:5432/keycloak
+    usernameSecret:
+      name: keycloak-postgres-app
+      key: username
+    passwordSecret:
+      name: keycloak-postgres-app
+      key: password
+  bootstrapAdminUsername: admin
+  bootstrapAdminPasswordSecret:
+    name: keycloak-credentials
+    key: admin-password
+  additionalOptions:
+    - name: hostname-strict
+      value: "false"
