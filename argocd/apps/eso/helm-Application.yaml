@@ -12,6 +12,8 @@ spec:
     repoURL: https://charts.external-secrets.io
     chart: external-secrets
     targetRevision: ">=0.10.0"
+    helm:
+      releaseName: external-secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: external-secrets
