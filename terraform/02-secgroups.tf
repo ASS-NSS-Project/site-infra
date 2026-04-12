@@ -20,8 +20,6 @@ resource "openstack_networking_secgroup_rule_v2" "ssh_external" {
   port_range_max    = 22
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.external.id
-
-  depends_on = [openstack_networking_secgroup_v2.external]
 }
 
 resource "openstack_networking_secgroup_rule_v2" "icmp_external" {
@@ -30,8 +28,6 @@ resource "openstack_networking_secgroup_rule_v2" "icmp_external" {
   protocol          = "icmp"
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.external.id
-
-  depends_on = [openstack_networking_secgroup_v2.external]
 }
 
 resource "openstack_networking_secgroup_rule_v2" "http_external" {
@@ -42,8 +38,6 @@ resource "openstack_networking_secgroup_rule_v2" "http_external" {
   port_range_max    = 80
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.external.id
-
-  depends_on = [openstack_networking_secgroup_v2.external]
 }
 
 resource "openstack_networking_secgroup_rule_v2" "https_external" {
@@ -54,8 +48,6 @@ resource "openstack_networking_secgroup_rule_v2" "https_external" {
   port_range_max    = 443
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.external.id
-
-  depends_on = [openstack_networking_secgroup_v2.external]
 }
 
 # Kubernetes API server — exposed via API LB FIP
@@ -67,8 +59,6 @@ resource "openstack_networking_secgroup_rule_v2" "k8s_api_external" {
   port_range_max    = 6443
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.external.id
-
-  depends_on = [openstack_networking_secgroup_v2.external]
 }
 
 # --- Internal Rules (all cluster nodes) ---
@@ -80,16 +70,12 @@ resource "openstack_networking_secgroup_rule_v2" "all_internal_subnet" {
   ethertype         = "IPv4"
   remote_ip_prefix  = "10.8.0.0/24"
   security_group_id = openstack_networking_secgroup_v2.internal.id
-
-  depends_on = [openstack_networking_secgroup_v2.internal]
 }
 
 # Allow intra-cluster traffic (pods, kubelet, etcd, VXLAN)
 resource "openstack_networking_secgroup_rule_v2" "all_internal_group" {
-  direction         = "ingress"
-  ethertype         = "IPv4"
-  remote_group_id   = openstack_networking_secgroup_v2.internal.id
+  direction       = "ingress"
+  ethertype       = "IPv4"
+  remote_group_id = openstack_networking_secgroup_v2.internal.id
   security_group_id = openstack_networking_secgroup_v2.internal.id
-
-  depends_on = [openstack_networking_secgroup_v2.internal]
 }

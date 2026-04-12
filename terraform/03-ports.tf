@@ -23,7 +23,7 @@ resource "openstack_networking_port_v2" "cp" {
   name           = "cp-${count.index}-port"
   network_id     = openstack_networking_network_v2.cluster.id
   admin_state_up = true
-  
+
   security_group_ids = [
     openstack_networking_secgroup_v2.external.id,
     openstack_networking_secgroup_v2.internal.id
@@ -33,13 +33,6 @@ resource "openstack_networking_port_v2" "cp" {
     subnet_id  = openstack_networking_subnet_v2.cluster.id
     ip_address = local.cp_ips[count.index]
   }
-
-  depends_on = [
-    openstack_networking_network_v2.cluster,
-    openstack_networking_subnet_v2.cluster,
-    openstack_networking_secgroup_v2.external,
-    openstack_networking_secgroup_v2.internal
-  ]
 }
 
 resource "openstack_networking_port_v2" "worker" {
@@ -55,10 +48,4 @@ resource "openstack_networking_port_v2" "worker" {
     subnet_id  = openstack_networking_subnet_v2.cluster.id
     ip_address = local.worker_ips[count.index]
   }
-
-  depends_on = [
-    openstack_networking_network_v2.cluster,
-    openstack_networking_subnet_v2.cluster,
-    openstack_networking_secgroup_v2.internal
-  ]
 }

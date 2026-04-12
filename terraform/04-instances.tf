@@ -9,21 +9,17 @@ resource "openstack_compute_instance_v2" "control_plane" {
   key_pair    = "jkuzel"
 
   network {port = openstack_networking_port_v2.cp[count.index].id}
-
-  depends_on = [openstack_networking_port_v2.cp]
 }
 
 # --- RKE2 Worker Nodes (4 nodes) ---
 
 resource "openstack_compute_instance_v2" "worker" {
   count = 4
-  
+
   name        = "worker-${count.index}"
   image_name  = "debian-13-x86_64"
   flavor_name = "c2.8core-30ram" # 8 vCPU, 30 GiB RAM
   key_pair    = "jkuzel"
 
   network {port = openstack_networking_port_v2.worker[count.index].id}
-
-  depends_on = [openstack_networking_port_v2.worker]
 }

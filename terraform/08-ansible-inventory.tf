@@ -13,8 +13,6 @@ resource "local_file" "cp0_host_vars" {
     "${path.module}/templates/cp-0-host-vars.yml.tpl",
     { cp0_fip = openstack_networking_floatingip_v2.cp0_ssh.address }
   )
-
-  depends_on = [openstack_networking_floatingip_v2.cp0_ssh]
 }
 
 resource "local_file" "ansible_terraform_vars" {
@@ -23,6 +21,4 @@ resource "local_file" "ansible_terraform_vars" {
     "${path.module}/templates/terraform-vars.yml.tpl",
     { api_lb_fip = openstack_networking_floatingip_v2.cluster_lb.address }
   )
-
-  depends_on = [openstack_networking_floatingip_v2.cluster_lb]
 }
