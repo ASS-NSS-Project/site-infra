@@ -138,7 +138,7 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 |------|-----------------------|
 | 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg` (Helm charts) |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster) |
-| 3 | `keycloak` (Helm chart), `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (HTTPRoutes) |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (Keycloak Deployment + HTTPRoute) |
 
 Monitor sync status:
 ```bash
