@@ -24,7 +24,7 @@ spec:
       name: keycloak-pg-app
       key: password
   bootstrapAdmin:                                                                                                                                                                                                                                      
-      user: admin 
+      user: "admin" 
       passwordSecret:
         name: keycloak-credentials
         key: admin-password
