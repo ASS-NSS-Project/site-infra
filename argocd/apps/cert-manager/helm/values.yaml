@@ -1,0 +1,6 @@
+crds:
+  enabled: true
+
+# Required for Gateway API (HTTPRoute-based HTTP-01 solver)
+extraArgs:
+  - --enable-gateway-api

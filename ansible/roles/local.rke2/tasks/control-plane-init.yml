@@ -52,13 +52,13 @@
 - name: Fetch kubeconfig
   ansible.builtin.fetch:
     src: /etc/rancher/rke2/rke2.yaml
-    dest: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    dest: "{{ playbook_dir }}/artifacts/kubeconfig"
     flat: true
 
 # Replace 127.0.0.1 with the API LB public FIP so kubectl works from outside
 - name: Fix kubeconfig server address
   ansible.builtin.replace:
-    path: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    path: "{{ playbook_dir }}/artifacts/kubeconfig"
     regexp: 'https://127\.0\.0\.1:6443'
     replace: "https://{{ rke2_api_lb_fip }}:6443"
   delegate_to: localhost

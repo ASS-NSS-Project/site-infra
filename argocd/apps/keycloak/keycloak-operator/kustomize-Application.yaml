@@ -1,0 +1,30 @@
+# Wave 1 — Keycloak Operator (CRDs + controller, installed via Kustomize)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak-operator-kustomize
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: security
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/keycloak-operator/kustomize
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keycloak
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

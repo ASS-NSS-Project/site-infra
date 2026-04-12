@@ -1,58 +1,51 @@
-# Play 1: System setup on all nodes
+# System setup on all nodes
 - name: System setup
   hosts: rke2_cluster
   become: true
   tags: system
-  roles:
-    - local.system
+  roles: [ "local.system" ]
 
-# Play 2: Install RKE2 on all control plane nodes.
-# serial: 1 guarantees cp-0 (first in inventory) initialises the cluster before
-# cp-1 and cp-2 attempt to join. The role detects init vs join by position.
-- name: Install RKE2 control plane
-  hosts: control_plane
-  serial: 1
+# Install RKE2 on all cluster nodes.
+# The role dispatches init / join / worker logic by group membership.
+# cp-0 runs init; join and worker tasks gate on port 9345 being reachable,
+# so ordering is enforced inside the role rather than via serial.
+- name: Install RKE2
+  hosts: rke2_cluster
   become: true
   tags: rke2
-  roles:
-    - local.rke2
+  roles: [ "local.rke2" ]
 
-# Play 3: Install RKE2 agent on workers (runs in parallel across all 4).
-- name: Install RKE2 workers
-  hosts: workers
-  become: true
-  tags: rke2
-  roles:
-    - local.rke2
-
-# Play 4: Bootstrap ArgoCD on the first control plane node.
+# Bootstrap ArgoCD from localhost using artifacts/kubeconfig.
 # Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD.
 - name: Bootstrap ArgoCD
-  hosts: control_plane[0]
-  become: true
+  hosts: localhost
+  connection: local
   tags: argocd
-  roles:
-    - local.argocd
+  roles: [ "local.argocd" ]
 
-# Play 5: Deploy all ArgoCD Applications.
-# Applies every manifest from k8s/apps/ — useful for initial bootstrap
-# or forcing re-registration without waiting for App of Apps sync.
+# Apply bootstrap resources and kick off ArgoCD Applications.
+# Runs locally — secrets must exist before ArgoCD syncs apps that reference them.
 - name: Deploy ArgoCD applications
-  hosts: control_plane[0]
-  become: true
-  tags: argocd
+  hosts: localhost
+  connection: local
+  tags: [ argocd, apps ]
   tasks:
-    - name: Copy k8s/apps manifests to control plane
-      ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../k8s/apps/"
-        dest: /tmp/argocd-apps/
-        mode: "0644"
+    - name: Apply bootstrap secrets
+      kubernetes.core.k8s:
+        src: "{{ item }}"
+        state: present
+        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"
+      loop: "{{ lookup('fileglob', playbook_dir + '/files/k8s/manifests/*.yaml', wantlist=True) }}"
 
-    - name: Apply all ArgoCD Application manifests
-      ansible.builtin.shell:
-        cmd: kubectl apply -f /tmp/argocd-apps/
-      environment:
-        KUBECONFIG: /etc/rancher/rke2/rke2.yaml
-        PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
-      register: apps_apply
-      changed_when: "'configured' in apps_apply.stdout or 'created' in apps_apply.stdout"
+    - name: Apply ArgoCD projects
+      kubernetes.core.k8s:
+        src: "{{ item }}"
+        state: present
+        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"
+      loop: "{{ lookup('fileglob', playbook_dir + '/../argocd/projects/*.yaml', wantlist=True) }}"
+
+    - name: Apply root Application
+      kubernetes.core.k8s:
+        src: "{{ playbook_dir }}/../argocd/root-Application.yaml"
+        state: present
+        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"

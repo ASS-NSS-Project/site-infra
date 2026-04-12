@@ -1,0 +1,19 @@
+# Step 2 — self-signed CA certificate (stored in cert-manager namespace)
+# Self-signed CA — useful for local testing or when Let's Encrypt is unreachable.
+# Browsers will show a warning; import the CA cert to trust it locally.
+# Usage: set issuerRef.name to "selfsigned-ca" in any Certificate resource.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: selfsigned-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: ass-nss.jkuzel02.online
+  secretName: selfsigned-ca-tls
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: ClusterIssuer

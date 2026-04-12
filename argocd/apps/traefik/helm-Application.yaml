@@ -1,0 +1,29 @@
+# Wave 1 — Traefik ingress controller (Helm chart + values from git)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik-helm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: infrastructure
+  sources:
+    - repoURL: https://traefik.github.io/charts
+      chart: traefik
+      targetRevision: ">=33.0.0"
+      helm:
+        valueFiles:
+          - $values/argocd/apps/traefik/helm/values.yaml
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-root-tls
+  namespace: traefik
+spec:
+  secretName: ass-nss-root-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - ass-nss.jkuzel02.online

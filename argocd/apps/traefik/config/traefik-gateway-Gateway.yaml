@@ -1,0 +1,121 @@
+# Single Gateway for the entire cluster.
+# HTTP listener is open to all namespaces so cert-manager can attach
+# HTTPRoutes for HTTP-01 ACME challenges.
+#
+# TLS termination: one HTTPS listener per hostname (HTTP-01 limitation —
+# wildcard certs require DNS-01).
+#
+# To add a new subdomain (e.g. website.ass-nss.jkuzel02.online):
+#   1. Add a new listener block below (copy the websecure-root example)
+#   2. Add a Certificate resource in argocd/apps/cert-manager/config/
+#   3. ArgoCD will sync both, cert-manager handles the rest
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: traefik-gateway
+  namespace: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  gatewayClassName: traefik
+  listeners:
+    # HTTP — ACME HTTP-01 challenges + redirect to HTTPS
+    - name: web
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    # HTTPS — root domain
+    - name: websecure-root
+      port: 443
+      protocol: HTTPS
+      hostname: ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-root-tls
+            namespace: traefik
+
+    - name: websecure-argocd
+      port: 443
+      protocol: HTTPS
+      hostname: argocd.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-argocd-tls
+            namespace: traefik
+
+    - name: websecure-harbor
+      port: 443
+      protocol: HTTPS
+      hostname: harbor.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-harbor-tls
+            namespace: traefik
+
+    - name: websecure-vault
+      port: 443
+      protocol: HTTPS
+      hostname: vault.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-vault-tls
+            namespace: traefik
+
+    - name: websecure-keycloak
+      port: 443
+      protocol: HTTPS
+      hostname: keycloak.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-keycloak-tls
+            namespace: traefik
+
+    - name: websecure-grafana
+      port: 443
+      protocol: HTTPS
+      hostname: grafana.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-grafana-tls
+            namespace: traefik
+
+    # --- Add new subdomain listeners here ---
+    # - name: websecure-<name>
+    #   port: 443
+    #   protocol: HTTPS
+    #   hostname: <name>.ass-nss.jkuzel02.online
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: All
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #       - name: ass-nss-<name>-tls
+    #         namespace: traefik

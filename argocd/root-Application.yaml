@@ -1,0 +1,24 @@
+# Root Application — applied by Ansible after ArgoCD is installed.
+# Recursively scans argocd/apps/ for *-Application.yaml files and creates
+# all child Applications. Lives outside apps/ so it is not self-managed.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps
+    directory:
+      recurse: true
+      include: "*-Application.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

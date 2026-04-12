@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-harbor-tls
+  namespace: traefik
+spec:
+  secretName: ass-nss-harbor-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - harbor.ass-nss.jkuzel02.online

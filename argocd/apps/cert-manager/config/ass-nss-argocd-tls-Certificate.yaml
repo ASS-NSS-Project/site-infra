@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-argocd-tls
+  namespace: traefik
+spec:
+  secretName: ass-nss-argocd-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - argocd.ass-nss.jkuzel02.online

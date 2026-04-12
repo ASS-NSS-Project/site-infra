@@ -1,0 +1,29 @@
+# Wave 1 — cert-manager (Helm chart + values from git)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-helm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: infrastructure
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: ">=1.16.0"
+      helm:
+        valueFiles:
+          - $values/argocd/apps/cert-manager/helm/values.yaml
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

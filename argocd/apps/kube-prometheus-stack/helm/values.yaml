@@ -1,0 +1,44 @@
+# kube-prometheus-stack
+# Grafana is the only UI exposed externally (via HTTPRoute).
+# Prometheus and Alertmanager are cluster-internal.
+#
+# Prerequisite — create the Grafana admin secret before ArgoCD syncs:
+#   Applied by Ansible from k8s/manifests/grafana-credentials-Secret.yaml
+
+grafana:
+  admin:
+    existingSecret: grafana-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+  ingress:
+    enabled: false
+  service:
+    type: ClusterIP
+    port: 80
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    size: 5Gi
+
+prometheus:
+  prometheusSpec:
+    retention: 14d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 20Gi
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 2Gi

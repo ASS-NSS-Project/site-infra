@@ -1,4 +1,10 @@
 ---
+- name: Wait for RKE2 registration endpoint to be ready
+  ansible.builtin.wait_for:
+    host: "{{ rke2_api_lb_vip }}"
+    port: 9345
+    timeout: 300
+
 # Read the token from CP-0 in case this play runs independently (not after init play)
 - name: Read RKE2 token from init node
   ansible.builtin.slurp:

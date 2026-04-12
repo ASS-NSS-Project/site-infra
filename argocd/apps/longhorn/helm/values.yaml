@@ -1,0 +1,28 @@
+# Longhorn distributed block storage
+# Prerequisites on worker nodes (handled by Ansible local.system role):
+#   - open-iscsi installed
+#   - /var/lib/longhorn mounted (LVM over 3 × 158 GB Cinder volumes per node)
+
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 2   # 2 replicas: tolerates 1 worker loss, 150 GB usable
+
+defaultSettings:
+  defaultDataPath: /var/lib/longhorn
+  defaultReplicaCount: 2
+
+  # Only schedule storage on worker nodes — control plane has no Longhorn disk
+  replicaSoftAntiAffinity: true
+  storageMinimalAvailablePercentage: 10
+  storageReservedPercentageForDefaultDisk: 5
+
+  # Automatically clean up system-generated snapshots
+  autoCleanupSystemGeneratedSnapshot: true
+
+longhornUI:
+  replicas: 1
+
+# Disable the pre-upgrade checker job — it fails on fresh installs via ArgoCD
+# because the longhorn-service-account doesn't exist when the hook runs.
+preUpgradeChecker:
+  jobEnabled: false

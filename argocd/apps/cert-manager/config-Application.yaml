@@ -1,0 +1,23 @@
+# Wave 2 — ClusterIssuers + Certificates (depends on cert-manager wave 1 + Gateway wave 2)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/cert-manager/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
