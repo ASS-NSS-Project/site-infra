@@ -3,7 +3,7 @@
 # No manual IP copy-paste required.
 
 locals {
-  ansible_root = "${path.module}/../ansible"
+  ansible_root = "${path.module}/../../ansible"
 }
 
 # cp-0's ansible_host must be the floating IP — generated here, gitignored.

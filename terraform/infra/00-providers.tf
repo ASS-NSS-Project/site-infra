@@ -1,8 +1,7 @@
 terraform {
-  # Remote Backend for Terraform State - Stored in GCS Bucket
   backend "gcs" {
     bucket = "k3s-cluster"
-    prefix = "terraform/state"
+    prefix = "terraform/infra/state"
   }
 
   required_providers {
@@ -14,8 +13,16 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.0"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
+    }
   }
 }
 
-# Reference, where to look for the creds in `clouds.yaml` file
 provider "openstack" { cloud = "openstack" }
+
+provider "google" {
+  project = "enc-ass-nss-project"
+  region  = "europe-west1"
+}

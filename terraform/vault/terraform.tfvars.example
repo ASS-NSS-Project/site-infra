@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and fill in the values.
+# terraform.tfvars is gitignored — never commit it.
+
+vault_root_token  = "hvs.XXXXXXXXXXXXXXXXXXXXXXXX"
+
+grafana_password  = ""
+keycloak_password = ""
+harbor_password   = ""
