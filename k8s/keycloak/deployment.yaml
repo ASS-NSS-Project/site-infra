@@ -25,6 +25,8 @@ spec:
   bootstrapAdminPasswordSecret:
     name: keycloak-credentials
     key: admin-password
+  ingress:
+    enabled: false
   additionalOptions:
     - name: hostname-strict
       value: "false"
