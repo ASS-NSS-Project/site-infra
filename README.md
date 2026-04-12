@@ -92,7 +92,13 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 
 - Terraform >= 1.11
 - Ansible >= 2.16
+- Helm >= 3.0 — required by the `kubernetes.core.helm` module, must be in `PATH` on the machine running the playbook
 - `clouds.yaml` at `terraform/clouds.yaml` (gitignored) — OpenStack application credentials
+
+Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 Install Ansible collections:
 ```bash

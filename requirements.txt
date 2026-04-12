@@ -1,3 +1,4 @@
-ansible
-gcloud
-python-openstackclient
+ansible==13.5.0
+gcloud==0.18.3
+python-openstackclient==9.0.0
+kubernetes==35.0.0
