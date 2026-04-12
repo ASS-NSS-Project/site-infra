@@ -1,6 +1,9 @@
 # Harbor container registry
 # TLS is terminated at Traefik — Harbor itself runs plain HTTP internally.
 
+existingSecretAdminPassword: harbor-credentials
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+
 expose:
   type: clusterIP
   tls:

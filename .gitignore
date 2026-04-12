@@ -210,7 +210,7 @@ __marimo__/
 .claude
 
 # OpenStack
-clouds.yaml
+**/clouds.yaml
 
 # Terraform
 .terraform
@@ -218,6 +218,7 @@ clouds.yaml
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
+terraform/**/terraform.tfvars
 
 # Ansible
 ansible.cfg
@@ -231,7 +232,11 @@ ansible/inventory/group_vars/all/terraform.yml
 .ssh/*config.*
 
 # Kubernetes Secrets (never commit plaintext secrets)
-*Secret.yaml
+# *-Secret.yaml matches foo-Secret.yaml but NOT foo-ExternalSecret.yaml or foo-ClusterSecretStore.yaml
+*-Secret.yaml
+
+# GCP service account keys
+ansible/files/vault/kms-sa-key.json
 
 # Others
 .DS_Store
