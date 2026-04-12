@@ -308,13 +308,13 @@ Vault runs in **standalone mode** (single pod, file storage on Longhorn). TLS is
 
 **First-time initialization** (required once after the pod first starts):
 ```bash
-kubectl exec -n vault vault-0 -- vault operator init
+kubectl exec -n vault vault-helm-0 -- vault operator init
 ```
 
 Save the 5 unseal keys and root token somewhere safe (e.g. a password manager). Then unseal:
 ```bash
 # Run 3 times with 3 different unseal keys
-kubectl exec -n vault vault-0 -- vault operator unseal
+kubectl exec -n vault vault-helm-0 -- vault operator unseal
 ```
 
 > Vault re-seals on every pod restart and must be manually unsealed again. For a production setup, configure auto-unseal via a cloud KMS or a transit seal.
