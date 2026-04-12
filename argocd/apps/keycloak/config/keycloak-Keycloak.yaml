@@ -18,10 +18,10 @@ spec:
     vendor: postgres
     url: jdbc:postgresql://keycloak-postgres-rw:5432/keycloak
     usernameSecret:
-      name: keycloak-postgres-app
+      name: keycloak-pg-app
       key: username
     passwordSecret:
-      name: keycloak-postgres-app
+      name: keycloak-pg-app
       key: password
   bootstrapAdminUsername: admin
   bootstrapAdminPasswordSecret:
