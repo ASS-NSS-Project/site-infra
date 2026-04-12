@@ -100,6 +100,19 @@ spec:
           - name: ass-nss-keycloak-tls
             namespace: traefik
 
+    - name: websecure-grafana
+      port: 443
+      protocol: HTTPS
+      hostname: grafana.ass-nss.jkuzel02.online
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-grafana-tls
+            namespace: traefik
+
     # --- Add new subdomain listeners here ---
     # - name: websecure-<name>
     #   port: 443
@@ -134,6 +147,7 @@ spec:
     - harbor.ass-nss.jkuzel02.online
     - vault.ass-nss.jkuzel02.online
     - keycloak.ass-nss.jkuzel02.online
+    - grafana.ass-nss.jkuzel02.online
   rules:
     - filters:
         - type: RequestRedirect

@@ -19,6 +19,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Secrets | HashiCorp Vault |
 | Database | CloudNativePG (PostgreSQL operator) |
 | Identity | Keycloak (Keycloak Operator) |
+| Monitoring | kube-prometheus-stack (Prometheus + Grafana + Alertmanager) |
 
 ## Cluster layout
 
@@ -69,7 +70,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── vault/          # Vault HTTPRoute
     ├── keycloak/           # Keycloak CR + HTTPRoute
     ├── keycloak-operator/  # Keycloak Operator (Kustomize, remote resources)
-    └── keycloak-postgres/  # CNPG Cluster resource
+    ├── keycloak-postgres/  # CNPG Cluster resource
+    └── grafana/            # Grafana HTTPRoute
 ```
 
 ## Prerequisites
@@ -86,6 +88,14 @@ ansible-galaxy collection install -r ansible/requirements.yml
 ## Deployment
 
 ### 1. Infrastructure — Terraform
+
+Unlike Ansible's imperative approach, Terraform is **declarative** — you describe the desired end state and Terraform figures out what needs to be created, updated, or destroyed to reach it. Resource ordering follows automatically from the **dependency graph** — each resource declares which other resources it depends on (explicitly via `depends_on`, or implicitly by referencing their attributes), and Terraform applies them in the correct order, parallelising independent resources where possible.
+
+Terraform compares the state file against your configuration on every `plan`. If the state is missing or out of sync with reality — e.g. a resource was deleted manually outside of Terraform — it will try to recreate it, which can cause conflicts or outright failures if the underlying provider rejects a duplicate. Keeping state intact and in sync is therefore critical.
+
+Terraform state is stored remotely rather than locally so that the state file is not lost when cloning the repo fresh, multiple team members share a single source of truth.
+
+Terraform state is stored remotely in a **Google Cloud Storage bucket** (`k3s-cluster`, prefix `terraform/state`), configured in `terraform/00-provider.tf`. This requires GCS credentials to be available before running any Terraform command — authenticate with `gcloud auth application-default login` or set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
 
 ```bash
 cd terraform
@@ -104,6 +114,8 @@ terraform output ingress_lb_public_ip
 ```
 
 ### 2. Cluster provisioning — Ansible
+
+Ansible executes tasks in **declaration order** — top to bottom within each play, play by play within the playbook. There is no dependency graph; ordering is the author's responsibility. The playbook is structured so that each play's prerequisites are guaranteed to be complete before the next one starts (e.g. k3s must be initialised before nodes can join, and the cluster must be healthy before ArgoCD is bootstrapped).
 
 ```bash
 cd ansible
@@ -133,13 +145,15 @@ The full playbook in order:
 
 ### 3. GitOps — ArgoCD takes over
 
-Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all components in sync waves:
+Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all components in **sync waves**.
 
-| Wave | Applications deployed |
-|------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg` (Helm charts), `keycloak-operator` (CRDs + controller) |
-| 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster) |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (Keycloak CR + HTTPRoute) |
+Sync waves are a **deployment ordering mechanism**: ArgoCD applies all resources in wave N, waits for them to reach a healthy state, and only then proceeds to wave N+1. This guarantees that operators and core infrastructure are fully ready before the resources that depend on them are created — for example, the CNPG operator (wave 1) must be running and its CRDs registered before a `Cluster` resource (wave 2) can be applied, and the Traefik Gateway (wave 2) must be up before HTTPRoutes (wave 3) can be programmed.
+
+| Wave | Applications deployed | Why this wave |
+|------|-----------------------|---------------|
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg`, `kube-prometheus-stack` (Helm charts), `keycloak-operator` (CRDs + controller) | Core infrastructure and operators — must be running before anything depends on them |
+| 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster) | Requires wave 1: Gateway needs Traefik, ClusterIssuers need cert-manager, CNPG Cluster needs the CNPG operator |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (Keycloak CR + HTTPRoute), `grafana-config` (HTTPRoute) | Requires wave 2: HTTPRoutes need the Gateway to exist, Keycloak needs its database |
 
 Monitor sync status:
 ```bash
@@ -159,6 +173,7 @@ All A records point to the **Ingress LB floating IP** (`terraform output ingress
 | `harbor.ass-nss.jkuzel02.online` | Harbor container registry |
 | `vault.ass-nss.jkuzel02.online` | HashiCorp Vault |
 | `keycloak.ass-nss.jkuzel02.online` | Keycloak |
+| `grafana.ass-nss.jkuzel02.online` | Grafana |
 
 ## ArgoCD
 
@@ -270,6 +285,23 @@ kubectl exec -n vault vault-0 -- vault operator unseal
 ```
 
 > Vault re-seals on every pod restart and must be manually unsealed again. For a production setup, configure auto-unseal via a cloud KMS or a transit seal.
+
+## Grafana
+
+UI: `https://grafana.ass-nss.jkuzel02.online`
+
+Deployed as part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Prometheus scrapes cluster metrics via ServiceMonitors; Grafana visualises them.
+
+**Prerequisite** — set the admin password and apply the secret before ArgoCD syncs wave 1:
+```bash
+# Edit k8s/grafana/grafana-credentialsSecret.yaml (gitignored), then:
+kubectl apply -f k8s/grafana/grafana-credentialsSecret.yaml
+```
+
+Retrieve Prometheus and Alertmanager (cluster-internal only):
+```bash
+kubectl get svc -n monitoring | grep -E 'prometheus|alertmanager'
+```
 
 ## Longhorn storage
 

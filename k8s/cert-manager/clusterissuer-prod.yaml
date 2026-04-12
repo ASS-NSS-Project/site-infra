@@ -97,3 +97,16 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - keycloak.ass-nss.jkuzel02.online
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-grafana-tls
+  namespace: traefik
+spec:
+  secretName: ass-nss-grafana-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - grafana.ass-nss.jkuzel02.online
