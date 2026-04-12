@@ -10,7 +10,6 @@
     src: /var/lib/rancher/rke2/server/node-token
   register: rke2_token_raw
   delegate_to: "{{ groups['control_plane'][0] }}"
-  run_once: true
 
 - name: Set RKE2 token fact
   ansible.builtin.set_fact:
