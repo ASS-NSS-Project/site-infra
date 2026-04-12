@@ -1,11 +1,11 @@
-# Wave 3 — Keycloak CR, HTTPRoute, and CNPG Cluster (operator + cnpg from wave 1)
+# Wave 1 — Keycloak Operator (CRDs + controller, must exist before Keycloak CR in wave 3)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: keycloak-config
+  name: keycloak-operator
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: infrastructure
   source:
