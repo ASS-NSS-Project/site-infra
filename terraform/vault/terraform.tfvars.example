@@ -9,3 +9,6 @@ keycloak_username = ""
 keycloak_password = ""
 harbor_username   = ""
 harbor_password   = ""
+
+# Generate with: htpasswd -nb -B <user> <password>
+longhorn_htpasswd = ""

@@ -44,6 +44,12 @@ variable "harbor_password" {
   sensitive   = true
 }
 
+variable "longhorn_htpasswd" {
+  description = "Longhorn UI basic auth in htpasswd format (bcrypt). Generate with: htpasswd -nb -B <user> <password>"
+  type        = string
+  sensitive   = true
+}
+
 resource "vault_mount" "secret" {
   path        = "secret"
   type        = "kv-v2"
@@ -77,5 +83,14 @@ resource "vault_kv_secret_v2" "harbor" {
   data_json = jsonencode({
     username = var.harbor_username
     password = var.harbor_password
+  })
+}
+
+resource "vault_kv_secret_v2" "longhorn" {
+  mount = vault_mount.secret.path
+  name  = "longhorn"
+
+  data_json = jsonencode({
+    htpasswd = var.longhorn_htpasswd
   })
 }
