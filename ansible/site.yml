@@ -47,7 +47,7 @@
 - name: Deploy ArgoCD applications
   hosts: cp_primary
   become: true
-  tags: bootstrap
+  tags: k8s
   tasks:
     - name: Copy k8s/apps manifests to control plane
       ansible.builtin.copy:
