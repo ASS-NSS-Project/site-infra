@@ -10,8 +10,13 @@
 resource "openstack_lb_loadbalancer_v2" "cluster" {
   name          = "k8s-cluster-lb"
   vip_subnet_id = openstack_networking_subnet_v2.cluster.id
-  vip_address   = "192.168.0.100"
-  depends_on    = [openstack_networking_router_interface_v2.cluster]
+  vip_address   = "10.8.0.100"
+
+  depends_on = [
+    openstack_networking_router_interface_v2.cluster,
+    openstack_networking_network_v2.cluster,
+    openstack_networking_subnet_v2.cluster
+  ]
 }
 
 # --- API chain (6443) ---
@@ -21,6 +26,8 @@ resource "openstack_lb_listener_v2" "api" {
   protocol        = "TCP"
   protocol_port   = 6443
   loadbalancer_id = openstack_lb_loadbalancer_v2.cluster.id
+
+  depends_on = [openstack_lb_loadbalancer_v2.cluster]
 }
 
 resource "openstack_lb_pool_v2" "api" {
@@ -28,15 +35,22 @@ resource "openstack_lb_pool_v2" "api" {
   protocol    = "TCP"
   lb_method   = "ROUND_ROBIN"
   listener_id = openstack_lb_listener_v2.api.id
+
+  depends_on = [openstack_lb_listener_v2.api]
 }
 
 resource "openstack_lb_member_v2" "api" {
-  count         = 3
+  count = 3
+
   pool_id       = openstack_lb_pool_v2.api.id
   address       = local.cp_ips[count.index]
   protocol_port = 6443
   subnet_id     = openstack_networking_subnet_v2.cluster.id
-  depends_on    = [openstack_compute_instance_v2.control_plane]
+
+  depends_on = [
+    openstack_compute_instance_v2.control_plane,
+    openstack_lb_pool_v2.api
+  ]
 }
 
 resource "openstack_lb_monitor_v2" "api" {
@@ -45,17 +59,19 @@ resource "openstack_lb_monitor_v2" "api" {
   delay       = 5
   timeout     = 5
   max_retries = 3
-  depends_on  = [openstack_lb_member_v2.api]
+
+  depends_on = [openstack_lb_member_v2.api]
 }
 
-# --- HTTP chain (80) — starts after API chain is fully complete ---
+# --- HTTP chain (80) — forwards directly to Traefik hostPort 80 on each CP ---
 
 resource "openstack_lb_listener_v2" "ingress_http" {
   name            = "k8s-ingress-http"
   protocol        = "TCP"
   protocol_port   = 80
   loadbalancer_id = openstack_lb_loadbalancer_v2.cluster.id
-  depends_on      = [openstack_lb_monitor_v2.api]
+
+  depends_on = [openstack_lb_monitor_v2.api]
 }
 
 resource "openstack_lb_pool_v2" "ingress_http" {
@@ -63,15 +79,22 @@ resource "openstack_lb_pool_v2" "ingress_http" {
   protocol    = "TCP"
   lb_method   = "ROUND_ROBIN"
   listener_id = openstack_lb_listener_v2.ingress_http.id
+
+  depends_on = [openstack_lb_listener_v2.ingress_http]
 }
 
 resource "openstack_lb_member_v2" "ingress_http" {
-  count         = 3
+  count = 3
+
   pool_id       = openstack_lb_pool_v2.ingress_http.id
   address       = local.cp_ips[count.index]
-  protocol_port = 30080
+  protocol_port = 80
   subnet_id     = openstack_networking_subnet_v2.cluster.id
-  depends_on    = [openstack_compute_instance_v2.control_plane]
+
+  depends_on    = [
+    openstack_compute_instance_v2.control_plane,
+    openstack_lb_pool_v2.ingress_http
+  ]
 }
 
 resource "openstack_lb_monitor_v2" "ingress_http" {
@@ -80,17 +103,19 @@ resource "openstack_lb_monitor_v2" "ingress_http" {
   delay       = 5
   timeout     = 5
   max_retries = 3
+
   depends_on  = [openstack_lb_member_v2.ingress_http]
 }
 
-# --- HTTPS chain (443) — starts after HTTP chain is fully complete ---
+# --- HTTPS chain (443) — forwards directly to Traefik hostPort 443 on each CP ---
 
 resource "openstack_lb_listener_v2" "ingress_https" {
   name            = "k8s-ingress-https"
   protocol        = "TCP"
   protocol_port   = 443
   loadbalancer_id = openstack_lb_loadbalancer_v2.cluster.id
-  depends_on      = [openstack_lb_monitor_v2.ingress_http]
+
+  depends_on = [openstack_lb_monitor_v2.ingress_http]
 }
 
 resource "openstack_lb_pool_v2" "ingress_https" {
@@ -98,15 +123,22 @@ resource "openstack_lb_pool_v2" "ingress_https" {
   protocol    = "TCP"
   lb_method   = "ROUND_ROBIN"
   listener_id = openstack_lb_listener_v2.ingress_https.id
+
+  depends_on = [openstack_lb_listener_v2.ingress_https]
 }
 
 resource "openstack_lb_member_v2" "ingress_https" {
-  count         = 3
+  count = 3
+
   pool_id       = openstack_lb_pool_v2.ingress_https.id
   address       = local.cp_ips[count.index]
-  protocol_port = 30443
+  protocol_port = 443
   subnet_id     = openstack_networking_subnet_v2.cluster.id
-  depends_on    = [openstack_compute_instance_v2.control_plane]
+
+  depends_on = [
+    openstack_compute_instance_v2.control_plane,
+    openstack_lb_pool_v2.ingress_https
+  ]
 }
 
 resource "openstack_lb_monitor_v2" "ingress_https" {
@@ -115,5 +147,6 @@ resource "openstack_lb_monitor_v2" "ingress_https" {
   delay       = 5
   timeout     = 5
   max_retries = 3
-  depends_on  = [openstack_lb_member_v2.ingress_https]
+  
+  depends_on = [openstack_lb_member_v2.ingress_https]
 }

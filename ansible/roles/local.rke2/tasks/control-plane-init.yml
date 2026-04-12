@@ -1,0 +1,65 @@
+---
+- name: Create RKE2 config directory
+  ansible.builtin.file:
+    path: /etc/rancher/rke2
+    state: directory
+    mode: "0755"
+
+- name: Write RKE2 server config
+  ansible.builtin.copy:
+    dest: /etc/rancher/rke2/config.yaml
+    content: |
+      tls-san:
+        - {{ rke2_api_lb_vip }}
+        - {{ rke2_api_lb_fip }}
+      disable:
+        - rke2-ingress-nginx
+    mode: "0644"
+
+- name: Install RKE2 server
+  ansible.builtin.shell:
+    cmd: curl -sfL https://get.rke2.io | sh -
+    creates: /usr/local/bin/rke2
+  environment:
+    INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+
+- name: Enable and start RKE2 server
+  ansible.builtin.systemd:
+    name: rke2-server
+    enabled: true
+    state: started
+
+- name: Wait for RKE2 node token to be generated
+  ansible.builtin.wait_for:
+    path: /var/lib/rancher/rke2/server/node-token
+    timeout: 120
+
+- name: Read node token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/rke2/server/node-token
+  register: rke2_token_raw
+
+- name: Expose node token as host fact
+  ansible.builtin.set_fact:
+    rke2_token: "{{ rke2_token_raw.content | b64decode | trim }}"
+
+- name: Wait for RKE2 API to become ready
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 180
+
+- name: Fetch kubeconfig
+  ansible.builtin.fetch:
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    flat: true
+
+# Replace 127.0.0.1 with the API LB public FIP so kubectl works from outside
+- name: Fix kubeconfig server address
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/../artifacts/kubeconfig"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://{{ rke2_api_lb_fip }}:6443"
+  delegate_to: localhost
+  become: false

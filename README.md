@@ -9,7 +9,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Infrastructure | OpenStack (Metacentrum MetaVO, Brno) |
 | Provisioning | Terraform |
 | Configuration | Ansible |
-| Kubernetes | k3s v1.32.3 (3-node HA control plane) |
+| Kubernetes | RKE2 (3-node HA control plane) |
 | GitOps | ArgoCD |
 | Ingress | Traefik v3 (Gateway API, DaemonSet on CPs) |
 | Load Balancer | OpenStack Octavia (API LB + Ingress LB) |
@@ -25,28 +25,28 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 
 | Node | Flavor | vCPU | RAM | Private IP | Extra storage |
 |------|--------|------|-----|------------|---------------|
-| cp-0 | e1.large | 4 | 8 GB | 192.168.0.10 | 1 × 111 GB → `/var/lib/rancher/k3s` |
-| cp-1 | e1.large | 4 | 8 GB | 192.168.0.11 | 1 × 111 GB → `/var/lib/rancher/k3s` |
-| cp-2 | e1.large | 4 | 8 GB | 192.168.0.12 | 1 × 111 GB → `/var/lib/rancher/k3s` |
-| worker-0 | e1.4core-16ram | 4 | 16 GB | 192.168.0.20 | 3 × 111 GB → LVM → `/var/lib/longhorn` |
-| worker-1 | e1.4core-16ram | 4 | 16 GB | 192.168.0.21 | 3 × 111 GB → LVM → `/var/lib/longhorn` |
+| cp-0 | c2.8core-16ram | 8 | 16 GB | 10.8.0.10 | 1 × 32 GB → `/var/lib/rancher/rke2` |
+| cp-1 | c2.8core-16ram | 8 | 16 GB | 10.8.0.11 | 1 × 32 GB → `/var/lib/rancher/rke2` |
+| cp-2 | c2.8core-16ram | 8 | 16 GB | 10.8.0.12 | 1 × 32 GB → `/var/lib/rancher/rke2` |
+| worker-0 | c2.8core-30ram | 8 | 30 GB | 10.8.0.20 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
+| worker-1 | c2.8core-30ram | 8 | 30 GB | 10.8.0.21 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
+| worker-2 | c2.8core-30ram | 8 | 30 GB | 10.8.0.22 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
+| worker-3 | c2.8core-30ram | 8 | 30 GB | 10.8.0.23 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
 
-**Totals**: 5 instances / 20 vCPU / 56 GB RAM / 9 Cinder volumes / 999 GB
+**Totals**: 7 instances / 56 vCPU / 168 GB RAM / 15 Cinder volumes / 1 992 GB
 
 ### Load balancers
 
 | Name | Private VIP | Purpose |
 |------|-------------|---------|
-| k8s-api-lb | 192.168.0.100 | k3s API (port 6443) → all 3 CPs |
-| k8s-ingress-lb | 192.168.0.101 | HTTP/HTTPS (→ NodePort 30080/30443 on CPs) |
+| rke2-cluster-lb | 10.8.0.100 | RKE2 API (port 6443) + HTTP/HTTPS ingress → all 3 CPs |
 
 ### Floating IPs
 
 | Assigned to | Used for |
 |-------------|----------|
 | cp-0 | SSH bastion — only node directly reachable from the internet |
-| API LB | kubectl access + k3s node join endpoint |
-| Ingress LB | HTTP/HTTPS traffic — **point all DNS A records here** |
+| Cluster LB | kubectl access + RKE2 node join endpoint + HTTP/HTTPS ingress |
 
 ## Repository structure
 
@@ -54,10 +54,10 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 ├── terraform/          # OpenStack IaC (network, instances, volumes, LBs, FIPs)
 ├── ansible/
 │   ├── site.yml        # Main playbook
-│   ├── inventory/      # hosts.yml + group_vars
+│   ├── inventory/      # hosts.yml (static) + host_vars/ + group_vars/
 │   └── roles/
 │       ├── local.system/   # Timezone, NTP, users, SSH keys, disk setup
-│       ├── local.k3s/      # k3s server (init + join) + agent installation
+│       ├── local.rke2/     # RKE2 server (init + join) + agent installation
 │       └── local.argocd/   # Helm + Gateway API CRDs + ArgoCD bootstrap
 └── k8s/
     ├── apps/           # ArgoCD App of Apps (one Application per component)
@@ -104,7 +104,7 @@ terraform apply
 ```
 
 `terraform apply` automatically writes two files from live resource outputs:
-- `ansible/inventory/hosts.yml` — cp-0 floating IP filled in
+- `ansible/inventory/host_vars/cp-0.yml` — cp-0 floating IP (gitignored, regenerated on each apply)
 - `ansible/inventory/group_vars/all/terraform.yml` — API LB floating IP for kubeconfig + TLS SANs
 
 The only manual step remaining is updating DNS A records:
@@ -115,7 +115,7 @@ terraform output ingress_lb_public_ip
 
 ### 2. Cluster provisioning — Ansible
 
-Ansible executes tasks in **declaration order** — top to bottom within each play, play by play within the playbook. There is no dependency graph; ordering is the author's responsibility. The playbook is structured so that each play's prerequisites are guaranteed to be complete before the next one starts (e.g. k3s must be initialised before nodes can join, and the cluster must be healthy before ArgoCD is bootstrapped).
+Ansible executes tasks in **declaration order** — top to bottom within each play, play by play within the playbook. There is no dependency graph; ordering is the author's responsibility. The playbook is structured so that each play's prerequisites are guaranteed to be complete before the next one starts (e.g. RKE2 must be initialised before nodes can join, and the cluster must be healthy before ArgoCD is bootstrapped).
 
 ```bash
 cd ansible
@@ -127,7 +127,7 @@ Available tags to run individual plays:
 | Tag | What it runs |
 |-----|-------------|
 | `--tags system` | Timezone, NTP, users, SSH keys, LVM disk setup, open-iscsi |
-| `--tags k3s` | k3s HA control plane (init + join) + k3s agents on workers |
+| `--tags rke2` | RKE2 HA control plane (init + join) + RKE2 agents on workers |
 | `--tags bootstrap` | Helm install, Gateway API CRDs, ArgoCD, all ArgoCD Applications |
 
 The full playbook in order:
@@ -135,13 +135,13 @@ The full playbook in order:
 | Play | Hosts | Description |
 |------|-------|-------------|
 | 1 — System setup | all | OS configuration, disk setup |
-| 2 — k3s init | cp_primary (cp-0) | `--cluster-init`, fetches kubeconfig to `artifacts/kubeconfig` |
-| 3 — k3s join | cp_followers (cp-1, cp-2) | Join cluster via API LB VIP |
-| 4 — k3s workers | workers | k3s agents, join cluster via API LB VIP |
+| 2 — RKE2 init | cp_primary (cp-0) | Initialises cluster, fetches kubeconfig to `artifacts/kubeconfig` |
+| 3 — RKE2 join | cp_followers (cp-1, cp-2) | Join cluster via API LB VIP (port 9345) |
+| 4 — RKE2 workers | workers | RKE2 agents, join cluster via API LB VIP |
 | 5 — Bootstrap ArgoCD | cp-0 | Installs Helm, Gateway API CRDs, ArgoCD via Helm, applies root App of Apps |
 | 6 — Deploy ArgoCD applications | cp-0 | Applies all `k8s/apps/` manifests directly |
 
-> **Note**: Only cp-0 has a floating IP. Ansible reaches cp-1, cp-2, and workers via SSH ProxyJump through cp-0 (configured automatically in `group_vars/cp_followers.yml` and `group_vars/workers.yml`).
+> **Note**: Only cp-0 has a floating IP. Ansible reaches cp-1, cp-2, and workers via SSH ProxyJump through cp-0 (configured in `host_vars/` for each non-primary node).
 
 ### 3. GitOps — ArgoCD takes over
 

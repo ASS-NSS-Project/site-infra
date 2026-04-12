@@ -1,6 +1,7 @@
 # --- Floating IPs ---
 
-# CP-0: SSH bastion — only node directly reachable from the internet
+# CP-0: SSH bastion (jump host) — the only node directly reachable from the internet 
+# (for remote management purposes; use the cp-0 for SSH ProxyJumping)
 resource "openstack_networking_floatingip_v2" "cp0_ssh" {
   pool = "external-ipv4-general-public"
 }
@@ -8,6 +9,11 @@ resource "openstack_networking_floatingip_v2" "cp0_ssh" {
 resource "openstack_networking_floatingip_associate_v2" "cp0_ssh" {
   floating_ip = openstack_networking_floatingip_v2.cp0_ssh.address
   port_id     = openstack_networking_port_v2.cp[0].id
+
+  depends_on = [
+    openstack_networking_floatingip_v2.cp0_ssh,
+    openstack_networking_port_v2.cp[0]
+  ]
 }
 
 # Cluster LB: single FIP for API (6443) + ingress (80/443).
@@ -19,6 +25,11 @@ resource "openstack_networking_floatingip_v2" "cluster_lb" {
 resource "openstack_networking_floatingip_associate_v2" "cluster_lb" {
   floating_ip = openstack_networking_floatingip_v2.cluster_lb.address
   port_id     = openstack_lb_loadbalancer_v2.cluster.vip_port_id
+
+  depends_on = [
+    openstack_networking_floatingip_v2.cluster_lb,
+    openstack_lb_loadbalancer_v2.cluster
+  ]
 }
 
 # --- Outputs ---

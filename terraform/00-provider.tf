@@ -17,6 +17,5 @@ terraform {
   }
 }
 
-provider "openstack" {
-  cloud = "openstack" # Reference, where to look for the creds in `clouds.yaml` file
-}
+# Reference, where to look for the creds in `clouds.yaml` file
+provider "openstack" { cloud = "openstack" }

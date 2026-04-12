@@ -8,7 +8,8 @@
   ansible.builtin.shell:
     cmd: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    KUBECONFIG: /etc/rancher/rke2/rke2.yaml
+    PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
   register: gateway_crds
   changed_when: "'created' in gateway_crds.stdout or 'configured' in gateway_crds.stdout"
 
@@ -16,7 +17,8 @@
   ansible.builtin.shell:
     cmd: helm repo add argo https://argoproj.github.io/argo-helm && helm repo update
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    KUBECONFIG: /etc/rancher/rke2/rke2.yaml
+    PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
   changed_when: false
 
 - name: Copy ArgoCD Helm values to control plane
@@ -34,7 +36,8 @@
       -f /tmp/argocd-values.yaml
       --wait --timeout 5m
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    KUBECONFIG: /etc/rancher/rke2/rke2.yaml
+    PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
   register: argocd_install
   changed_when: "'deployed' in argocd_install.stdout or 'upgraded' in argocd_install.stdout"
 
@@ -48,5 +51,6 @@
   ansible.builtin.shell:
     cmd: kubectl apply -f /tmp/argocd-root-app.yaml
   environment:
-    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    KUBECONFIG: /etc/rancher/rke2/rke2.yaml
+    PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
   changed_when: true

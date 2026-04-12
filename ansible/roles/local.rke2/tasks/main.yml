@@ -1,0 +1,15 @@
+---
+# Init node = first host in the control_plane group (by inventory order).
+# No role var needed — derived entirely from inventory structure.
+
+- name: Install RKE2 control plane (init)
+  ansible.builtin.import_tasks: control-plane-init.yml
+  when: "'control_plane' in group_names and inventory_hostname == groups['control_plane'][0]"
+
+- name: Join RKE2 control plane
+  ansible.builtin.import_tasks: control-plane-join.yml
+  when: "'control_plane' in group_names and inventory_hostname != groups['control_plane'][0]"
+
+- name: Install RKE2 worker agent
+  ansible.builtin.import_tasks: workers.yml
+  when: "'workers' in group_names"

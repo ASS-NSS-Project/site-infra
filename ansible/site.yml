@@ -1,51 +1,44 @@
 # Play 1: System setup on all nodes
 - name: System setup
-  hosts: k3s_cluster
+  hosts: rke2_cluster
   become: true
   tags: system
   roles:
     - local.system
 
-# Play 2: Bootstrap k3s on CP-0 (cluster-init node)
-# Sets k3s_token fact consumed by plays 3 and 4.
-- name: Install k3s init control plane
-  hosts: cp_primary
+# Play 2: Install RKE2 on all control plane nodes.
+# serial: 1 guarantees cp-0 (first in inventory) initialises the cluster before
+# cp-1 and cp-2 attempt to join. The role detects init vs join by position.
+- name: Install RKE2 control plane
+  hosts: control_plane
+  serial: 1
   become: true
-  tags: k3s
+  tags: rke2
   roles:
-    - local.k3s
+    - local.rke2
 
-# Play 3: Join CP-1 and CP-2 to the cluster via API LB VIP
-# Runs after CP-0 so the token and etcd quorum are available.
-- name: Join k3s follower control planes
-  hosts: cp_followers
-  become: true
-  tags: k3s
-  roles:
-    - local.k3s
-
-# Play 4: Install k3s agent on workers
-- name: Install k3s workers
+# Play 3: Install RKE2 agent on workers (runs in parallel across all 4).
+- name: Install RKE2 workers
   hosts: workers
   become: true
-  tags: k3s
+  tags: rke2
   roles:
-    - local.k3s
+    - local.rke2
 
-# Play 5: Bootstrap ArgoCD on CP-0
+# Play 4: Bootstrap ArgoCD on the first control plane node.
 # Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD.
 - name: Bootstrap ArgoCD
-  hosts: cp_primary
+  hosts: control_plane[0]
   become: true
   tags: bootstrap
   roles:
     - local.argocd
 
-# Play 6: Deploy all ArgoCD Applications
+# Play 5: Deploy all ArgoCD Applications.
 # Applies every manifest from k8s/apps/ — useful for initial bootstrap
 # or forcing re-registration without waiting for App of Apps sync.
 - name: Deploy ArgoCD applications
-  hosts: cp_primary
+  hosts: control_plane[0]
   become: true
   tags: k8s
   tasks:
@@ -59,6 +52,7 @@
       ansible.builtin.shell:
         cmd: kubectl apply -f /tmp/argocd-apps/
       environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        KUBECONFIG: /etc/rancher/rke2/rke2.yaml
+        PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
       register: apps_apply
       changed_when: "'configured' in apps_apply.stdout or 'created' in apps_apply.stdout"

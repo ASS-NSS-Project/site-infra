@@ -6,16 +6,15 @@ locals {
   ansible_root = "${path.module}/../ansible"
 }
 
-resource "local_file" "ansible_hosts" {
-  filename = "${local.ansible_root}/inventory/hosts.yml"
+# cp-0's ansible_host must be the floating IP — generated here, gitignored.
+resource "local_file" "cp0_host_vars" {
+  filename = "${local.ansible_root}/inventory/host_vars/cp-0.yml"
   content = templatefile(
-    "${path.module}/templates/hosts.yml.tpl",
-    {
-      cp0_fip    = openstack_networking_floatingip_v2.cp0_ssh.address
-      cp_ips     = local.cp_ips
-      worker_ips = local.worker_ips
-    }
+    "${path.module}/templates/cp-0-host-vars.yml.tpl",
+    { cp0_fip = openstack_networking_floatingip_v2.cp0_ssh.address }
   )
+
+  depends_on = [openstack_networking_floatingip_v2.cp0_ssh]
 }
 
 resource "local_file" "ansible_terraform_vars" {
@@ -24,4 +23,6 @@ resource "local_file" "ansible_terraform_vars" {
     "${path.module}/templates/terraform-vars.yml.tpl",
     { api_lb_fip = openstack_networking_floatingip_v2.cluster_lb.address }
   )
+
+  depends_on = [openstack_networking_floatingip_v2.cluster_lb]
 }

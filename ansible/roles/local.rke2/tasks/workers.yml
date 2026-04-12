@@ -1,0 +1,39 @@
+---
+- name: Read RKE2 token from init node
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/rke2/server/node-token
+  register: rke2_token_raw
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  run_once: true
+
+- name: Set RKE2 token fact
+  ansible.builtin.set_fact:
+    rke2_token: "{{ rke2_token_raw.content | b64decode | trim }}"
+
+- name: Create RKE2 config directory
+  ansible.builtin.file:
+    path: /etc/rancher/rke2
+    state: directory
+    mode: "0755"
+
+- name: Write RKE2 agent config
+  ansible.builtin.copy:
+    dest: /etc/rancher/rke2/config.yaml
+    content: |
+      server: https://{{ rke2_api_lb_vip }}:9345
+      token: {{ rke2_token }}
+    mode: "0644"
+
+- name: Install RKE2 agent
+  ansible.builtin.shell:
+    cmd: curl -sfL https://get.rke2.io | sh -
+    creates: /usr/local/bin/rke2
+  environment:
+    INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+    INSTALL_RKE2_TYPE: "agent"
+
+- name: Enable and start RKE2 agent
+  ansible.builtin.systemd:
+    name: rke2-agent
+    enabled: true
+    state: started

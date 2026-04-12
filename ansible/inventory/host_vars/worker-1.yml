@@ -1,0 +1,4 @@
+ansible_host: "10.8.0.21"
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=no
+  -o ProxyJump=debian@{{ hostvars['cp-0']['ansible_host'] }}

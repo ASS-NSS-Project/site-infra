@@ -29,17 +29,17 @@
     fstype: ext4
     dev: "{{ cp_extra_disk_discovered.stdout | trim }}"
 
-- name: Create /var/lib/rancher/k3s mount point
+- name: Create /var/lib/rancher/rke2 mount point
   ansible.builtin.file:
-    path: /var/lib/rancher/k3s
+    path: /var/lib/rancher/rke2
     state: directory
     owner: root
     group: root
     mode: "0750"
 
-- name: Mount control plane disk at /var/lib/rancher/k3s and persist in fstab
+- name: Mount control plane disk at /var/lib/rancher/rke2 and persist in fstab
   ansible.posix.mount:
-    path: /var/lib/rancher/k3s
+    path: /var/lib/rancher/rke2
     src: "{{ cp_extra_disk_discovered.stdout | trim }}"
     fstype: ext4
     opts: defaults

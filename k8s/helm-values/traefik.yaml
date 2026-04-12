@@ -1,8 +1,7 @@
 # Traefik v3 — Gateway API mode
 # Runs as a DaemonSet on all control plane nodes.
-# The Octavia Ingress LB (192.168.0.101) forwards:
-#   port 80  → NodePort 30080 on each CP node
-#   port 443 → NodePort 30443 on each CP node
+# The Octavia LB forwards port 80/443 directly to port 80/443 on each CP node
+# via hostPort — no NodePort translation layer.
 
 # Run on control plane nodes only
 tolerations:
@@ -32,20 +31,19 @@ gateway:
 gatewayClass:
   enabled: false
 
-# NodePort service — Octavia Ingress LB members target these ports on each CP node.
-# NodePorts are fixed so the LB member configuration in Terraform stays stable.
+# ClusterIP service — traffic arrives via hostPort directly, no NodePort needed.
 service:
-  type: NodePort
+  type: ClusterIP
 
 ports:
   web:
     port: 80
-    nodePort: 30080
+    hostPort: 80
     expose:
       default: true
   websecure:
     port: 443
-    nodePort: 30443
+    hostPort: 443
     expose:
       default: true
 
