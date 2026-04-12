@@ -23,10 +23,8 @@ spec:
     passwordSecret:
       name: keycloak-pg-app
       key: password
-  bootstrapAdmin:                                                                                                                                                                                                                                      
-      user: "admin" 
-      passwordSecret:
-        name: keycloak-credentials
-        key: admin-password
+  bootstrapAdmin:
+    user:
+      secret: keycloak-credentials
   ingress:
     enabled: false
