@@ -17,6 +17,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Storage | Longhorn (LVM over Cinder volumes) |
 | Registry | Harbor (container image registry) |
 | Secrets | HashiCorp Vault |
+| Identity | Keycloak |
 
 ## Cluster layout
 
@@ -64,7 +65,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── longhorn/       # Longhorn HTTPRoute
     ├── argocd/         # ArgoCD HTTPRoute
     ├── harbor/         # Harbor HTTPRoute
-    └── vault/          # Vault HTTPRoute
+    ├── vault/          # Vault HTTPRoute
+    └── keycloak/       # Keycloak HTTPRoute
 ```
 
 ## Prerequisites
@@ -132,9 +134,9 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 
 | Wave | Applications deployed |
 |------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault` (Helm charts) |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `keycloak` (Helm charts) |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers) |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config` (HTTPRoutes) |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (HTTPRoutes) |
 
 Monitor sync status:
 ```bash
@@ -153,6 +155,7 @@ All A records point to the **Ingress LB floating IP** (`terraform output ingress
 | `longhorn.ass-nss.jkuzel02.online` | Longhorn UI |
 | `harbor.ass-nss.jkuzel02.online` | Harbor container registry |
 | `vault.ass-nss.jkuzel02.online` | HashiCorp Vault |
+| `keycloak.ass-nss.jkuzel02.online` | Keycloak |
 
 ## ArgoCD
 
@@ -226,6 +229,16 @@ kubectl create secret docker-registry harbor-credentials \
   --docker-username=<user> \
   --docker-password=<password> \
   -n <namespace>
+```
+
+## Keycloak
+
+UI: `https://keycloak.ass-nss.jkuzel02.online`
+
+Initial admin password (auto-generated on first install):
+```bash
+kubectl get secret keycloak -n keycloak \
+  -o jsonpath="{.data.admin-password}" | base64 -d
 ```
 
 ## HashiCorp Vault

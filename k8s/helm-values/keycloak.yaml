@@ -1,0 +1,20 @@
+# Keycloak identity provider
+# TLS is terminated at Traefik — Keycloak listens on plain HTTP internally.
+# proxy: edge tells Keycloak it's behind a reverse proxy that handles TLS,
+# so it generates correct HTTPS redirect URLs from X-Forwarded headers.
+
+auth:
+  adminUser: admin
+  # adminPassword auto-generated on first install — retrieve with:
+  #   kubectl get secret keycloak -n keycloak -o jsonpath="{.data.admin-password}" | base64 -d
+
+production: false
+proxy: edge
+
+# PostgreSQL — persistent storage on Longhorn
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      storageClass: longhorn
+      size: 2Gi

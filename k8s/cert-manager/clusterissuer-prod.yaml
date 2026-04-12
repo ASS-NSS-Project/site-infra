@@ -84,3 +84,16 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - vault.ass-nss.jkuzel02.online
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-keycloak-tls
+  namespace: traefik
+spec:
+  secretName: ass-nss-keycloak-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - keycloak.ass-nss.jkuzel02.online
