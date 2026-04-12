@@ -1,0 +1,21 @@
+# Wave 2 — ClusterSecretStore (requires ESO CRDs from wave 1)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eso-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/eso/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
