@@ -337,6 +337,35 @@ UI: `https://grafana.ass-nss.jkuzel02.online`
 
 Part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Admin credentials are synced from Vault (`secret/grafana`) by ESO into the `grafana-credentials` secret.
 
+## TODO
+
+### SSO via Keycloak (Google + GitHub OIDC)
+
+The goal is a single sign-on layer across all cluster UIs using Keycloak as the central identity broker. Users log in with their Google or GitHub account — Keycloak federates the identity, and every app in the cluster trusts Keycloak as its OIDC provider.
+
+**Plan:**
+
+1. **Register OAuth apps** on Google Cloud Console and GitHub (one each), pointing their callback URLs at Keycloak's broker endpoint.
+
+2. **Provision Keycloak via Terraform** using the [mrparkers/keycloak](https://registry.terraform.io/providers/mrparkers/keycloak/latest) provider (`terraform/keycloak/` — a third Terraform phase, run after Vault and Keycloak are up):
+   - Create a realm
+   - Add Google and GitHub as Identity Providers (Client ID + Secret from step 1, stored in Vault)
+   - Create one OIDC client per app with correct redirect URIs
+   - Store generated client secrets in Vault (`secret/oidc/<app>`) for ESO to sync
+
+3. **Configure each app** to use Keycloak as its OIDC provider (all have native support):
+
+   | App | Config location | Notes |
+   |-----|----------------|-------|
+   | ArgoCD | `argocd/apps/argocd/config/` | `oidc.config` in ArgoCD ConfigMap |
+   | Grafana | `argocd/apps/grafana/helm/values.yaml` | `grafana.ini` `[auth.generic_oauth]` section |
+   | Longhorn | replace basicAuth Middleware | Traefik ForwardAuth + oauth2-proxy sidecar pointing at Keycloak |
+   | Harbor | Harbor UI → Configuration → Auth | OIDC mode, points at Keycloak realm |
+
+4. **oauth2-proxy** — for apps without native OIDC (e.g. Longhorn UI), deploy oauth2-proxy as a Traefik ForwardAuth middleware backed by Keycloak. One shared instance can protect multiple apps.
+
+**Result:** a single `terraform/keycloak/` apply wires up the full SSO chain. Users authenticate once via Google or GitHub and get seamless access to all cluster UIs.
+
 ## Longhorn storage
 
 - **Raw capacity**: 333 GB per worker (3 × 111 GB), 666 GB total
