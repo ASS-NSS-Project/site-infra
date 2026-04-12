@@ -56,13 +56,6 @@
           stringData:
             credentials.json: "{{ lookup('file', playbook_dir + '/files/vault/kms-sa-key.json') }}"
 
-    - name: Apply bootstrap secrets
-      kubernetes.core.k8s:
-        src: "{{ item }}"
-        state: present
-        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"
-      loop: "{{ lookup('fileglob', playbook_dir + '/files/k8s/manifests/*.yaml', wantlist=True) }}"
-      
     - name: Apply ArgoCD projects
       kubernetes.core.k8s:
         src: "{{ item }}"
