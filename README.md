@@ -37,9 +37,12 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 
 ### Load balancers
 
-| Name | Private VIP | Purpose |
-|------|-------------|---------|
-| rke2-cluster-lb | 10.8.0.100 | RKE2 API (port 6443) + HTTP/HTTPS ingress → all 3 CPs |
+| Name | Private VIP | Port | Purpose | Restricted to |
+|------|-------------|------|---------|---------------|
+| rke2-cluster-lb | 10.8.0.100 | 6443 | Kubernetes API | — |
+| rke2-cluster-lb | 10.8.0.100 | 9345 | RKE2 node registration | `10.8.0.0/27` (cluster subnet only) |
+| rke2-cluster-lb | 10.8.0.100 | 80 | HTTP ingress → Traefik | — |
+| rke2-cluster-lb | 10.8.0.100 | 443 | HTTPS ingress → Traefik | — |
 
 ### Floating IPs
 
@@ -51,27 +54,38 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 ## Repository structure
 
 ```
-├── terraform/          # OpenStack IaC (network, instances, volumes, LBs, FIPs)
+├── terraform/              # OpenStack IaC (network, instances, volumes, LBs, FIPs)
+│   └── templates/          # Ansible inventory templates (rendered by terraform apply)
 ├── ansible/
-│   ├── site.yml        # Main playbook
-│   ├── inventory/      # hosts.yml (static) + host_vars/ + group_vars/
+│   ├── site.yml            # Main playbook (4 plays)
+│   ├── inventory/          # hosts.yml (static) + host_vars/ + group_vars/
+│   ├── artifacts/          # Runtime-generated files — gitignored
+│   │   └── kubeconfig      # Fetched from cp-0 by the rke2 role
+│   ├── files/
+│   │   └── k8s/
+│   │       ├── helm/argocd/values.yaml   # ArgoCD Helm values (Ansible-bootstrapped)
+│   │       └── manifests/                # Secrets applied by Ansible before ArgoCD syncs
 │   └── roles/
 │       ├── local.system/   # Timezone, NTP, users, SSH keys, disk setup
-│       ├── local.rke2/     # RKE2 server (init + join) + agent installation
-│       └── local.argocd/   # Helm + Gateway API CRDs + ArgoCD bootstrap
-└── k8s/
-    ├── apps/           # ArgoCD App of Apps (one Application per component)
-    ├── helm-values/    # Helm values files for all charts
-    ├── traefik/        # GatewayClass + Gateway + HTTP→HTTPS redirect
-    ├── cert-manager/   # ClusterIssuers (prod, staging, self-signed)
-    ├── longhorn/       # Longhorn HTTPRoute
-    ├── argocd/         # ArgoCD HTTPRoute
-    ├── harbor/         # Harbor HTTPRoute
-    ├── vault/          # Vault HTTPRoute
-    ├── keycloak/           # Keycloak CR + HTTPRoute
-    ├── keycloak-operator/  # Keycloak Operator (Kustomize, remote resources)
-    ├── keycloak-postgres/  # CNPG Cluster resource
-    └── grafana/            # Grafana HTTPRoute
+│       ├── local.rke2/     # RKE2 server (init + join) + agent; dispatches by group
+│       └── local.argocd/   # Gateway API CRDs + ArgoCD bootstrap via Helm
+└── argocd/
+    ├── root-Application.yaml           # App-of-apps root; scans argocd/apps/ recursively
+    ├── projects/                        # ArgoCD AppProjects (RBAC / grouping)
+    │   ├── infrastructure-AppProject.yaml
+    │   └── observability-AppProject.yaml
+    └── apps/                            # One subdirectory per component
+        ├── <app>/
+        │   ├── helm-Application.yaml    # ArgoCD Application deploying the Helm chart
+        │   ├── config-Application.yaml  # ArgoCD Application for config resources
+        │   ├── helm/values.yaml         # Helm values file
+        │   └── config/                  # K8s manifests: <name>-<Kind>.yaml
+        └── keycloak/
+            ├── keycloak-operator-Application.yaml
+            ├── keycloak-operator/kustomize-Application.yaml
+            ├── keycloak-operator/kustomize/kustomization.yaml
+            ├── config-Application.yaml
+            └── config/
 ```
 
 ## Prerequisites
@@ -128,24 +142,25 @@ Available tags to run individual plays:
 |-----|-------------|
 | `--tags system` | Timezone, NTP, users, SSH keys, LVM disk setup, open-iscsi |
 | `--tags rke2` | RKE2 HA control plane (init + join) + RKE2 agents on workers |
-| `--tags bootstrap` | Helm install, Gateway API CRDs, ArgoCD, all ArgoCD Applications |
+| `--tags argocd` | Gateway API CRDs + ArgoCD Helm install |
+| `--tags argocd,apps` | All of the above + apply secrets, ArgoCD projects, and root Application |
 
 The full playbook in order:
 
 | Play | Hosts | Description |
 |------|-------|-------------|
-| 1 — System setup | all | OS configuration, disk setup |
-| 2 — RKE2 init | cp_primary (cp-0) | Initialises cluster, fetches kubeconfig to `artifacts/kubeconfig` |
-| 3 — RKE2 join | cp_followers (cp-1, cp-2) | Join cluster via API LB VIP (port 9345) |
-| 4 — RKE2 workers | workers | RKE2 agents, join cluster via API LB VIP |
-| 5 — Bootstrap ArgoCD | cp-0 | Installs Helm, Gateway API CRDs, ArgoCD via Helm, applies root App of Apps |
-| 6 — Deploy ArgoCD applications | cp-0 | Applies all `k8s/apps/` manifests directly |
+| 1 — System setup | `rke2_cluster` (all nodes) | OS configuration, disk setup |
+| 2 — Install RKE2 | `rke2_cluster` (all nodes) | Role dispatches init/join/worker by group; fetches `artifacts/kubeconfig` from cp-0 |
+| 3 — Bootstrap ArgoCD | `localhost` | Installs Gateway API CRDs and ArgoCD via Helm using `artifacts/kubeconfig` |
+| 4 — Deploy ArgoCD applications | `localhost` | Applies bootstrap Secrets, ArgoCD AppProjects, and the root Application |
 
-> **Note**: Only cp-0 has a floating IP. Ansible reaches cp-1, cp-2, and workers via SSH ProxyJump through cp-0 (configured in `host_vars/` for each non-primary node).
+> **Note**: Only cp-0 has a floating IP. Ansible reaches cp-1, cp-2, and workers via SSH ProxyJump through cp-0 (configured in `host_vars/` for each non-primary node). Plays 3 and 4 run entirely from localhost using `ansible/artifacts/kubeconfig`.
+
+> **RKE2 join ordering**: cp-1, cp-2, and all workers wait for port 9345 on the LB VIP to be reachable before attempting to join, so all nodes can start in parallel — ordering is self-enforced by the role.
 
 ### 3. GitOps — ArgoCD takes over
 
-Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all components in **sync waves**.
+Once bootstrapped, ArgoCD syncs `argocd/apps/` from this repo and deploys all components in **sync waves**.
 
 Sync waves are a **deployment ordering mechanism**: ArgoCD applies all resources in wave N, waits for them to reach a healthy state, and only then proceeds to wave N+1. This guarantees that operators and core infrastructure are fully ready before the resources that depend on them are created — for example, the CNPG operator (wave 1) must be running and its CRDs registered before a `Cluster` resource (wave 2) can be applied, and the Traefik Gateway (wave 2) must be up before HTTPRoutes (wave 3) can be programmed.
 
@@ -157,7 +172,7 @@ Sync waves are a **deployment ordering mechanism**: ArgoCD applies all resources
 
 Monitor sync status:
 ```bash
-export KUBECONFIG=artifacts/kubeconfig
+export KUBECONFIG=ansible/artifacts/kubeconfig
 kubectl -n argocd get applications
 ```
 
@@ -198,9 +213,20 @@ kubectl label secret github-repo -n argocd \
   argocd.argoproj.io/secret-type=repository
 ```
 
+### ArgoCD AppProjects
+
+Applications are grouped into AppProjects for RBAC and organisational clarity:
+
+| Project | Applications |
+|---------|-------------|
+| `infrastructure` | traefik, cert-manager, longhorn, cnpg, argocd-config |
+| `observability` | kube-prometheus-stack, grafana-config |
+
+Projects are defined in `argocd/projects/` and applied by Ansible (play 4) before the root Application.
+
 ## TLS certificates
 
-Three issuers are available in `k8s/cert-manager/`:
+Three issuers are available in `argocd/apps/cert-manager/config/`:
 
 | Issuer | Use case |
 |--------|---------|
@@ -222,9 +248,9 @@ kubectl -n cert-manager get secret selfsigned-ca-tls \
 ## Adding a new subdomain
 
 1. Add a DNS A record → Ingress LB floating IP
-2. Add an HTTPS listener in `k8s/traefik/gateway.yaml`
-3. Add a `Certificate` in `k8s/cert-manager/clusterissuer-prod.yaml`
-4. Add an `HTTPRoute` in your application namespace
+2. Add an HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
+3. Add a `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml`
+4. Add an `HTTPRoute` in your application's `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
 5. Push to `kost` branch — ArgoCD applies automatically
 
 ## Harbor container registry
@@ -255,10 +281,11 @@ UI: `https://keycloak.ass-nss.jkuzel02.online`
 
 Deployed via the **official Keycloak Operator** (`k8s.keycloak.org/v2alpha1`) at v26.5.5. Uses **CloudNativePG** for PostgreSQL — the operator auto-generates database credentials into secret `keycloak-postgres-app`.
 
-**Prerequisite** — create the admin bootstrap secret before ArgoCD syncs wave 3:
+**Prerequisite** — populate and apply the admin bootstrap secret before running Ansible play 4:
 ```bash
-# Edit k8s/keycloak/keycloak-credentialsSecret.yaml (gitignored), then:
-kubectl apply -f k8s/keycloak/keycloak-credentialsSecret.yaml
+# Edit ansible/files/k8s/manifests/keycloak-credentials-Secret.yaml (gitignored), then:
+kubectl apply -f ansible/files/k8s/manifests/keycloak-credentials-Secret.yaml \
+  --kubeconfig ansible/artifacts/kubeconfig
 ```
 
 Retrieve the admin password later:
@@ -292,10 +319,11 @@ UI: `https://grafana.ass-nss.jkuzel02.online`
 
 Deployed as part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Prometheus scrapes cluster metrics via ServiceMonitors; Grafana visualises them.
 
-**Prerequisite** — set the admin password and apply the secret before ArgoCD syncs wave 1:
+**Prerequisite** — populate and apply the admin password secret before running Ansible play 4:
 ```bash
-# Edit k8s/grafana/grafana-credentialsSecret.yaml (gitignored), then:
-kubectl apply -f k8s/grafana/grafana-credentialsSecret.yaml
+# Edit ansible/files/k8s/manifests/grafana-credentials-Secret.yaml (gitignored), then:
+kubectl apply -f ansible/files/k8s/manifests/grafana-credentials-Secret.yaml \
+  --kubeconfig ansible/artifacts/kubeconfig
 ```
 
 Retrieve Prometheus and Alertmanager (cluster-internal only):
