@@ -17,6 +17,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Storage | Longhorn (LVM over Cinder volumes) |
 | Registry | Harbor (container image registry) |
 | Secrets | HashiCorp Vault |
+| Database | CloudNativePG (PostgreSQL operator) |
 | Identity | Keycloak |
 
 ## Cluster layout
@@ -66,7 +67,8 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
     ├── argocd/         # ArgoCD HTTPRoute
     ├── harbor/         # Harbor HTTPRoute
     ├── vault/          # Vault HTTPRoute
-    └── keycloak/       # Keycloak HTTPRoute
+    ├── keycloak/           # Keycloak HTTPRoute
+    └── keycloak-postgres/  # CNPG Cluster resource
 ```
 
 ## Prerequisites
@@ -134,9 +136,9 @@ Once bootstrapped, ArgoCD syncs `k8s/apps/` from this repo and deploys all compo
 
 | Wave | Applications deployed |
 |------|-----------------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `keycloak` (Helm charts) |
-| 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers) |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (HTTPRoutes) |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg` (Helm charts) |
+| 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster) |
+| 3 | `keycloak` (Helm chart), `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config` (HTTPRoutes) |
 
 Monitor sync status:
 ```bash
@@ -235,9 +237,17 @@ kubectl create secret docker-registry harbor-credentials \
 
 UI: `https://keycloak.ass-nss.jkuzel02.online`
 
-Initial admin password (auto-generated on first install):
+Uses **CloudNativePG** for PostgreSQL — the operator auto-generates database credentials into secret `keycloak-postgres-app`.
+
+**Prerequisite** — set the admin password and apply the secret before ArgoCD syncs wave 3:
 ```bash
-kubectl get secret keycloak -n keycloak \
+# Edit k8s/keycloak/keycloak-credentialsSecret.yaml (gitignored), then:
+kubectl apply -f k8s/keycloak/keycloak-credentialsSecret.yaml
+```
+
+Retrieve the admin password later:
+```bash
+kubectl get secret keycloak-credentials -n keycloak \
   -o jsonpath="{.data.admin-password}" | base64 -d
 ```
 

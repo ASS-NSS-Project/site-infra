@@ -1,26 +1,26 @@
-# Wave 3 — Keycloak Helm chart (after CNPG cluster is healthy in wave 2)
+# Wave 1 — CloudNativePG operator (Helm chart)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: keycloak
+  name: cnpg
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   sources:
-    - repoURL: https://codecentric.github.io/helm-charts
-      chart: keycloakx
-      targetRevision: ">=2.0.0"
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      targetRevision: ">=0.18.0"
       helm:
         valueFiles:
-          - $values/k8s/helm-values/keycloak.yaml
+          - $values/k8s/helm-values/cnpg.yaml
     - repoURL: https://github.com/ASS-NSS-Project/site-infra
       targetRevision: kost
       ref: values
   destination:
     server: https://kubernetes.default.svc
-    namespace: keycloak
+    namespace: cnpg-system
   syncPolicy:
     automated:
       prune: true
