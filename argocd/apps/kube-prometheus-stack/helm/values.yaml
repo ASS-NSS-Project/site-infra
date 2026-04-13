@@ -32,6 +32,13 @@ prometheus:
             requests:
               storage: 20Gi
 
+nodeExporter:
+  operatingSystems:
+    aix:
+      enabled: false
+    darwin:
+      enabled: false
+
 alertmanager:
   alertmanagerSpec:
     storage:
