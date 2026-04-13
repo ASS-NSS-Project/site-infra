@@ -9,13 +9,18 @@ metadata:
 spec:
   revisionHistoryLimit: 0
   project: default
-  source:
-    repoURL: https://github.com/ASS-NSS-Project/site-infra
-    targetRevision: kost
-    path: argocd/apps
-    directory:
-      recurse: true
-      include: "*-Application.yaml"
+  sources:
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      path: argocd/apps
+      directory:
+        include: "*-AppProject.yaml"
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      path: argocd/apps
+      directory:
+        recurse: true
+        include: "*-Application.yaml"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
