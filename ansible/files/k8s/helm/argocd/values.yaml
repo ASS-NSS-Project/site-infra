@@ -14,6 +14,20 @@ configs:
   params:
     # TLS is terminated at the Traefik Gateway — ArgoCD runs insecure internally
     server.insecure: "true"
+  cm:
+    oidc.config: |
+      name: Keycloak
+      issuer: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss
+      clientID: argocd
+      clientSecret: $argocd-oidc-secret:client_secret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+  rbac:
+    policy.csv: |
+      g, admins, role:admin
+    policy.default: role:readonly
 
 server:
   replicas: 1
