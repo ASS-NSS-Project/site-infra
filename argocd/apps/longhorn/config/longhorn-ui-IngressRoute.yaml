@@ -22,5 +22,6 @@ spec:
           port: 80
       middlewares:
         - name: longhorn-auth
+        - name: longhorn-auth-errors
   tls:
     secretName: ass-nss-longhorn-tls
