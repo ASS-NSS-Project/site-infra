@@ -19,6 +19,22 @@ grafana:
     enabled: true
     storageClassName: longhorn
     size: 5Gi
+  envFromSecrets:
+    - name: grafana-oidc-secret
+  grafana.ini:
+    server:
+      root_url: https://grafana.ass-nss.jkuzel02.online
+    auth.generic_oauth:
+      enabled: true
+      name: Keycloak
+      allow_sign_up: true
+      client_id: grafana
+      client_secret: $__env{client_secret}
+      scopes: openid profile email
+      auth_url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/protocol/openid-connect/auth
+      token_url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/protocol/openid-connect/token
+      api_url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/protocol/openid-connect/userinfo
+      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
 
 prometheus:
   prometheusSpec:
