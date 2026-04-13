@@ -7,10 +7,19 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`longhorn.ass-nss.jkuzel02.online`)
+    - match: Host(`longhorn.ass-nss.jkuzel02.online`) && PathPrefix(`/oauth2/`)
       kind: Rule
       services:
         - name: oauth2-proxy
+          namespace: oauth2-proxy
           port: 80
+    - match: Host(`longhorn.ass-nss.jkuzel02.online`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+      middlewares:
+        - name: longhorn-auth
+        - name: longhorn-auth-errors
   tls:
     secretName: ass-nss-longhorn-tls

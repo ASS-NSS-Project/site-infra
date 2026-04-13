@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ass-nss-alertmanager-tls
+  namespace: monitoring
+spec:
+  secretName: ass-nss-alertmanager-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - alertmanager.ass-nss.jkuzel02.online

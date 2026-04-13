@@ -1,8 +1,8 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: longhorn-auth
-  namespace: longhorn-system
+  name: monitoring-auth
+  namespace: monitoring
 spec:
   forwardAuth:
     address: http://oauth2-proxy.oauth2-proxy.svc.cluster.local/oauth2/auth
@@ -14,13 +14,25 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: longhorn-auth-errors
-  namespace: longhorn-system
+  name: monitoring-auth-errors
+  namespace: monitoring
 spec:
   errors:
     status:
       - "401"
     service:
-      name: oauth2-proxy
+      name: oauth2-proxy-ext
       port: 80
     query: /oauth2/sign_in?rd={url}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy-ext
+  namespace: monitoring
+spec:
+  type: ExternalName
+  externalName: oauth2-proxy.oauth2-proxy.svc.cluster.local
+  ports:
+    - port: 80
+      targetPort: 80

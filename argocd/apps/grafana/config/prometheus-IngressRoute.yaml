@@ -1,0 +1,24 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-ui
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`prometheus.ass-nss.jkuzel02.online`) && PathPrefix(`/oauth2/`)
+      kind: Rule
+      services:
+        - name: oauth2-proxy-ext
+          port: 80
+    - match: Host(`prometheus.ass-nss.jkuzel02.online`)
+      kind: Rule
+      services:
+        - name: prometheus-operated
+          port: 9090
+      middlewares:
+        - name: monitoring-auth
+        - name: monitoring-auth-errors
+  tls:
+    secretName: ass-nss-prometheus-tls
