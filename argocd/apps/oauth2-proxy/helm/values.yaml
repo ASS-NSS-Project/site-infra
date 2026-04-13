@@ -3,8 +3,7 @@
 # Secrets are injected via environment variables from ESO-synced K8s secrets.
 
 config:
-  clientID: "oauth2-proxy"
-  # clientSecret and cookieSecret are provided via existingSecret
+  # clientID, clientSecret and cookieSecret are all provided via existingSecret
   existingSecret: oauth2-proxy-credentials
 
 extraArgs:
