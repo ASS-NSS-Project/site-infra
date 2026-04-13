@@ -3,7 +3,7 @@ terraform {
     bucket = "k3s-cluster"
     prefix = "terraform/keycloak/state"
   }
-  
+
   required_providers {
     keycloak = {
       source  = "mrparkers/keycloak"

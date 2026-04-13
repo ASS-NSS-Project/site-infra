@@ -94,3 +94,17 @@ resource "vault_kv_secret_v2" "longhorn" {
     htpasswd = var.longhorn_htpasswd
   })
 }
+
+# oauth2-proxy cookie secret — randomly generated, stored in Vault
+resource "random_bytes" "oauth2_proxy_cookie" {
+  length = 32
+}
+
+resource "vault_kv_secret_v2" "oauth2_proxy_cookie" {
+  mount = vault_mount.secret.path
+  name  = "oidc/oauth2-proxy-cookie"
+
+  data_json = jsonencode({
+    cookie_secret = random_bytes.oauth2_proxy_cookie.base64
+  })
+}

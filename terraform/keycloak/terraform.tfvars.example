@@ -10,8 +10,3 @@ vault_root_token = "hvs.XXXXXXXXXXXXXXXXXXXXXXXX"
 # Authorized redirect URI: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint
 google_client_id     = ""
 google_client_secret = ""
-
-# GitHub — Settings → Developer settings → OAuth Apps → New OAuth App
-# Authorization callback URL: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/github/endpoint
-github_client_id     = ""
-github_client_secret = ""
