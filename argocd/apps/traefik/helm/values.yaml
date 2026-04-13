@@ -23,6 +23,7 @@ providers:
     enabled: false
   kubernetesCRD:
     enabled: true
+    allowCrossNamespace: true
 
 # Do not create a GatewayClass/Gateway automatically — managed in argocd/apps/traefik/config/
 gateway:
