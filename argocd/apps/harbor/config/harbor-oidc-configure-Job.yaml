@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: harbor-oidc-configure
+  namespace: harbor
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: configure
+          image: curlimages/curl:latest
+          env:
+            - name: HARBOR_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: harbor-credentials
+                  key: HARBOR_ADMIN_PASSWORD
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: harbor-oidc-secret
+                  key: client_secret
+          command:
+            - sh
+            - -c
+            - |
+              curl -sf -X PUT \
+                "http://harbor/api/v2.0/configurations" \
+                -u "admin:$HARBOR_ADMIN_PASSWORD" \
+                -H "Content-Type: application/json" \
+                -d "{
+                  \"auth_mode\": \"oidc_auth\",
+                  \"oidc_name\": \"Keycloak\",
+                  \"oidc_endpoint\": \"https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss\",
+                  \"oidc_client_id\": \"harbor\",
+                  \"oidc_client_secret\": \"$OIDC_CLIENT_SECRET\",
+                  \"oidc_scope\": \"openid,profile,email\",
+                  \"oidc_admin_group\": \"admins\",
+                  \"oidc_auto_onboard\": true,
+                  \"oidc_user_claim\": \"preferred_username\"
+                }"
