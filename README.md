@@ -343,28 +343,57 @@ Part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Admin c
 
 The goal is a single sign-on layer across all cluster UIs using Keycloak as the central identity broker. Users log in with their Google or GitHub account — Keycloak federates the identity, and every app in the cluster trusts Keycloak as its OIDC provider.
 
-**Plan:**
+**Deployment chain** (extends the existing 4-step flow):
 
-1. **Register OAuth apps** on Google Cloud Console and GitHub (one each), pointing their callback URLs at Keycloak's broker endpoint.
+```
+terraform/infra → ansible → vault operator init → terraform/vault → terraform/keycloak → configure apps
+      (1)            (2)              (3)                 (4)                (5)                (6)
+```
 
-2. **Provision Keycloak via Terraform** using the [mrparkers/keycloak](https://registry.terraform.io/providers/mrparkers/keycloak/latest) provider (`terraform/keycloak/` — a third Terraform phase, run after Vault and Keycloak are up):
-   - Create a realm
-   - Add Google and GitHub as Identity Providers (Client ID + Secret from step 1, stored in Vault)
-   - Create one OIDC client per app with correct redirect URIs
-   - Store generated client secrets in Vault (`secret/oidc/<app>`) for ESO to sync
+**Step 5 — `terraform/keycloak/`** (run after Keycloak is up and healthy):
 
-3. **Configure each app** to use Keycloak as its OIDC provider (all have native support):
+```bash
+cd terraform/keycloak
+cp terraform.tfvars.example terraform.tfvars
+# Fill in: keycloak creds, vault token, Google + GitHub OAuth app credentials
+terraform init
+terraform apply
+```
 
-   | App | Config location | Notes |
-   |-----|----------------|-------|
-   | ArgoCD | `argocd/apps/argocd/config/` | `oidc.config` in ArgoCD ConfigMap |
-   | Grafana | `argocd/apps/grafana/helm/values.yaml` | `grafana.ini` `[auth.generic_oauth]` section |
-   | Longhorn | replace basicAuth Middleware | Traefik ForwardAuth + oauth2-proxy sidecar pointing at Keycloak |
-   | Harbor | Harbor UI → Configuration → Auth | OIDC mode, points at Keycloak realm |
+What it provisions:
+- `ass-nss` realm with registration disabled
+- Google OIDC identity provider (via `keycloak_oidc_google_identity_provider`)
+- GitHub OAuth2 identity provider (via `keycloak_oidc_identity_provider`)
+- `admins` group — members get admin access in ArgoCD, Grafana, Harbor
+- One confidential OIDC client per app with groups claim mapper
+- All client secrets pushed to Vault under `secret/oidc/<app>` for ESO to sync
 
-4. **oauth2-proxy** — for apps without native OIDC (e.g. Longhorn UI), deploy oauth2-proxy as a Traefik ForwardAuth middleware backed by Keycloak. One shared instance can protect multiple apps.
+**Before running**, register the OAuth apps to obtain the Client ID and Secret:
 
-**Result:** a single `terraform/keycloak/` apply wires up the full SSO chain. Users authenticate once via Google or GitHub and get seamless access to all cluster UIs.
+**Google:**
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create → OAuth 2.0 Client ID → Web application
+3. Under "Authorized redirect URIs" add: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`
+4. Copy the Client ID and Client Secret into `terraform.tfvars`
+
+**GitHub:**
+1. Go to GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
+2. Set "Authorization callback URL" to: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/github/endpoint`
+3. After saving, click "Generate a new client secret"
+4. Copy the Client ID and Client Secret into `terraform.tfvars`
+
+**Step 6 — Configure each app** to use Keycloak as its OIDC provider:
+
+| App | Approach | Config location |
+|-----|----------|----------------|
+| ArgoCD | Native OIDC — `oidc.config` in ArgoCD ConfigMap | `argocd/apps/argocd/config/` |
+| Grafana | Native OIDC — `grafana.ini` `[auth.generic_oauth]` | `argocd/apps/grafana/helm/values.yaml` |
+| Harbor | Native OIDC — Harbor admin UI → Configuration → Authentication | Harbor UI (one-time) |
+| Longhorn | oauth2-proxy as Traefik ForwardAuth (replaces basicAuth) | new `argocd/apps/oauth2-proxy/` |
+
+Client secrets flow: Vault (`secret/oidc/<app>`) → ESO ExternalSecret → K8s Secret → app config.
+
+**oauth2-proxy** — a single shared deployment protects apps without native OIDC. Traefik ForwardAuth middleware delegates auth to it; it validates the session against Keycloak and either allows or redirects to login.
 
 ## Longhorn storage
 
