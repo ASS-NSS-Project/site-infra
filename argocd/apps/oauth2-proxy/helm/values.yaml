@@ -10,10 +10,10 @@ extraArgs:
   provider: keycloak-oidc
   oidc-issuer-url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss
   email-domain: "*"
-  upstream: static://200
+  upstream: http://longhorn-frontend.longhorn-system.svc.cluster.local
   cookie-secure: "true"
   cookie-domain: ".ass-nss.jkuzel02.online"
   whitelist-domain: ".ass-nss.jkuzel02.online"
-  set-xauthrequest: "true"
   skip-provider-button: "true"
   silence-ping-logging: "true"
+  redirect-url: https://longhorn.ass-nss.jkuzel02.online/oauth2/callback

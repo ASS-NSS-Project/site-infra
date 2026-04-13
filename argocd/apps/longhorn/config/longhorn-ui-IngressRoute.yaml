@@ -7,21 +7,11 @@ spec:
   entryPoints:
     - websecure
   routes:
-    # oauth2-proxy callback — must be reachable without auth check
-    - match: Host(`longhorn.ass-nss.jkuzel02.online`) && PathPrefix(`/oauth2/`)
+    - match: Host(`longhorn.ass-nss.jkuzel02.online`)
       kind: Rule
       services:
         - name: oauth2-proxy
           namespace: oauth2-proxy
           port: 80
-    # Longhorn UI — protected by ForwardAuth
-    - match: Host(`longhorn.ass-nss.jkuzel02.online`)
-      kind: Rule
-      services:
-        - name: longhorn-frontend
-          port: 80
-      middlewares:
-        - name: longhorn-auth
-        - name: longhorn-auth-errors
   tls:
     secretName: ass-nss-longhorn-tls
