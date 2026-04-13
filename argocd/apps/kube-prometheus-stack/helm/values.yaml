@@ -1,24 +1,62 @@
-# kube-prometheus-stack
-# Grafana is the only UI exposed externally (via HTTPRoute).
-# Prometheus and Alertmanager are cluster-internal.
-#
-# Prerequisite — create the Grafana admin secret before ArgoCD syncs:
-#   Applied by Ansible from k8s/manifests/grafana-credentials-Secret.yaml
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+  route:
+    main:
+      enabled: true
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      hostnames:
+        - alertmanager.ass-nss.jkuzel02.online
+      parentRefs:
+        - name: traefik-gateway
+          namespace: traefik
+          sectionName: websecure-alertmanager
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: monitoring-auth
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: monitoring-auth-errors
+      additionalRules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /oauth2/
+          backendRefs:
+            - name: oauth2-proxy-ext
+              port: 80
 
 grafana:
   admin:
     existingSecret: grafana-credentials
     userKey: admin-user
     passwordKey: admin-password
-  ingress:
-    enabled: false
-  service:
-    type: ClusterIP
-    port: 80
   persistence:
     enabled: true
+    type: sts
     storageClassName: longhorn
+    accessModes:
+      - ReadWriteOnce
     size: 5Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
   envFromSecrets:
     - name: grafana-oidc-secret
   grafana.ini:
@@ -36,18 +74,6 @@ grafana:
       api_url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/protocol/openid-connect/userinfo
       role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
 
-prometheus:
-  prometheusSpec:
-    retention: 14d
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: longhorn
-          accessModes: [ReadWriteOnce]
-          resources:
-            requests:
-              storage: 20Gi
-
 nodeExporter:
   operatingSystems:
     aix:
@@ -55,13 +81,48 @@ nodeExporter:
     darwin:
       enabled: false
 
-alertmanager:
-  alertmanagerSpec:
-    storage:
+prometheus:
+  prometheusSpec:
+    retention: 14d
+    storageSpec:
       volumeClaimTemplate:
         spec:
           storageClassName: longhorn
-          accessModes: [ReadWriteOnce]
+          accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 2Gi
+              storage: 20Gi
+  route:
+    main:
+      enabled: true
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      hostnames:
+        - prometheus.ass-nss.jkuzel02.online
+      parentRefs:
+        - name: traefik-gateway
+          namespace: traefik
+          sectionName: websecure-prometheus
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: monitoring-auth
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: monitoring-auth-errors
+      additionalRules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /oauth2/
+          backendRefs:
+            - name: oauth2-proxy-ext
+              port: 80

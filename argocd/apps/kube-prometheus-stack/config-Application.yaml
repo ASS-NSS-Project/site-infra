@@ -1,20 +1,17 @@
-# Wave 3 — Grafana HTTPRoute (depends on Traefik + cert-manager from waves 1-2)
+# Wave 3 — Prometheus + Alertmanager IngressRoutes + auth middlewares
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grafana-config
+  name: kube-prometheus-stack-config
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  revisionHistoryLimit: 0
   project: observability
   source:
     repoURL: https://github.com/ASS-NSS-Project/site-infra
     targetRevision: kost
-    path: argocd/apps/grafana/config
+    path: argocd/apps/kube-prometheus-stack/config
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
