@@ -1,0 +1,20 @@
+# oauth2-proxy — ForwardAuth provider for Traefik
+# Protects apps without native OIDC (Longhorn, Prometheus, Alertmanager)
+# Secrets are injected via environment variables from ESO-synced K8s secrets.
+
+config:
+  clientID: "oauth2-proxy"
+  # clientSecret and cookieSecret are provided via existingSecret
+  existingSecret: oauth2-proxy-credentials
+
+extraArgs:
+  provider: keycloak-oidc
+  oidc-issuer-url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss
+  email-domain: "*"
+  upstream: static://200
+  cookie-secure: "true"
+  cookie-domain: ".ass-nss.jkuzel02.online"
+  whitelist-domain: ".ass-nss.jkuzel02.online"
+  set-xauthrequest: "true"
+  skip-provider-button: "true"
+  silence-ping-logging: "true"

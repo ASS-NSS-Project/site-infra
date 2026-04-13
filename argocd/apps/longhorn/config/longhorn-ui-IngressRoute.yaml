@@ -1,7 +1,3 @@
-# Exposes the Longhorn UI at https://longhorn.ass-nss.jkuzel02.online
-# Uses Traefik IngressRoute (not Gateway API HTTPRoute) so that the
-# basicAuth Middleware can be attached natively.
-# TLS cert is issued by cert-manager into longhorn-system/ass-nss-longhorn-tls.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -11,6 +7,14 @@ spec:
   entryPoints:
     - websecure
   routes:
+    # oauth2-proxy callback — must be reachable without auth check
+    - match: Host(`longhorn.ass-nss.jkuzel02.online`) && PathPrefix(`/oauth2/`)
+      kind: Rule
+      services:
+        - name: oauth2-proxy
+          namespace: oauth2-proxy
+          port: 80
+    # Longhorn UI — protected by ForwardAuth
     - match: Host(`longhorn.ass-nss.jkuzel02.online`)
       kind: Rule
       services:
