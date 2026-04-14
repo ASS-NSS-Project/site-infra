@@ -25,20 +25,22 @@ resource "vault_jwt_auth_backend" "oidc" {
 }
 
 resource "vault_jwt_auth_backend_role" "default" {
-  backend               = vault_jwt_auth_backend.oidc.path
-  role_name             = "default"
-  role_type             = "oidc"
-  bound_audiences       = [keycloak_openid_client.vault.client_id]
-  user_claim            = "sub"
-  groups_claim          = "groups"
-  oidc_scopes           = ["openid", "profile", "email"]
+  backend         = vault_jwt_auth_backend.oidc.path
+  role_name       = "default"
+  role_type       = "oidc"
+  bound_audiences = [keycloak_openid_client.vault.client_id]
+  user_claim      = "sub"
+  groups_claim    = "groups"
+  oidc_scopes     = ["openid", "profile", "email"]
+
   allowed_redirect_uris = [
     "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
     "http://localhost:8250/oidc/callback",
   ]
-  token_policies    = ["default"]
-  token_ttl         = 3600
-  token_max_ttl     = 86400
+
+  token_policies = ["default"]
+  token_ttl      = 3600
+  token_max_ttl  = 86400
 }
 
 # --- Admin policy ---
