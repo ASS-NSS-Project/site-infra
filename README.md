@@ -381,6 +381,8 @@ Vault supports two auth methods:
 
 **OIDC login via UI**: select "OIDC" on the login page, leave the role blank, click "Sign in with OIDC Provider". Members of the Keycloak `admins` group get the `vault-admin` policy (full access).
 
+> **Role field**: The OIDC login form shows a "Role" field — leave it blank. Vault uses the `default` role automatically. Filling in a role name is not a security risk: roles are validated server-side against the JWT claims, so a user cannot gain access by guessing a role name they are not entitled to.
+
 **OIDC login via CLI**:
 ```bash
 vault login -method=oidc -address=https://vault.ass-nss.jkuzel02.online
