@@ -75,3 +75,51 @@ All four modules use the GCS backend (`site-infra` bucket) — authenticate with
 ## Lock files
 
 `.terraform.lock.hcl` is committed for all four modules. It pins exact provider versions and checksums. Update it intentionally with `terraform init -upgrade` when upgrading a provider, then commit the result.
+
+## Troubleshooting
+
+### GCS backend: state writes fail with 404
+
+`terraform init` may succeed (the bucket is reachable) but `terraform apply` then fails with a misleading 404 on the lock file:
+
+```
+Error loading state: writing "gs://site-infra/terraform/gcp/state/default.tflock" failed:
+googleapi: Error 404: The specified bucket does not exist., notFound
+```
+
+GCS returns 404 instead of 403 when the authenticated identity lacks write permissions — the bucket exists but your credentials can't write to it. Fix:
+
+```bash
+# Check which identity you're using
+gcloud auth application-default print-access-token
+
+# Re-authenticate if needed
+gcloud auth application-default login
+
+# Or grant write access explicitly
+gsutil iam ch user:YOUR_EMAIL:objectAdmin gs://site-infra
+```
+
+### GCP KMS resources already exist (409 on first apply)
+
+If the GCP module was applied before without Terraform managing the state, `apply` will fail with 409 conflicts on KMS resources. Import each conflicting resource into state rather than trying to recreate it:
+
+```bash
+terraform import google_kms_key_ring.vault \
+  projects/enc-ass-nss-project/locations/global/keyRings/vault-keyring
+
+terraform import google_kms_crypto_key.vault_unseal \
+  projects/enc-ass-nss-project/locations/global/keyRings/vault-keyring/cryptoKeys/vault-unseal-key
+```
+
+After importing, `terraform plan` should show only the IAM bindings and local file as pending — no key ring or crypto key creation. Then `terraform apply` completes cleanly.
+
+### OpenStack network quota exceeded (409 on first apply)
+
+When redeploying into a project that already has a network and router from a previous deployment, `apply` fails with quota errors on `openstack_networking_network_v2` and `openstack_networking_router_v2`. The fix is to delete the leftover resources so Terraform can recreate them:
+
+```bash
+bash terraform/openstack/cleanup-network.sh
+```
+
+The script removes the router, subnet, and network in the correct dependency order, then Terraform creates them fresh on the next `apply`.
