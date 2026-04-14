@@ -30,6 +30,16 @@
   connection: local
   tags: "argocd,apps"
   tasks:
+    - name: Create vault namespace
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: vault
+
     - name: Create Vault KMS SA secret
       kubernetes.core.k8s:
         state: present
