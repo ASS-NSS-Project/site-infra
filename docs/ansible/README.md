@@ -16,7 +16,7 @@ Static files (commit): `hosts.yml`, `host_vars/cp-1.yml`, `host_vars/cp-2.yml`, 
 
 Generated/gitignored:
 
-- `inventory/host_vars/cp-0.yml` and `inventory/group_vars/all/terraform.yml` — written by `terraform/infra`
+- `inventory/host_vars/cp-0.yml` and `inventory/group_vars/all/terraform.yml` — written by `terraform/openstack`
 - `artifacts/kubeconfig` — fetched from cp-0 by the rke2 role, needed by plays 3 and 4
 
 ## Playbook

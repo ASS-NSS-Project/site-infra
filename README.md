@@ -43,7 +43,7 @@ Load balancer VIP `10.8.0.100` — ports 6443 (K8s API), 9345 (RKE2 join, cluste
 
 ## Layers
 
-- [terraform](docs/terraform/README.md) — three root modules: infra, vault, keycloak
+- [terraform](docs/terraform/README.md) — four root modules: gcp, openstack, vault, keycloak
 - [ansible](docs/ansible/README.md) — OS baseline, RKE2, ArgoCD bootstrap
 - [argocd](docs/argocd/README.md) — app-of-apps, sync waves, ExternalSecret patterns
 - [.github](docs/.github/README.md) — GitHub Actions jobs and what each enforces
@@ -52,7 +52,7 @@ Load balancer VIP `10.8.0.100` — ports 6443 (K8s API), 9345 (RKE2 join, cluste
 
 - Terraform >= 1.11
 - Ansible >= 2.16 + Helm >= 3.0 in PATH
-- `terraform/infra/clouds.yaml` — OpenStack application credentials (gitignored)
+- `terraform/openstack/clouds.yaml` — OpenStack application credentials (gitignored)
 - GCS credentials: `gcloud auth application-default login`
 
 ```bash
@@ -63,7 +63,7 @@ ansible-galaxy collection install -r ansible/requirements.yml
 ## Deployment
 
 ```text
-terraform/infra → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
+terraform/gcp + terraform/openstack → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
 Each step gates the next — do not skip ahead.
@@ -73,20 +73,23 @@ Each step gates the next — do not skip ahead.
 Create the GCS bucket for Terraform state (one-time, before any `terraform init`):
 
 ```bash
-gcloud storage buckets create gs://k3s-cluster --location=europe-west1
+gcloud storage buckets create gs://site-infra --location=europe-west1
 ```
 
 Authenticate for GCS backend and OpenStack:
 
 ```bash
 gcloud auth application-default login
-# place clouds.yaml in terraform/infra/clouds.yaml
+# place clouds.yaml in terraform/openstack/clouds.yaml
 ```
 
-### 1. terraform/infra
+### 1. terraform/gcp and terraform/openstack
+
+These two modules are independent — run them in parallel or in either order:
 
 ```bash
-cd terraform/infra && terraform init && terraform apply
+cd terraform/gcp && terraform init && terraform apply
+cd terraform/openstack && terraform init && terraform apply
 ```
 
 Update DNS A records after apply — all hostnames point to the ingress LB IP:
@@ -147,13 +150,14 @@ Destroy in reverse order to respect dependencies:
 ```bash
 cd terraform/keycloak && terraform destroy
 cd terraform/vault && terraform destroy
-cd terraform/infra && terraform destroy
+cd terraform/openstack && terraform destroy
+cd terraform/gcp && terraform destroy
 ```
 
 Delete the GCS state bucket last (this is irreversible):
 
 ```bash
-gcloud storage rm -r gs://k3s-cluster
+gcloud storage rm -r gs://site-infra
 ```
 
 ## Secrets management

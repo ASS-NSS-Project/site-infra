@@ -25,7 +25,7 @@ Working branch: `kost`. All ArgoCD `targetRevision` fields point here. PRs targe
 Each step gates the next — do not skip ahead:
 
 ```text
-terraform/infra → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
+terraform/gcp + terraform/openstack → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
 Details for each layer live in the layer's own README.md file.
