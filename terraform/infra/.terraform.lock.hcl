@@ -6,6 +6,7 @@ provider "registry.terraform.io/hashicorp/google" {
   constraints = "~> 6.0"
   hashes = [
     "h1:79CwMTsp3Ud1nOl5hFS5mxQHyT0fGVye7pqpU0PPlHI=",
+    "h1:faTJQOetP9/RYuHwA3r2SWnuYoyzQNm4tUWZrZggcgY=",
     "zh:1f3513fcfcbf7ca53d667a168c5067a4dd91a4d4cccd19743e248ff31065503c",
     "zh:3da7db8fc2c51a77dd958ea8baaa05c29cd7f829bd8941c26e2ea9cb3aadc1e5",
     "zh:3e09ac3f6ca8111cbb659d38c251771829f4347ab159a12db195e211c76068bb",
@@ -26,6 +27,7 @@ provider "registry.terraform.io/hashicorp/local" {
   constraints = "~> 2.0"
   hashes = [
     "h1:3jWHVwO5QUIS9V1NsK10ZzdpkK2ABuB4G+UIWrVeGp4=",
+    "h1:KCuj8nPbNP/ofQrAoQIuQ3CP6k+ADpULvxr7dw2PrpM=",
     "zh:05f18164beab4a84753e5fedf463771ee0c6eca8e90346b8766f1e1c186dec1e",
     "zh:563a0702e3711e25ba8930120899b681378b50cbb957fd204b37745c7c9b5f40",
     "zh:5b56ab2ed70ed92721febb4a070af0837f1084c44825c18e4b95f7efb1d45d26",
@@ -46,6 +48,7 @@ provider "registry.terraform.io/terraform-provider-openstack/openstack" {
   constraints = "~> 3.0.0"
   hashes = [
     "h1:5LLYtkab+Vdg8CE9pI1O8ufh3sTXqWlY3uKxko/y3X8=",
+    "h1:sxq+0vFl4SfV9dlut5liwaH4FejyNIf4ClAjRgowxv8=",
     "zh:01718f229597b34ed430236a230a407dacd6289543556d33910e151462e8cb8a",
     "zh:2424c5347d35fe0de778d1c40dbe8d9b1278309c4d65cce31709e6fcbec139df",
     "zh:2a785f9efd6d8c979031803dd78411a583bc0d9a572ddf5fb9e539cbbfc1ce43",
