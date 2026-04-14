@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "k3s-cluster"
+    bucket = "site-infra"
     prefix = "terraform/keycloak/state"
   }
 

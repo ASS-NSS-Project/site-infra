@@ -2,6 +2,10 @@
 # Vault calls GCP KMS to encrypt/decrypt its master key on every (re)start,
 # eliminating the need for manual unseal after pod restarts.
 
+locals {
+  ansible_root = "${path.module}/../../ansible"
+}
+
 resource "google_project_service" "kms" {
   service            = "cloudkms.googleapis.com"
   disable_on_destroy = true
