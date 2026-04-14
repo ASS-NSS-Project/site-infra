@@ -6,9 +6,8 @@ rules:
     max: 120
     level: warning
 
-  # Ansible and Kubernetes both use multi-document files occasionally
-  document-start:
-    present: false
+  # Neither require nor forbid --- (Ansible uses it, Kubernetes often doesn't)
+  document-start: disable
 
   # Allow both yes/no (Ansible) and true/false (Kubernetes)
   truthy:

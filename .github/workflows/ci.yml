@@ -27,7 +27,7 @@ jobs:
           else
             git log -1 --format=%B > "$MSG_FILE"
           fi
-          pre-commit run --hook-stage commit-msg --commit-msg-filename "$MSG_FILE"
+          pre-commit run -c .github/config/pre-commit-config.yaml --hook-stage commit-msg --commit-msg-filename "$MSG_FILE"
 
   yamllint:
     name: YAML lint
@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install yamllint
-      - run: yamllint .
+      - run: yamllint -c .github/config/yamllint.yaml .
 
   markdownlint:
     name: Markdown lint
@@ -49,7 +49,7 @@ jobs:
         with:
           node-version: "22"
       - run: npm install -g markdownlint-cli
-      - run: markdownlint "**/*.md" --ignore .venv
+      - run: markdownlint --config .github/config/markdownlint.yaml "**/*.md" --ignore-path .gitignore
 
   terraform-fmt:
     name: Terraform format
