@@ -1,4 +1,4 @@
-# argocd/CLAUDE.md
+# ArgoCD
 
 All application delivery lives here. ArgoCD self-heals against this directory on the `kost` branch — every change merged to `kost` is applied automatically.
 
@@ -11,7 +11,7 @@ All application delivery lives here. ArgoCD self-heals against this directory on
 1. Create `apps/<app>/` with the structure below
 2. Confirm the sync wave with the developer before committing
 3. Set `revisionHistoryLimit: 0` and `syncPolicy.automated` on every Application
-4. Add the finalizer only if the app is stateless — see root CLAUDE.md for the list of apps that must not have it
+4. Add the finalizer only if the app is stateless — see root README for the list of apps that must not have it
 5. If the app needs Vault credentials, add an ExternalSecret in `config/`
 
 ## Directory structure

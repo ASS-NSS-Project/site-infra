@@ -6,7 +6,11 @@ Context for Claude Code. Read this before touching anything.
 
 Every change must be reflected in the right documentation file. README is for humans operating the system. CLAUDE.md files are for understanding conventions and structure.
 
-Each layer owns its documentation: update `README.md` for anything user-facing (URLs, cluster layout, deployment steps), this file for project-wide conventions, and the layer's own CLAUDE.md or README for anything scoped to that layer (`terraform/`, `ansible/`, `argocd/`, `.github/`).
+Each layer owns its documentation: update `README.md` for anything user-facing (URLs, cluster layout, deployment steps), this file for project-wide conventions, and the layer's own README under `docs/` for anything scoped to that layer.
+
+All layer READMEs live in `docs/` — not inside their respective source directories. This is intentional: GitHub renders any `README.md` it finds in a directory as that directory's description, which means a `terraform/README.md` or `.github/README.md` would shadow or replace the root `README.md` when browsing the repo. Keeping docs in `docs/` avoids that collision. When you add or change anything in `terraform/`, `ansible/`, `argocd/`, or CI, update the corresponding file in `docs/`.
+
+Layer READMEs are imported at the bottom of this file.
 
 When unsure: README is for running the system, CLAUDE.md is for building it.
 
@@ -24,7 +28,7 @@ Each step gates the next — do not skip ahead:
 terraform/infra → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
-Details for each layer live in the layer's own CLAUDE.md file.
+Details for each layer live in the layer's own README.md file.
 
 ## Writing style
 
@@ -75,3 +79,10 @@ All validation runs in GitHub Actions on push to `kost`. Jobs are documented in 
 - Rollback via `git revert` — never `argocd app rollback`. ArgoCD self-heals from git.
 - Secrets live in Vault. Kubernetes gets them only via ExternalSecret → ESO → Vault. Never inject them directly.
 - Do not touch stateful helm apps (longhorn-helm, vault-helm, harbor-helm) without explicit confirmation — they own PVCs.
+
+## Layer documentation
+
+@docs/terraform/README.md
+@docs/ansible/README.md
+@docs/argocd/README.md
+@docs/.github/README.md

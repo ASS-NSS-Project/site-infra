@@ -12,6 +12,8 @@ resource "openstack_networking_secgroup_v2" "internal" {
 
 # --- External Rules (applied to CP-0 bastion + LB VIP ports) ---
 
+# Public ingress is intentional here — these ports are exposed by design on the cluster edge.
+#tfsec:ignore:openstack-networking-no-public-ingress
 resource "openstack_networking_secgroup_rule_v2" "ssh_external" {
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -22,6 +24,7 @@ resource "openstack_networking_secgroup_rule_v2" "ssh_external" {
   security_group_id = openstack_networking_secgroup_v2.external.id
 }
 
+#tfsec:ignore:openstack-networking-no-public-ingress
 resource "openstack_networking_secgroup_rule_v2" "icmp_external" {
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -30,6 +33,7 @@ resource "openstack_networking_secgroup_rule_v2" "icmp_external" {
   security_group_id = openstack_networking_secgroup_v2.external.id
 }
 
+#tfsec:ignore:openstack-networking-no-public-ingress
 resource "openstack_networking_secgroup_rule_v2" "http_external" {
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -40,6 +44,7 @@ resource "openstack_networking_secgroup_rule_v2" "http_external" {
   security_group_id = openstack_networking_secgroup_v2.external.id
 }
 
+#tfsec:ignore:openstack-networking-no-public-ingress
 resource "openstack_networking_secgroup_rule_v2" "https_external" {
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -51,6 +56,7 @@ resource "openstack_networking_secgroup_rule_v2" "https_external" {
 }
 
 # Kubernetes API server — exposed via API LB FIP
+#tfsec:ignore:openstack-networking-no-public-ingress
 resource "openstack_networking_secgroup_rule_v2" "k8s_api_external" {
   direction         = "ingress"
   ethertype         = "IPv4"

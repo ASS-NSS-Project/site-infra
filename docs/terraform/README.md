@@ -1,6 +1,6 @@
-# terraform/CLAUDE.md
+# Terraform
 
-Three independent root modules — each has its own GCS backend state and must be applied in the order defined in the root CLAUDE.md.
+Three independent root modules — each has its own GCS backend state and must be applied in the order defined in the root README.
 
 ## Modules and their dependencies
 
@@ -16,9 +16,31 @@ Files are numbered: `00-providers.tf` always first (backend + providers), then `
 
 Current files:
 
-- **infra/**: 00-providers, 01-network, 02-secgroups, 03-ports, 04-instances, 05-volumes, 06-loadbalancers, 07-floating-ips, 08-ansible-inventory, 09-gcp-kms
-- **vault/**: 00-providers, 01-vault, 02-vault-k8s-auth
-- **keycloak/**: 00-providers, 01-realm, 02-identity-providers, 03-clients, 04-vault-secrets, 05-vault-oidc
+```text
+terraform/
+├── infra/
+│   ├── 00-providers.tf          # GCS backend + OpenStack + GCP providers
+│   ├── 01-network.tf            # router, subnet, network
+│   ├── 02-secgroups.tf          # external and internal security groups
+│   ├── 03-ports.tf              # fixed-IP ports for each node
+│   ├── 04-instances.tf          # control plane and worker VMs
+│   ├── 05-volumes.tf            # Cinder volumes for RKE2 and Longhorn
+│   ├── 06-loadbalancers.tf      # Octavia LB for API and ingress
+│   ├── 07-floating-ips.tf       # FIPs for cp-0 and ingress LB
+│   ├── 08-ansible-inventory.tf  # writes host_vars and group_vars for Ansible
+│   └── 09-gcp-kms.tf            # KMS key ring and key for Vault auto-unseal
+├── vault/
+│   ├── 00-providers.tf          # GCS backend + Vault provider
+│   ├── 01-vault.tf              # KV v2 engine and service credentials
+│   └── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
+└── keycloak/
+    ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
+    ├── 01-realm.tf              # realm definition
+    ├── 02-identity-providers.tf # Google OIDC federation
+    ├── 03-clients.tf            # OIDC clients per service
+    ├── 04-vault-secrets.tf      # pushes client secrets to Vault
+    └── 05-vault-oidc.tf         # Vault OIDC auth method
+```
 
 ## Secrets and auth
 

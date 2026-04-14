@@ -41,6 +41,13 @@ This repo uses [Claude Code](https://claude.ai/code) for AI-assisted development
 
 Load balancer VIP `10.8.0.100` — ports 6443 (K8s API), 9345 (RKE2 join, cluster-only), 80/443 (ingress). cp-0 and the cluster LB have floating IPs.
 
+## Layers
+
+- [terraform](docs/terraform/README.md) — three root modules: infra, vault, keycloak
+- [ansible](docs/ansible/README.md) — OS baseline, RKE2, ArgoCD bootstrap
+- [argocd](docs/argocd/README.md) — app-of-apps, sync waves, ExternalSecret patterns
+- [.github](docs/.github/README.md) — GitHub Actions jobs and what each enforces
+
 ## Prerequisites
 
 - Terraform >= 1.11
