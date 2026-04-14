@@ -1,4 +1,3 @@
----
 - name: Find root disk name
   ansible.builtin.shell:
     cmd: lsblk -no pkname $(df / --output=source | tail -1)

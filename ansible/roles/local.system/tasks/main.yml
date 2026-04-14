@@ -1,12 +1,9 @@
----
 # --- Timezone ---
-
 - name: Set timezone
   community.general.timezone:
     name: "{{ timezone }}"
 
 # --- NTP ---
-
 - name: Install chrony
   ansible.builtin.apt:
     name: chrony
@@ -29,7 +26,6 @@
     enabled: true
 
 # --- Users ---
-
 - name: Create user accounts
   ansible.builtin.user:
     name: "{{ item.name }}"
@@ -50,14 +46,12 @@
     label: "{{ item.0.name }}"
 
 # --- Longhorn Prerequisites ---
-
 - name: Install open-iscsi (required by Longhorn on all nodes)
   ansible.builtin.apt:
     name: open-iscsi
     state: present
 
 # --- Disk Setup ---
-
 - name: Set up worker Longhorn storage (LVM)
   ansible.builtin.import_tasks: disks-workers.yml
   when: "'workers' in group_names"
@@ -67,7 +61,6 @@
   when: "'control_plane' in group_names"
 
 # --- Sudoers ---
-
 - name: Grant passwordless sudo to sudoer users
   ansible.builtin.copy:
     content: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL\n"

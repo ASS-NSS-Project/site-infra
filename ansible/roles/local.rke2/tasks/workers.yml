@@ -1,4 +1,3 @@
----
 - name: Wait for RKE2 registration endpoint to be ready
   ansible.builtin.wait_for:
     host: "{{ rke2_api_lb_vip }}"
