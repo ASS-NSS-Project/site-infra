@@ -6,7 +6,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      job-name: harbor-oidc-configure
+      app: harbor-oidc-configure-job
   policyTypes:
     - Ingress
     - Egress

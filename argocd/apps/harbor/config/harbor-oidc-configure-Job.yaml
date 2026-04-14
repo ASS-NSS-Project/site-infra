@@ -8,21 +8,28 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   template:
+    metadata:
+      labels:
+        app: harbor-oidc-configure-job
     spec:
       restartPolicy: OnFailure
       containers:
         - name: configure
           image: curlimages/curl:8.9.1
+          imagePullPolicy: Always
           resources:
             requests:
               memory: "16Mi"
               cpu: "10m"
+              ephemeral-storage: "1Mi"
             limits:
               memory: "32Mi"
               cpu: "100m"
+              ephemeral-storage: "16Mi"
           securityContext:
             runAsNonRoot: true
-            runAsUser: 100
+            runAsUser: 10000
+            runAsGroup: 10000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
