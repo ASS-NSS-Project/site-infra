@@ -106,32 +106,6 @@ spec:
           - name: ass-nss-grafana-tls
             namespace: traefik
 
-    - name: websecure-prometheus
-      port: 443
-      protocol: HTTPS
-      hostname: prometheus.ass-nss.jkuzel02.online
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: ass-nss-prometheus-tls
-            namespace: traefik
-
-    - name: websecure-alertmanager
-      port: 443
-      protocol: HTTPS
-      hostname: alertmanager.ass-nss.jkuzel02.online
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: ass-nss-alertmanager-tls
-            namespace: traefik
-
     # --- Add new subdomain listeners here ---
     # - name: websecure-<name>
     #   port: 443

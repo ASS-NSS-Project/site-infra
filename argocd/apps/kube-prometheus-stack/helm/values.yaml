@@ -8,40 +8,6 @@ alertmanager:
           resources:
             requests:
               storage: 2Gi
-  route:
-    main:
-      enabled: true
-      apiVersion: gateway.networking.k8s.io/v1
-      kind: HTTPRoute
-      hostnames:
-        - alertmanager.ass-nss.jkuzel02.online
-      parentRefs:
-        - name: traefik-gateway
-          namespace: traefik
-          sectionName: websecure-alertmanager
-      matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: monitoring-auth
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: monitoring-auth-errors
-      additionalRules:
-        - matches:
-            - path:
-                type: PathPrefix
-                value: /oauth2/
-          backendRefs:
-            - name: oauth2-proxy-ext
-              port: 80
 
 grafana:
   admin:
@@ -92,37 +58,3 @@ prometheus:
           resources:
             requests:
               storage: 20Gi
-  route:
-    main:
-      enabled: true
-      apiVersion: gateway.networking.k8s.io/v1
-      kind: HTTPRoute
-      hostnames:
-        - prometheus.ass-nss.jkuzel02.online
-      parentRefs:
-        - name: traefik-gateway
-          namespace: traefik
-          sectionName: websecure-prometheus
-      matches:
-        - path:
-            type: PathPrefix
-            value: /
-      filters:
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: monitoring-auth
-        - type: ExtensionRef
-          extensionRef:
-            group: traefik.io
-            kind: Middleware
-            name: monitoring-auth-errors
-      additionalRules:
-        - matches:
-            - path:
-                type: PathPrefix
-                value: /oauth2/
-          backendRefs:
-            - name: oauth2-proxy-ext
-              port: 80

@@ -345,15 +345,22 @@ Three issuers are available in `argocd/apps/cert-manager/config/`:
 
 cert-manager uses **HTTP-01 challenge** — port 80 must be reachable from the internet during issuance. Renewals are automatic.
 
-All TLS secrets live in the **`traefik` namespace** — the Gateway reads them there.
+TLS secrets for Gateway API routes live in the **`traefik` namespace** — the Gateway reads them there. Services exposed via Traefik IngressRoute (Longhorn, Prometheus, Alertmanager) keep their TLS secrets in their own namespace.
 
 ## Adding a new subdomain
 
+### Via Gateway API (HTTPRoute) — for apps without Traefik middleware needs
 1. Add a DNS A record → Ingress LB floating IP
 2. Add an HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
 3. Add a `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
 4. Add an `HTTPRoute` in your application's `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
 5. Push to `kost` branch — ArgoCD applies automatically
+
+### Via Traefik IngressRoute — for apps using Traefik middlewares (e.g. ForwardAuth)
+1. Add a DNS A record → Ingress LB floating IP
+2. Add a `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: same as the app)
+3. Add an `IngressRoute` in your application's `argocd/apps/<app>/config/<app>-IngressRoute.yaml`
+4. Push to `kost` branch — ArgoCD applies automatically
 
 ## HashiCorp Vault
 
