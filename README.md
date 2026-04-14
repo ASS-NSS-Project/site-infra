@@ -151,7 +151,19 @@ All A records → Ingress LB floating IP (`terraform output ingress_lb_public_ip
 
 ## SSO
 
-All UIs are protected by Keycloak (Google SSO). Add a user to the `admins` group in Keycloak to grant admin access across ArgoCD, Grafana, Harbor, and Vault. Longhorn, Prometheus, and Alertmanager use oauth2-proxy ForwardAuth — any authenticated user can access.
+All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of five groups managed by `terraform/keycloak`:
+
+| Group | ArgoCD | Grafana | Harbor | Vault | Longhorn / Prometheus / Alertmanager |
+|-------|--------|---------|--------|-------|--------------------------------------|
+| `admin` | full admin | Admin | Harbor admin | full access | allowed |
+| `curator` | — | — | account only† | no access | blocked |
+| `analytic` | — | Viewer | account only† | no access | blocked |
+| `user` | — | — | account only† | no access | blocked |
+| `unauthorized` | — | — | account only† | no access | blocked |
+
+**†** Harbor auto-creates an account on first login but grants no project access unless explicitly added.
+
+To add a user, put their Gmail address in `admin_members`, `curator_members`, `analytic_members`, or `user_members` in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 
 ## TLS
 

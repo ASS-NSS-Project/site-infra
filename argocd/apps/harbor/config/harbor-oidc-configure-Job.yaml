@@ -61,7 +61,7 @@ spec:
                   \"oidc_client_id\": \"harbor\",
                   \"oidc_client_secret\": \"$OIDC_CLIENT_SECRET\",
                   \"oidc_scope\": \"openid,profile,email\",
-                  \"oidc_admin_group\": \"admins\",
+                  \"oidc_admin_group\": \"admin\",
                   \"oidc_auto_onboard\": true,
                   \"oidc_user_claim\": \"preferred_username\"
                 }"

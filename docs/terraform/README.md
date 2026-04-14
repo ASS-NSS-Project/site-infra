@@ -8,7 +8,25 @@ Three independent root modules — each has its own GCS backend state and must b
 
 `vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials, and sets up Kubernetes auth for ESO.
 
-`keycloak/` runs last, after Keycloak is deployed and Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, and pushes client secrets to Vault.
+`keycloak/` runs last, after Keycloak is deployed and Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
+
+### Keycloak groups
+
+Five groups are defined in `01-realm.tf`. Access per service is enforced at the application layer — Keycloak only issues the group claim:
+
+| Group | Purpose |
+|-------|---------|
+| `admin` | Full access to all services and infrastructure |
+| `curator` | Data source management, collection rules, legal titles |
+| `analytic` | Experiments, model testing, index quality; Grafana Viewer |
+| `user` | Standard end user — submits queries, views answers |
+| `unauthorized` | Explicitly blocked; no access to any service |
+
+Users are pre-created by Gmail address via `keycloak_user` resources. On first Google login, Keycloak matches by email and links the Google identity automatically. Add Gmail addresses to the corresponding `*_members` variable in `terraform.tfvars` and re-apply. If a user already logged in before being added, import them first:
+
+```bash
+terraform import 'keycloak_user.admin["their@gmail.com"]' <realm-id>/users/<user-id>
+```
 
 ## File conventions
 

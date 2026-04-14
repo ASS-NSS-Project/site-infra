@@ -239,4 +239,6 @@ ansible/inventory/group_vars/all/terraform.yml
 ansible/files/vault/kms-sa-key.json
 
 # Others
+test-values
 .DS_Store
+*.pdf

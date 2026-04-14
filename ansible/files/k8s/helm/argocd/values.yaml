@@ -26,8 +26,8 @@ configs:
         - email
   rbac:
     policy.csv: |
-      g, admins, role:admin
-    policy.default: role:readonly
+      g, admin, role:admin
+    policy.default: ''
 
 server:
   replicas: 1

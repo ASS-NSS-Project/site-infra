@@ -40,6 +40,33 @@ variable "vault_root_token" {
   sensitive   = true
 }
 
+# Gmail addresses of users to pre-create in Keycloak and assign to each group.
+# Users are created before their first login — Keycloak links their Google identity on first sign-in.
+
+variable "admin_members" {
+  description = "Gmail addresses to pre-create and add to the admin group"
+  type        = list(string)
+  default     = []
+}
+
+variable "curator_members" {
+  description = "Gmail addresses to pre-create and add to the curator group"
+  type        = list(string)
+  default     = []
+}
+
+variable "analytic_members" {
+  description = "Gmail addresses to pre-create and add to the analytic group"
+  type        = list(string)
+  default     = []
+}
+
+variable "user_members" {
+  description = "Gmail addresses to pre-create and add to the user group"
+  type        = list(string)
+  default     = []
+}
+
 provider "vault" {
   address = "https://vault.ass-nss.jkuzel02.online"
   token   = var.vault_root_token

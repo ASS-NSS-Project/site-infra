@@ -84,7 +84,7 @@
       "Read(**/kubeconfig)",
       "Read(**/*.kubeconfig)",
       "Read(**/ansible.cfg)",
-      "Read(**/ansible/files/**)",
+      "Read(**/ansible/files/vault)",
       "Read(**/ansible/artifacts/**)",
       "Read(**/*.pem)",
       "Read(**/*.key)",

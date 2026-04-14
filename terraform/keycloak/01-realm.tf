@@ -12,8 +12,95 @@ resource "keycloak_realm" "main" {
   ssl_required = "external"
 }
 
-# Admin group — members get admin access in ArgoCD, Grafana, Harbor
-resource "keycloak_group" "admins" {
+# admin — full access to all services and infrastructure
+resource "keycloak_group" "admin" {
   realm_id = keycloak_realm.main.id
-  name     = "admins"
+  name     = "admin"
+}
+
+# curator — data source management, collection rules, legal titles
+resource "keycloak_group" "curator" {
+  realm_id = keycloak_realm.main.id
+  name     = "curator"
+}
+
+# analytic — experiments, model testing, index quality evaluation; Grafana viewer
+resource "keycloak_group" "analytic" {
+  realm_id = keycloak_realm.main.id
+  name     = "analytic"
+}
+
+# user — standard end user; submits queries, views answers with citations
+resource "keycloak_group" "user" {
+  realm_id = keycloak_realm.main.id
+  name     = "user"
+}
+
+# unauthorized — explicitly blocked; no access to any service
+resource "keycloak_group" "unauthorized" {
+  realm_id = keycloak_realm.main.id
+  name     = "unauthorized"
+}
+
+# --- Group memberships ---
+# Users are pre-created by Gmail address. On first Google login, Keycloak's "Detect Existing
+# Account" flow matches by email (trust_email = true) and links the Google identity to the
+# pre-created account.
+# If a user has already logged in before being added to tfvars, import them first:
+#   terraform import 'keycloak_user.admin["their@gmail.com"]' <realm-id>/users/<user-id>
+
+resource "keycloak_user" "admin" {
+  for_each = toset(var.admin_members)
+  realm_id = keycloak_realm.main.id
+  username = each.value
+  email    = each.value
+  enabled  = true
+}
+
+resource "keycloak_group_membership" "admin" {
+  realm_id = keycloak_realm.main.id
+  group_id = keycloak_group.admin.id
+  members  = [for u in keycloak_user.admin : u.id]
+}
+
+resource "keycloak_user" "curator" {
+  for_each = toset(var.curator_members)
+  realm_id = keycloak_realm.main.id
+  username = each.value
+  email    = each.value
+  enabled  = true
+}
+
+resource "keycloak_group_membership" "curator" {
+  realm_id = keycloak_realm.main.id
+  group_id = keycloak_group.curator.id
+  members  = [for u in keycloak_user.curator : u.id]
+}
+
+resource "keycloak_user" "analytic" {
+  for_each = toset(var.analytic_members)
+  realm_id = keycloak_realm.main.id
+  username = each.value
+  email    = each.value
+  enabled  = true
+}
+
+resource "keycloak_group_membership" "analytic" {
+  realm_id = keycloak_realm.main.id
+  group_id = keycloak_group.analytic.id
+  members  = [for u in keycloak_user.analytic : u.id]
+}
+
+resource "keycloak_user" "user" {
+  for_each = toset(var.user_members)
+  realm_id = keycloak_realm.main.id
+  username = each.value
+  email    = each.value
+  enabled  = true
+}
+
+resource "keycloak_group_membership" "user" {
+  realm_id = keycloak_realm.main.id
+  group_id = keycloak_group.user.id
+  members  = [for u in keycloak_user.user : u.id]
 }

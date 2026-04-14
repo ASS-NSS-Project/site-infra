@@ -55,19 +55,19 @@ resource "vault_policy" "admin" {
   EOT
 }
 
-# --- Group mapping: Keycloak "admins" → vault-admin policy ---
+# --- Group mapping: Keycloak "admin" → vault-admin policy ---
 # vault_identity_group creates a Vault external group.
 # vault_identity_group_alias links the Keycloak group name to the OIDC backend accessor,
-# so when a user logs in with the "admins" group claim, Vault assigns the admin policy.
+# so when a user logs in with the "admin" group claim, Vault assigns the admin policy.
 
-resource "vault_identity_group" "admins" {
-  name     = "admins"
+resource "vault_identity_group" "admin" {
+  name     = "admin"
   type     = "external"
   policies = [vault_policy.admin.name]
 }
 
-resource "vault_identity_group_alias" "admins" {
-  name           = "admins"
+resource "vault_identity_group_alias" "admin" {
+  name           = "admin"
   mount_accessor = vault_jwt_auth_backend.oidc.accessor
-  canonical_id   = vault_identity_group.admins.id
+  canonical_id   = vault_identity_group.admin.id
 }
