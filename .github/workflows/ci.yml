@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [kost, main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  conventional-commits:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install yamllint
+      - run: yamllint .
+
+  markdownlint:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install -g markdownlint-cli
+      - run: markdownlint "**/*.md" --ignore .venv
+
+  terraform-fmt:
+    name: Terraform format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.11"
+      - name: Check formatting in all modules
+        run: |
+          terraform fmt -check -recursive terraform/
+
+  kubeconform:
+    name: Kubernetes manifest validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kubeconform
+        run: |
+          curl -sSLo kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar -xf kubeconform.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+      - name: Validate manifests
+        # --ignore-missing-schemas skips CRDs (ArgoCD, cert-manager, ESO, etc.)
+        # Standard K8s resources are still validated against the upstream schemas
+        run: |
+          find argocd/apps -name "*.yaml" ! -name "*-Application.yaml" | \
+            kubeconform \
+              --ignore-missing-schemas \
+              --kubernetes-version 1.31.0 \
+              --summary \
+              -

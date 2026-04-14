@@ -1,0 +1,10 @@
+default: true
+
+# Line length — infrastructure docs often have long table cells and URLs
+MD013: false
+
+# Table column style — cosmetic, not enforced
+MD060: false
+
+# Allow inline HTML (useful for badges etc.)
+MD033: false
