@@ -1,3 +1,0 @@
----
-k3s_role: ""       # set to "server" or "agent" via group_vars
-k3s_version: "latest"
