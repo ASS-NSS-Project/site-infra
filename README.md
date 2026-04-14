@@ -19,6 +19,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Secrets | HashiCorp Vault + External Secrets Operator |
 | Database | CloudNativePG (PostgreSQL operator) |
 | Identity | Keycloak (Keycloak Operator) |
+| SSO | oauth2-proxy (ForwardAuth for apps without native OIDC) |
 | Monitoring | kube-prometheus-stack (Prometheus + Grafana + Alertmanager) |
 
 ## Cluster layout
@@ -60,10 +61,16 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 │   │   ├── 0x-*.tf             # Network, instances, volumes, LBs, FIPs
 │   │   ├── 08-ansible-inventory.tf  # Renders Ansible inventory from live IPs
 │   │   └── 09-gcp-kms.tf       # GCP KMS key ring + SA for Vault auto-unseal
-│   └── vault/                  # Phase 2 — Vault provisioning (run after Vault is initialized)
-│       ├── 00-providers.tf     # Vault provider, GCS backend
-│       ├── 01-vault.tf         # KV v2 engine + service credentials (grafana, keycloak, harbor)
-│       └── 02-vault-k8s-auth.tf  # Kubernetes auth backend + ESO policy/role
+│   ├── vault/                  # Phase 2 — Vault provisioning (run after Vault is initialized)
+│   │   ├── 00-providers.tf     # Vault provider, GCS backend
+│   │   ├── 01-vault.tf         # KV v2 engine + service credentials (grafana, keycloak, harbor, oidc/*)
+│   │   └── 02-vault-k8s-auth.tf  # Kubernetes auth backend + ESO policy/role
+│   └── keycloak/               # Phase 3 — Keycloak realm + OIDC clients (run after Keycloak is up)
+│       ├── 00-providers.tf     # Keycloak + Vault providers, GCS backend
+│       ├── 01-realm.tf         # ass-nss realm
+│       ├── 02-identity-providers.tf  # Google OIDC identity provider
+│       ├── 03-clients.tf       # OIDC clients (argocd, grafana, harbor, oauth2-proxy) + groups mapper
+│       └── 04-vault-secrets.tf # Pushes client secrets to Vault under secret/oidc/<app>
 ├── ansible/
 │   ├── site.yml                # Main playbook (4 plays)
 │   ├── inventory/              # hosts.yml (static) + host_vars/ + group_vars/
@@ -88,7 +95,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
         ├── <app>/
         │   ├── helm-Application.yaml    # ArgoCD Application deploying the Helm chart
         │   ├── config-Application.yaml  # ArgoCD Application for config resources
-        │   ├── helm/values.yaml         # Helm values file
+        │   ├── helm/values.yaml         # Helm values (overrides only)
         │   └── config/                  # K8s manifests: <name>-<Kind>.yaml
         └── keycloak/
             ├── keycloak-operator-Application.yaml
@@ -119,11 +126,11 @@ ansible-galaxy collection install -r ansible/requirements.yml
 
 ## Deployment
 
-Full deployment requires **four steps**. Steps 1–2 and step 4 are fully automated. Step 3 is a one-time manual Vault initialization that cannot be automated by design.
+Full deployment requires **five steps**. Steps 1–2 are fully automated. Step 3 is a one-time manual Vault initialization that cannot be automated by design. Steps 4–5 are Terraform.
 
 ```
-terraform/infra  →  ansible  →  vault operator init  →  terraform/vault
-     (1)              (2)               (3)                    (4)
+terraform/infra  →  ansible  →  vault operator init  →  terraform/vault  →  terraform/keycloak
+      (1)              (2)               (3)                   (4)                   (5)
                                                          [everything auto from here]
 ```
 
@@ -200,7 +207,34 @@ terraform init
 terraform apply
 ```
 
-After this step ESO connects to Vault automatically and syncs all credentials into Kubernetes Secrets. No further manual steps are needed — the cluster is fully operational.
+After this step ESO connects to Vault automatically and syncs all credentials into Kubernetes Secrets.
+
+### 5. Keycloak provisioning — Terraform (keycloak)
+
+Wait for ArgoCD to deploy Keycloak (check `kubectl get keycloak -n keycloak`), then provision the realm, identity providers, and OIDC clients.
+
+**Before running**, register a Google OAuth app to obtain credentials:
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create → OAuth 2.0 Client ID → Web application
+3. Under "Authorized redirect URIs" add: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`
+4. Copy the Client ID and Client Secret into `terraform.tfvars`
+
+```bash
+cd terraform/keycloak
+cp terraform.tfvars.example terraform.tfvars
+# Fill in: keycloak_url, keycloak admin creds, vault token, Google OAuth credentials
+terraform init
+terraform apply
+```
+
+What it provisions:
+- `ass-nss` realm with registration disabled
+- Google OIDC identity provider
+- `admins` group — members get admin access in ArgoCD, Grafana, Harbor
+- OIDC clients for ArgoCD, Grafana, Harbor, and oauth2-proxy (covers Longhorn, Prometheus, Alertmanager)
+- All client secrets pushed to Vault under `secret/oidc/<app>`
+
+After this step ESO syncs all OIDC secrets into Kubernetes — SSO is fully operational.
 
 ### GitOps — ArgoCD sync waves
 
@@ -208,9 +242,9 @@ ArgoCD deploys all components in sync waves — wave N must be healthy before wa
 
 | Wave | Applications | Why this wave |
 |------|-------------|---------------|
-| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg`, `kube-prometheus-stack`, `keycloak-operator`, `eso` (Helm charts + operators) | Core infrastructure — must be running before anything depends on them |
+| 1 | `traefik`, `cert-manager`, `longhorn`, `harbor`, `vault`, `cnpg`, `kube-prometheus-stack`, `keycloak-operator`, `eso`, `oauth2-proxy` (Helm charts + operators) | Core infrastructure — must be running before anything depends on them |
 | 2 | `traefik-config` (Gateway + GatewayClass), `cert-manager-config` (ClusterIssuers), `keycloak-postgres` (CNPG Cluster), `eso-config` (ClusterSecretStore) | Requires wave 1: Gateway needs Traefik, ClusterIssuers need cert-manager, ESO config needs ESO CRDs |
-| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config`, `grafana-config` | Requires wave 2: HTTPRoutes need the Gateway, Keycloak needs its database, ExternalSecrets need the ClusterSecretStore |
+| 3 | `longhorn-config`, `argocd-config`, `harbor-config`, `vault-config`, `keycloak-config`, `kube-prometheus-stack-config` | Requires wave 2: HTTPRoutes need the Gateway, Keycloak needs its database, ExternalSecrets need the ClusterSecretStore |
 
 Monitor sync status:
 ```bash
@@ -224,11 +258,15 @@ All service credentials are stored in **HashiCorp Vault** (KV v2, path `secret/`
 
 | Vault path | Kubernetes Secret | Namespace | Used by |
 |------------|-------------------|-----------|---------|
-| `secret/grafana` | `grafana-credentials` | `monitoring` | kube-prometheus-stack |
+| `secret/grafana` | `grafana-credentials` | `monitoring` | Grafana admin login |
 | `secret/keycloak` | `keycloak-credentials` | `keycloak` | Keycloak Operator bootstrap admin |
 | `secret/harbor` | `harbor-credentials` | `harbor` | Harbor admin password |
+| `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` | ArgoCD OIDC client secret |
+| `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | Grafana OIDC client secret |
+| `secret/oidc/harbor` | `harbor-oidc-secret` | `harbor` | Harbor OIDC PostSync job |
+| `secret/oidc/oauth2-proxy` | `oauth2-proxy-credentials` | `oauth2-proxy` | oauth2-proxy client + cookie secret |
 
-Credentials are provisioned into Vault by `terraform/vault/01-vault.tf` and synced to K8s via `ExternalSecret` resources in each app's `config/` directory.
+Credentials are provisioned into Vault by `terraform/vault/01-vault.tf` and OIDC secrets by `terraform/keycloak/04-vault-secrets.tf`. All are synced to K8s via `ExternalSecret` resources in each app's `config/` directory.
 
 ## DNS records
 
@@ -243,12 +281,31 @@ All A records point to the **Ingress LB floating IP** (`terraform output ingress
 | `vault.ass-nss.jkuzel02.online` | HashiCorp Vault |
 | `keycloak.ass-nss.jkuzel02.online` | Keycloak |
 | `grafana.ass-nss.jkuzel02.online` | Grafana |
+| `prometheus.ass-nss.jkuzel02.online` | Prometheus |
+| `alertmanager.ass-nss.jkuzel02.online` | Alertmanager |
+
+## SSO
+
+All UIs are protected by **Keycloak** as the central OIDC provider. Users authenticate via **Google** — Keycloak federates the identity.
+
+| App | Auth method | Groups → roles |
+|-----|-------------|----------------|
+| ArgoCD | Native OIDC | `admins` → `role:admin` |
+| Grafana | Native OIDC (`auth.generic_oauth`) | `admins` → `Admin` role |
+| Harbor | Native OIDC (configured via PostSync Job) | `admins` → `AdminGroupDN` |
+| Longhorn | oauth2-proxy ForwardAuth | any authenticated user |
+| Prometheus | oauth2-proxy ForwardAuth | any authenticated user |
+| Alertmanager | oauth2-proxy ForwardAuth | any authenticated user |
+
+The `admins` group is managed in Keycloak. Add a user to `admins` in the Keycloak UI to grant admin access across all apps.
+
+**oauth2-proxy** runs as a single shared deployment in the `oauth2-proxy` namespace. It operates in auth-only mode (`upstream: static://200`) — Traefik's ForwardAuth middleware delegates auth checks to it. A 401 response triggers a redirect to the Keycloak login page.
 
 ## ArgoCD
 
 UI: `https://argocd.ass-nss.jkuzel02.online`
 
-Initial admin password:
+Initial admin password (only needed before SSO is configured):
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d
@@ -271,8 +328,8 @@ kubectl label secret github-repo -n argocd \
 
 | Project | Applications |
 |---------|-------------|
-| `infrastructure` | traefik, cert-manager, longhorn, cnpg, harbor, vault, eso, keycloak, argocd-config |
-| `observability` | kube-prometheus-stack, grafana-config |
+| `infrastructure` | traefik, cert-manager, longhorn, cnpg, harbor, vault, eso, keycloak, oauth2-proxy, argocd-config |
+| `observability` | kube-prometheus-stack, kube-prometheus-stack-config |
 
 ## TLS certificates
 
@@ -288,11 +345,13 @@ Three issuers are available in `argocd/apps/cert-manager/config/`:
 
 cert-manager uses **HTTP-01 challenge** — port 80 must be reachable from the internet during issuance. Renewals are automatic.
 
+All TLS secrets live in the **`traefik` namespace** — the Gateway reads them there.
+
 ## Adding a new subdomain
 
 1. Add a DNS A record → Ingress LB floating IP
 2. Add an HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
-3. Add a `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml`
+3. Add a `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
 4. Add an `HTTPRoute` in your application's `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
 5. Push to `kost` branch — ArgoCD applies automatically
 
@@ -308,7 +367,7 @@ Standalone mode (single pod, file storage on Longhorn). TLS terminated at Traefi
 
 UI: `https://harbor.ass-nss.jkuzel02.online`
 
-Admin credentials are managed by ESO from `secret/harbor` in Vault. To use Harbor as the image registry:
+Admin credentials are managed by ESO from `secret/harbor` in Vault. OIDC is configured automatically via a PostSync Job after each Harbor deployment. To use Harbor as the image registry:
 
 ```bash
 docker login harbor.ass-nss.jkuzel02.online
@@ -331,66 +390,17 @@ UI: `https://keycloak.ass-nss.jkuzel02.online`
 
 Deployed via the **official Keycloak Operator** (`k8s.keycloak.org/v2alpha1`) at v26.5.5. Uses **CloudNativePG** for PostgreSQL. Bootstrap admin credentials are synced from Vault (`secret/keycloak`) by ESO into the `keycloak-credentials` secret.
 
+Realm and OIDC clients are fully managed by `terraform/keycloak/` — do not edit them manually in the Keycloak UI.
+
 ## Grafana
 
 UI: `https://grafana.ass-nss.jkuzel02.online`
 
-Part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Admin credentials are synced from Vault (`secret/grafana`) by ESO into the `grafana-credentials` secret.
-
-## TODO
-
-### SSO via Keycloak (Google + GitHub OIDC)
-
-The goal is a single sign-on layer across all cluster UIs using Keycloak as the central identity broker. Users log in with their Google or GitHub account — Keycloak federates the identity, and every app in the cluster trusts Keycloak as its OIDC provider.
-
-**Deployment chain** (extends the existing 4-step flow):
-
-```
-terraform/infra → ansible → vault operator init → terraform/vault → terraform/keycloak → configure apps
-      (1)            (2)              (3)                 (4)                (5)                (6)
-```
-
-**Step 5 — `terraform/keycloak/`** (run after Keycloak is up and healthy):
-
-```bash
-cd terraform/keycloak
-cp terraform.tfvars.example terraform.tfvars
-# Fill in: keycloak creds, vault token, Google + GitHub OAuth app credentials
-terraform init
-terraform apply
-```
-
-What it provisions:
-- `ass-nss` realm with registration disabled
-- Google OIDC identity provider (via `keycloak_oidc_google_identity_provider`)
-- GitHub OAuth2 identity provider (via `keycloak_oidc_identity_provider`)
-- `admins` group — members get admin access in ArgoCD, Grafana, Harbor
-- One confidential OIDC client per app with groups claim mapper
-- All client secrets pushed to Vault under `secret/oidc/<app>` for ESO to sync
-
-**Before running**, register the Google OAuth app to obtain the Client ID and Secret:
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
-2. Create → OAuth 2.0 Client ID → Web application
-3. Under "Authorized redirect URIs" add: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`
-4. Copy the Client ID and Client Secret into `terraform.tfvars`
-
-**Step 6 — Configure each app** to use Keycloak as its OIDC provider:
-
-| App | Approach | Config location |
-|-----|----------|----------------|
-| ArgoCD | Native OIDC — `oidc.config` in ArgoCD ConfigMap | `argocd/apps/argocd/config/` |
-| Grafana | Native OIDC — `grafana.ini` `[auth.generic_oauth]` | `argocd/apps/grafana/helm/values.yaml` |
-| Harbor | Native OIDC — Harbor admin UI → Configuration → Authentication | Harbor UI (one-time) |
-| Longhorn | oauth2-proxy as Traefik ForwardAuth (replaces basicAuth) | new `argocd/apps/oauth2-proxy/` |
-
-Client secrets flow: Vault (`secret/oidc/<app>`) → ESO ExternalSecret → K8s Secret → app config.
-
-**oauth2-proxy** — a single shared deployment protects apps without native OIDC. Traefik ForwardAuth middleware delegates auth to it; it validates the session against Keycloak and either allows or redirects to login.
+Part of **kube-prometheus-stack** (Prometheus + Grafana + Alertmanager). Admin credentials are synced from Vault (`secret/grafana`) by ESO. Authenticates via Keycloak OIDC — `admins` group members get the Admin role.
 
 ## Longhorn storage
 
 - **Raw capacity**: 333 GB per worker (3 × 111 GB), 666 GB total
 - **Usable capacity**: ~333 GB with 2-replica default (666 GB ÷ 2)
 - **Default StorageClass**: `longhorn`
-- **UI**: `https://longhorn.ass-nss.jkuzel02.online`
+- **UI**: `https://longhorn.ass-nss.jkuzel02.online` (protected by oauth2-proxy)
