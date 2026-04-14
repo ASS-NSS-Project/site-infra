@@ -82,3 +82,26 @@ resource "keycloak_openid_group_membership_protocol_mapper" "oauth2_proxy_groups
   claim_name      = "groups"
   full_path       = false
 }
+
+# Vault
+resource "keycloak_openid_client" "vault" {
+  realm_id              = keycloak_realm.main.id
+  client_id             = "vault"
+  name                  = "Vault"
+  enabled               = true
+  access_type           = "CONFIDENTIAL"
+  standard_flow_enabled = true
+  valid_redirect_uris = [
+    "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
+    "http://localhost:8250/oidc/callback",
+  ]
+  web_origins = ["https://vault.ass-nss.jkuzel02.online"]
+}
+
+resource "keycloak_openid_group_membership_protocol_mapper" "vault_groups" {
+  realm_id        = keycloak_realm.main.id
+  client_id       = keycloak_openid_client.vault.id
+  name            = "groups"
+  claim_name      = "groups"
+  full_path       = false
+}

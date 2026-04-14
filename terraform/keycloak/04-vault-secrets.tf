@@ -45,3 +45,14 @@ resource "vault_kv_secret_v2" "oidc_oauth2_proxy" {
     issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
   })
 }
+
+resource "vault_kv_secret_v2" "oidc_vault" {
+  mount = "secret"
+  name  = "oidc/vault"
+
+  data_json = jsonencode({
+    client_id     = keycloak_openid_client.vault.client_id
+    client_secret = keycloak_openid_client.vault.client_secret
+    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+  })
+}

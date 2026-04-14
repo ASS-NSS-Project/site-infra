@@ -265,6 +265,7 @@ All service credentials are stored in **HashiCorp Vault** (KV v2, path `secret/`
 | `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | Grafana OIDC client secret |
 | `secret/oidc/harbor` | `harbor-oidc-secret` | `harbor` | Harbor OIDC PostSync job |
 | `secret/oidc/oauth2-proxy` | `oauth2-proxy-credentials` | `oauth2-proxy` | oauth2-proxy client + cookie secret |
+| `secret/oidc/vault` | — | — | stored for reference; used directly by Terraform to configure Vault OIDC |
 
 Credentials are provisioned into Vault by `terraform/vault/01-vault.tf` and OIDC secrets by `terraform/keycloak/04-vault-secrets.tf`. All are synced to K8s via `ExternalSecret` resources in each app's `config/` directory.
 
@@ -293,6 +294,7 @@ All UIs are protected by **Keycloak** as the central OIDC provider. Users authen
 | ArgoCD | Native OIDC | `admins` → `role:admin` |
 | Grafana | Native OIDC (`auth.generic_oauth`) | `admins` → `Admin` role |
 | Harbor | Native OIDC (configured via PostSync Job) | `admins` → `AdminGroupDN` |
+| Vault | Native OIDC (`vault_jwt_auth_backend`) | `admins` → `vault-admin` policy (full access) |
 | Longhorn | oauth2-proxy ForwardAuth | any authenticated user |
 | Prometheus | oauth2-proxy ForwardAuth | any authenticated user |
 | Alertmanager | oauth2-proxy ForwardAuth | any authenticated user |
@@ -367,6 +369,25 @@ TLS secrets for Gateway API routes live in the **`traefik` namespace** — the G
 UI: `https://vault.ass-nss.jkuzel02.online`
 
 Standalone mode (single pod, file storage on Longhorn). TLS terminated at Traefik. Auto-unseal via **GCP KMS** (`enc-ass-nss-project` / `vault-keyring` / `vault-unseal-key`) — fully automatic on every pod restart.
+
+### Authentication
+
+Vault supports two auth methods:
+
+| Method | Use case |
+|--------|---------|
+| OIDC (Keycloak) | Human access — UI and CLI login via Google SSO |
+| Root token | Break-glass only — saved from `vault operator init` |
+
+**OIDC login via UI**: select "OIDC" on the login page, leave the role blank, click "Sign in with OIDC Provider". Members of the Keycloak `admins` group get the `vault-admin` policy (full access).
+
+**OIDC login via CLI**:
+```bash
+vault login -method=oidc -address=https://vault.ass-nss.jkuzel02.online
+```
+This opens a browser for the Keycloak login flow and exchanges the token automatically.
+
+**Note**: OIDC auth is configured by `terraform/keycloak/05-vault-oidc.tf` — it is **runtime Vault configuration** applied via the Vault API, not part of the Helm chart. The Helm chart only manages the server process. Re-running `terraform/keycloak` after a full cluster rebuild will restore the OIDC auth method automatically.
 
 > **DR note**: Vault data lives on a Longhorn PVC. Back up via Longhorn snapshots to S3. The GCP KMS key ring is permanent (cannot be deleted from GCP) — on a full cluster rebuild, import it back into Terraform state and Vault will auto-unseal against the same key.
 
