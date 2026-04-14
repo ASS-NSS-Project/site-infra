@@ -22,6 +22,10 @@ Current files:
 
 ## Secrets and auth
 
-`terraform.tfvars` is gitignored — never commit it. `terraform.tfvars.example` is committed with placeholder values — keep it in sync with actual variables when adding new ones.
+`terraform.tfvars` is gitignored — never commit it. `terraform.tfvars.example` is committed with placeholder values — keep it in sync with actual variables when adding new ones. CI enforces this automatically for `vault/` and `keycloak/` via `.github/scripts/check-tfvars-example.sh`.
 
 All three modules use the GCS backend (`k3s-cluster` bucket) — authenticate with `gcloud auth application-default login`. The `infra/` module also needs `clouds.yaml` for OpenStack credentials (gitignored).
+
+## Lock files
+
+`.terraform.lock.hcl` is committed for all three modules. It pins exact provider versions and checksums. Update it intentionally with `terraform init -upgrade` when upgrading a provider, then commit the result.

@@ -28,6 +28,10 @@ Generated/gitignored:
 - `--tags argocd` — Gateway API CRDs + ArgoCD Helm install
 - `--tags argocd,apps` — bootstrap secrets, AppProjects, root Application
 
+## Linting
+
+`ansible-lint` runs in CI on `ansible/site.yml`. Config is in `.ansible-lint` at the repo root — suppresses `galaxy[no-runtime]` (local roles don't need `runtime.yml`) and `yaml[line-length]` (handled by yamllint). Add suppressions there rather than inline `# noqa` comments unless the suppression is truly one-off.
+
 ## Roles
 
 All roles use the `local.` prefix — follow this for any new ones.

@@ -6,11 +6,7 @@ Context for Claude Code. Read this before touching anything.
 
 Every change must be reflected in the right documentation file. README is for humans operating the system. CLAUDE.md files are for understanding conventions and structure.
 
-- Changed something user-facing (URLs, cluster layout, deployment steps, service config)? → update `README.md`
-- Changed a project-wide convention (deployment order, ArgoCD settings, security rules)? → update this file
-- Changed something Terraform-specific? → update `terraform/CLAUDE.md`
-- Changed something Ansible-specific? → update `ansible/CLAUDE.md`
-- Changed something ArgoCD-specific (app structure, sync waves, ExternalSecret pattern)? → update `argocd/CLAUDE.md`
+Each layer owns its documentation: update `README.md` for anything user-facing (URLs, cluster layout, deployment steps), this file for project-wide conventions, and the layer's own CLAUDE.md or README for anything scoped to that layer (`terraform/`, `ansible/`, `argocd/`, `.github/`).
 
 When unsure: README is for running the system, CLAUDE.md is for building it.
 
@@ -61,6 +57,17 @@ not:
 ```
 
 **In Markdown files**: write in short, direct sentences. Use bullet lists when items are genuinely enumerable and parallel — checklists, option lists, file inventories. Prefer prose when the items have natural flow or depend on each other. Tables only when comparing multiple items across the same attributes.
+
+## CI
+
+All validation runs in GitHub Actions on push to `kost`. Jobs are documented in `.github/README.md`. The short version of what's enforced:
+
+- Commit messages must follow Conventional Commits
+- YAML, Markdown, and Terraform formatting are checked — fix locally before pushing
+- Terraform modules are validated and scanned for security issues
+- Ansible playbooks are linted
+- Kubernetes manifests in `argocd/apps/` are validated against upstream schemas and scored for best practices
+- `terraform.tfvars.example` must stay in sync with declared variables
 
 ## Security rules
 
