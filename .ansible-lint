@@ -1,0 +1,9 @@
+exclude_paths:
+  - .venv/
+  - .terraform/
+
+skip_list:
+  # local.* roles are not distributed via Galaxy — runtime.yml is not needed
+  - galaxy[no-runtime]
+  # line length is enforced by yamllint with a project-specific limit
+  - yaml[line-length]

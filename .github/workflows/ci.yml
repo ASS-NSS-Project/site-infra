@@ -2,12 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [kost, main]
-  pull_request:
-    branches: [main]
+    branches: [kost] #[kost, main]
+  # pull_request:
+  #   branches: [main]
 
 jobs:
-
   conventional-commits:
     name: Conventional commits
     runs-on: ubuntu-latest
@@ -28,17 +27,6 @@ jobs:
             git log -1 --format=%B > "$MSG_FILE"
           fi
           pre-commit run -c .github/config/pre-commit-config.yaml --hook-stage commit-msg --commit-msg-filename "$MSG_FILE"
-
-  yamllint:
-    name: YAML lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: pip install yamllint
-      - run: yamllint -c .github/config/yamllint.yaml .
 
   markdownlint:
     name: Markdown lint
@@ -63,6 +51,66 @@ jobs:
         run: |
           terraform fmt -check -recursive terraform/
 
+  terraform-validate:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [infra, vault, keycloak]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.11"
+      - uses: actions/cache@v4
+        with:
+          path: terraform/${{ matrix.module }}/.terraform
+          key: terraform-${{ matrix.module }}-${{ hashFiles(format('terraform/{0}/.terraform.lock.hcl', matrix.module)) }}
+      - name: Validate ${{ matrix.module }}
+        # -backend=false skips GCS/provider auth — only checks syntax and references
+        run: |
+          terraform -chdir=terraform/${{ matrix.module }} init -backend=false
+          terraform -chdir=terraform/${{ matrix.module }} validate
+
+  tfsec:
+    name: Terraform security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform
+
+  ansible-lint:
+    name: Ansible lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install ansible-lint
+      - run: ansible-galaxy collection install -r ansible/requirements.yml
+      - run: ansible-lint ansible/site.yml
+
+  tfvars-example-sync:
+    name: Terraform tfvars example sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/check-tfvars-example.sh
+
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install yamllint
+      - run: yamllint -c .github/config/yamllint.yaml .
+
   kubeconform:
     name: Kubernetes manifest validation
     runs-on: ubuntu-latest
@@ -83,3 +131,21 @@ jobs:
               --ignore-missing-schemas \
               --kubernetes-version 1.31.0 \
               --summary
+
+  kube-score:
+    name: Kubernetes best practices
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kube-score
+        run: |
+          curl -sSLo kube-score.tar.gz \
+            https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz
+          tar -xf kube-score.tar.gz
+          sudo mv kube-score /usr/local/bin/
+      - name: Score manifests
+        # Only scores standard K8s resources — CRDs are skipped automatically
+        # Warnings (yellow) do not fail the build, only criticals (red) do
+        run: |
+          find argocd/apps -name "*.yaml" ! -name "*-Application.yaml" ! -name "kustomization.yaml" ! -path "*/helm/*" \
+            | xargs kube-score score --output-format ci
