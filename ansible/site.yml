@@ -3,7 +3,7 @@
   hosts: rke2_cluster
   become: true
   tags: system
-  roles: [ "local.system" ]
+  roles: ["local.system"]
 
 # Install RKE2 on all cluster nodes.
 # The role dispatches init / join / worker logic by group membership.
@@ -13,7 +13,7 @@
   hosts: rke2_cluster
   become: true
   tags: rke2
-  roles: [ "local.rke2" ]
+  roles: ["local.rke2"]
 
 # Bootstrap ArgoCD from localhost using artifacts/kubeconfig.
 # Everything else (Traefik, cert-manager, Longhorn, etc.) is deployed by ArgoCD.
@@ -21,7 +21,7 @@
   hosts: localhost
   connection: local
   tags: argocd
-  roles: [ "local.argocd" ]
+  roles: ["local.argocd"]
 
 # Apply bootstrap resources and kick off ArgoCD Applications.
 # Runs locally — secrets must exist before ArgoCD syncs apps that reference them.
