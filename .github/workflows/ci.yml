@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: "22"
       - run: npm install -g markdownlint-cli
-      - run: markdownlint --config .github/config/markdownlint.yaml "**/*.md" --ignore-path .gitignore
+      - run: markdownlint --config .github/config/markdownlint.yaml "**/*.md" --ignore-path .gitignore --ignore "**/CLAUDE.md"
 
   terraform-fmt:
     name: Terraform format
@@ -91,7 +91,7 @@ jobs:
           python-version: "3.13"
       - run: pip install ansible-lint
       - run: ansible-galaxy collection install -r ansible/requirements.yml
-      - run: ansible-lint ansible/site.yml
+      - run: ansible-lint -c .github/config/ansible-lint.yaml ansible/site.yml
 
   tfvars-example-sync:
     name: Terraform tfvars example sync
@@ -139,8 +139,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install kube-score
         run: |
+          VERSION=$(curl -s https://api.github.com/repos/zegl/kube-score/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | tr -d 'v')
           curl -sSLo kube-score.tar.gz \
-            https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz
+            "https://github.com/zegl/kube-score/releases/download/v${VERSION}/kube-score_${VERSION}_linux_amd64.tar.gz"
           tar -xf kube-score.tar.gz
           sudo mv kube-score /usr/local/bin/
       - name: Score manifests

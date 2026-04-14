@@ -7,3 +7,7 @@ skip_list:
   - galaxy[no-runtime]
   # line length is enforced by yamllint with a project-specific limit
   - yaml[line-length]
+  # RKE2 only supports its official curl | sh installer — get_url is not viable here
+  - command-instead-of-module
+  # pipe commands are intentional and correct for disk discovery; pipefail would add no safety here
+  - risky-shell-pipe
