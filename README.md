@@ -73,7 +73,11 @@ Each step gates the next — do not skip ahead.
 Create the GCS bucket for Terraform state (one-time, before any `terraform init`):
 
 ```bash
-gcloud storage buckets create gs://site-infra --location=europe-west1
+gcloud storage buckets create gs://site-infra \
+    --default-storage-class=STANDARD \
+    --location=US \
+    --uniform-bucket-level-access \
+    --public-access-prevention
 ```
 
 Authenticate for GCS backend and OpenStack:
