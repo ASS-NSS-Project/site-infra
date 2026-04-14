@@ -66,13 +66,30 @@ ansible-galaxy collection install -r ansible/requirements.yml
 terraform/infra → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
+Each step gates the next — do not skip ahead.
+
+### 0. Prerequisites
+
+Create the GCS bucket for Terraform state (one-time, before any `terraform init`):
+
+```bash
+gcloud storage buckets create gs://k3s-cluster --location=europe-west1
+```
+
+Authenticate for GCS backend and OpenStack:
+
+```bash
+gcloud auth application-default login
+# place clouds.yaml in terraform/infra/clouds.yaml
+```
+
 ### 1. terraform/infra
 
 ```bash
 cd terraform/infra && terraform init && terraform apply
 ```
 
-Update DNS A records after apply:
+Update DNS A records after apply — all hostnames point to the ingress LB IP:
 
 ```bash
 terraform output ingress_lb_public_ip
@@ -81,42 +98,62 @@ terraform output ingress_lb_public_ip
 ### 2. Ansible
 
 ```bash
+export KUBECONFIG=$(pwd)/ansible/artifacts/kubeconfig
 cd ansible && ansible-playbook site.yml
 ```
 
-Available tags: `system`, `rke2`, `argocd`, `argocd,apps`
+### 3. Wait for ArgoCD wave 1
 
-### 3. Vault init (one-time manual)
+Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, Harbor, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 5.
+
+```bash
+kubectl -n argocd get applications -w
+```
+
+Wait until Vault is `Healthy` (it will stay `Degraded` until initialized — that is expected at this point).
+
+### 4. Vault init (one-time manual)
 
 ```bash
 kubectl exec -n vault vault-helm-0 -- vault operator init
 ```
 
-Save recovery keys and root token in a password manager. Vault auto-unseals via GCP KMS on every restart.
+Save all recovery keys and the root token in a password manager. Vault auto-unseals via GCP KMS on every restart — the keys are only needed for break-glass recovery.
 
-### 4. terraform/vault
+### 5. terraform/vault
 
 ```bash
 cd terraform/vault
-cp terraform.tfvars.example terraform.tfvars  # fill in vault_root_token + credentials
+cp terraform.tfvars.example terraform.tfvars  # fill in vault_root_token
 terraform init && terraform apply
 ```
 
-### 5. terraform/keycloak
+This pushes all service credentials into Vault. ESO will now sync them into Kubernetes — wait for all wave 1 and wave 2 apps to become `Healthy` before continuing.
 
-Register a Google OAuth app first (redirect URI: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`), then:
+### 6. terraform/keycloak
+
+Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`), then:
 
 ```bash
 cd terraform/keycloak
-cp terraform.tfvars.example terraform.tfvars  # fill in keycloak + vault + google credentials
+cp terraform.tfvars.example terraform.tfvars  # fill in keycloak + vault + google credentials + group members
 terraform init && terraform apply
 ```
 
-Monitor ArgoCD sync:
+## Teardown
+
+Destroy in reverse order to respect dependencies:
 
 ```bash
-export KUBECONFIG=ansible/artifacts/kubeconfig
-kubectl -n argocd get applications
+cd terraform/keycloak && terraform destroy
+cd terraform/vault && terraform destroy
+cd terraform/infra && terraform destroy
+```
+
+Delete the GCS state bucket last (this is irreversible):
+
+```bash
+gcloud storage rm -r gs://k3s-cluster
 ```
 
 ## Secrets management

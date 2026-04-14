@@ -47,7 +47,7 @@ resource "keycloak_group" "unauthorized" {
 # Account" flow matches by email (trust_email = true) and links the Google identity to the
 # pre-created account.
 # If a user has already logged in before being added to tfvars, import them first:
-#   terraform import 'keycloak_user.admin["their@gmail.com"]' <realm-id>/users/<user-id>
+#   terraform import 'keycloak_user.admin["their@gmail.com"]' {realm-id}/users/{user-id}
 
 resource "keycloak_user" "admin" {
   for_each = toset(var.admin_members)
@@ -57,10 +57,10 @@ resource "keycloak_user" "admin" {
   enabled  = true
 }
 
-resource "keycloak_group_membership" "admin" {
+resource "keycloak_group_memberships" "admin" {
   realm_id = keycloak_realm.main.id
   group_id = keycloak_group.admin.id
-  members  = [for u in keycloak_user.admin : u.id]
+  members  = [for u in keycloak_user.admin : u.username]
 }
 
 resource "keycloak_user" "curator" {
@@ -71,10 +71,10 @@ resource "keycloak_user" "curator" {
   enabled  = true
 }
 
-resource "keycloak_group_membership" "curator" {
+resource "keycloak_group_memberships" "curator" {
   realm_id = keycloak_realm.main.id
   group_id = keycloak_group.curator.id
-  members  = [for u in keycloak_user.curator : u.id]
+  members  = [for u in keycloak_user.curator : u.username]
 }
 
 resource "keycloak_user" "analytic" {
@@ -85,10 +85,10 @@ resource "keycloak_user" "analytic" {
   enabled  = true
 }
 
-resource "keycloak_group_membership" "analytic" {
+resource "keycloak_group_memberships" "analytic" {
   realm_id = keycloak_realm.main.id
   group_id = keycloak_group.analytic.id
-  members  = [for u in keycloak_user.analytic : u.id]
+  members  = [for u in keycloak_user.analytic : u.username]
 }
 
 resource "keycloak_user" "user" {
@@ -99,8 +99,8 @@ resource "keycloak_user" "user" {
   enabled  = true
 }
 
-resource "keycloak_group_membership" "user" {
+resource "keycloak_group_memberships" "user" {
   realm_id = keycloak_realm.main.id
   group_id = keycloak_group.user.id
-  members  = [for u in keycloak_user.user : u.id]
+  members  = [for u in keycloak_user.user : u.username]
 }

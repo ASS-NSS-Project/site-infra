@@ -1,6 +1,6 @@
 # --- Vault OIDC auth backend via Keycloak ---
 # Configures Vault to accept logins via Keycloak OIDC.
-# The "admins" Keycloak group maps to the vault-admin policy (full access).
+# The "admin" Keycloak group maps to the vault-admin policy (full access).
 # Any other authenticated user gets the default policy (no access beyond their own token).
 
 locals {
@@ -21,6 +21,12 @@ resource "vault_jwt_auth_backend" "oidc" {
     listing_visibility = "unauth"
     default_lease_ttl  = "1h"
     max_lease_ttl      = "24h"
+  }
+
+  # The Vault provider re-reads tune as a different internal type on each plan,
+  # producing a perpetual diff even when nothing changed. The settings are correct — ignore.
+  lifecycle {
+    ignore_changes = [tune]
   }
 }
 
