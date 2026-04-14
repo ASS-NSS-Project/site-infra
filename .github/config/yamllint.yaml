@@ -14,6 +14,11 @@ rules:
     allowed-values: ["true", "false", "yes", "no"]
     check-keys: false
 
+  # Allow spaces inside brackets (Ansible role lists use [ "role.name" ] style)
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
   # Inline comments are fine
   comments-indentation: disable
 

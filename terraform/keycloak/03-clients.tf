@@ -20,11 +20,11 @@ resource "keycloak_openid_client" "argocd" {
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "argocd_groups" {
-  realm_id        = keycloak_realm.main.id
-  client_id       = keycloak_openid_client.argocd.id
-  name            = "groups"
-  claim_name      = "groups"
-  full_path       = false
+  realm_id   = keycloak_realm.main.id
+  client_id  = keycloak_openid_client.argocd.id
+  name       = "groups"
+  claim_name = "groups"
+  full_path  = false
 }
 
 # Grafana
@@ -40,11 +40,11 @@ resource "keycloak_openid_client" "grafana" {
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "grafana_groups" {
-  realm_id        = keycloak_realm.main.id
-  client_id       = keycloak_openid_client.grafana.id
-  name            = "groups"
-  claim_name      = "groups"
-  full_path       = false
+  realm_id   = keycloak_realm.main.id
+  client_id  = keycloak_openid_client.grafana.id
+  name       = "groups"
+  claim_name = "groups"
+  full_path  = false
 }
 
 # Harbor
@@ -67,20 +67,20 @@ resource "keycloak_openid_client" "oauth2_proxy" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris = [
+  valid_redirect_uris   = [
     "https://longhorn.ass-nss.jkuzel02.online/oauth2/callback",
     "https://prometheus.ass-nss.jkuzel02.online/oauth2/callback",
     "https://alertmanager.ass-nss.jkuzel02.online/oauth2/callback"
   ]
-  web_origins = ["*"]
+  web_origins           = ["*"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "oauth2_proxy_groups" {
-  realm_id        = keycloak_realm.main.id
-  client_id       = keycloak_openid_client.oauth2_proxy.id
-  name            = "groups"
-  claim_name      = "groups"
-  full_path       = false
+  realm_id   = keycloak_realm.main.id
+  client_id  = keycloak_openid_client.oauth2_proxy.id
+  name       = "groups"
+  claim_name = "groups"
+  full_path  = false
 }
 
 # Vault
@@ -91,17 +91,17 @@ resource "keycloak_openid_client" "vault" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris = [
+  valid_redirect_uris   = [
     "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
     "http://localhost:8250/oidc/callback",
   ]
-  web_origins = ["https://vault.ass-nss.jkuzel02.online"]
+  web_origins           = ["https://vault.ass-nss.jkuzel02.online"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "vault_groups" {
-  realm_id        = keycloak_realm.main.id
-  client_id       = keycloak_openid_client.vault.id
-  name            = "groups"
-  claim_name      = "groups"
-  full_path       = false
+  realm_id   = keycloak_realm.main.id
+  client_id  = keycloak_openid_client.vault.id
+  name       = "groups"
+  claim_name = "groups"
+  full_path  = false
 }

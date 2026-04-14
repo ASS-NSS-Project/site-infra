@@ -18,7 +18,7 @@ All application delivery lives here. ArgoCD self-heals against this directory on
 
 Every app follows the same layout:
 
-```
+```text
 apps/<app>/
 ├── helm-Application.yaml     # deploys the Helm chart (multi-source)
 ├── config-Application.yaml   # deploys manifests from config/

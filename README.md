@@ -55,7 +55,7 @@ ansible-galaxy collection install -r ansible/requirements.yml
 
 ## Deployment
 
-```
+```text
 terraform/infra → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
@@ -155,12 +155,14 @@ Always test with staging first — DNS and port 80 routing must be reachable for
 ## Adding a new subdomain
 
 **Via Gateway API (HTTPRoute)** — no middleware needed:
+
 1. Add DNS A record
 2. Add HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
 3. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
 4. Add `HTTPRoute` in `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
 
 **Via Traefik IngressRoute** — for ForwardAuth or other middleware:
+
 1. Add DNS A record
 2. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: app's namespace)
 3. Add `IngressRoute` in `argocd/apps/<app>/config/<app>-IngressRoute.yaml`

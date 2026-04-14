@@ -78,7 +78,7 @@ jobs:
         # --ignore-missing-schemas skips CRDs (ArgoCD, cert-manager, ESO, etc.)
         # Standard K8s resources are still validated against the upstream schemas
         run: |
-          find argocd/apps -name "*.yaml" ! -name "*-Application.yaml" | \
+          find argocd/apps -name "*.yaml" ! -name "*-Application.yaml" ! -path "*/helm/*" | \
             kubeconform \
               --ignore-missing-schemas \
               --kubernetes-version 1.31.0 \

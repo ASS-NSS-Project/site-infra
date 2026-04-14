@@ -74,8 +74,8 @@ resource "openstack_networking_secgroup_rule_v2" "all_internal_subnet" {
 
 # Allow intra-cluster traffic (pods, kubelet, etcd, VXLAN)
 resource "openstack_networking_secgroup_rule_v2" "all_internal_group" {
-  direction       = "ingress"
-  ethertype       = "IPv4"
-  remote_group_id = openstack_networking_secgroup_v2.internal.id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  remote_group_id   = openstack_networking_secgroup_v2.internal.id
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }

@@ -8,7 +8,9 @@ resource "openstack_compute_instance_v2" "control_plane" {
   flavor_name = "c2.8core-16ram" # 8 vCPU, 16 GiB RAM
   key_pair    = "jkuzel"
 
-  network {port = openstack_networking_port_v2.cp[count.index].id}
+  network {
+    port = openstack_networking_port_v2.cp[count.index].id
+  }
 }
 
 # --- RKE2 Worker Nodes (4 nodes) ---
@@ -21,5 +23,7 @@ resource "openstack_compute_instance_v2" "worker" {
   flavor_name = "c2.8core-30ram" # 8 vCPU, 30 GiB RAM
   key_pair    = "jkuzel"
 
-  network {port = openstack_networking_port_v2.worker[count.index].id}
+  network {
+    port = openstack_networking_port_v2.worker[count.index].id
+  }
 }

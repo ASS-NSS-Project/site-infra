@@ -15,6 +15,7 @@ Three independent root modules — each has its own GCS backend state and must b
 Files are numbered: `00-providers.tf` always first (backend + providers), then `01-*.tf`, `02-*.tf` — one logical resource group per file. Don't merge unrelated resources into one file.
 
 Current files:
+
 - **infra/**: 00-providers, 01-network, 02-secgroups, 03-ports, 04-instances, 05-volumes, 06-loadbalancers, 07-floating-ips, 08-ansible-inventory, 09-gcp-kms
 - **vault/**: 00-providers, 01-vault, 02-vault-k8s-auth
 - **keycloak/**: 00-providers, 01-realm, 02-identity-providers, 03-clients, 04-vault-secrets, 05-vault-oidc

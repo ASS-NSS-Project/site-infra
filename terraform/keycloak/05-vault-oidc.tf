@@ -36,9 +36,9 @@ resource "vault_jwt_auth_backend_role" "default" {
     "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
     "http://localhost:8250/oidc/callback",
   ]
-  token_policies    = ["default"]
-  token_ttl         = 3600
-  token_max_ttl     = 86400
+  token_policies        = ["default"]
+  token_ttl             = 3600
+  token_max_ttl         = 86400
 }
 
 # --- Admin policy ---

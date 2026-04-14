@@ -4,7 +4,7 @@ Ansible configures cluster nodes and bootstraps ArgoCD. Once ArgoCD is running, 
 
 ## Inventory
 
-```
+```text
 rke2_cluster
 ├── control_plane: cp-0 (init), cp-1, cp-2 (join)
 └── workers: worker-0..3
@@ -15,6 +15,7 @@ Only `cp-0` has a floating IP. All other nodes are reached via SSH ProxyJump thr
 Static files (commit): `hosts.yml`, `host_vars/cp-1.yml`, `host_vars/cp-2.yml`, `host_vars/worker-*.yml`
 
 Generated/gitignored:
+
 - `inventory/host_vars/cp-0.yml` and `inventory/group_vars/all/terraform.yml` — written by `terraform/infra`
 - `artifacts/kubeconfig` — fetched from cp-0 by the rke2 role, needed by plays 3 and 4
 
