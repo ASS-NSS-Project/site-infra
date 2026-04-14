@@ -81,6 +81,13 @@ jobs:
         with:
           working_directory: terraform
 
+  tfvars-example-sync:
+    name: Terraform tfvars example sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/check-tfvars-example.sh
+
   ansible-lint:
     name: Ansible lint
     runs-on: ubuntu-latest
@@ -92,13 +99,6 @@ jobs:
       - run: pip install ansible-lint
       - run: ansible-galaxy collection install -r ansible/requirements.yml
       - run: ansible-lint -c .github/config/ansible-lint.yaml ansible/site.yml
-
-  tfvars-example-sync:
-    name: Terraform tfvars example sync
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: bash .github/scripts/check-tfvars-example.sh
 
   yamllint:
     name: YAML lint
