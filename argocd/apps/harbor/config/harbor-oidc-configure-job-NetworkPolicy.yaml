@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: harbor-oidc-configure-job
+  namespace: harbor
+spec:
+  podSelector:
+    matchLabels:
+      job-name: harbor-oidc-configure
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    # DNS resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Harbor API — http://harbor/ routes to the harbor nginx service in this namespace
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 80
+          protocol: TCP

@@ -12,7 +12,22 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: configure
-          image: curlimages/curl:latest
+          image: curlimages/curl:8.9.1
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: HARBOR_ADMIN_PASSWORD
               valueFrom:
