@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(terraform apply*)",
+      "Bash(terraform destroy*)",
+      "Bash(terraform init*)",
+      "Bash(terraform plan*)",
+      "Bash(terraform import*)",
+      "Bash(terraform state*)",
+      "Bash(ansible-playbook*)",
+      "Bash(ansible *)",
+      "Bash(git *)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/.envrc)",
+      "Read(**/clouds.yaml)",
+      "Read(**/terraform.tfvars)",
+      "Read(**/*.tfstate)",
+      "Read(**/*.tfstate.backup)",
+      "Read(**/*-Secret.yaml)",
+      "Read(**/kubeconfig)",
+      "Read(**/*.kubeconfig)",
+      "Read(**/ansible.cfg)",
+      "Read(**/ansible/files/**)",
+      "Read(**/ansible/artifacts/**)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/*.crt)",
+      "Read(**/*.cer)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)",
+      "Read(**/id_ecdsa)",
+      "Read(**/.ssh/**)",
+      "Read(**/credentials.json)",
+      "Read(**/service-account*.json)",
+      "Read(**/*sa-key*.json)",
+      "Read(**/kms-sa-key.json)"
+    ]
+  }
+}
