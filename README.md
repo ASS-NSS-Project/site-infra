@@ -368,18 +368,11 @@ What it provisions:
 - One confidential OIDC client per app with groups claim mapper
 - All client secrets pushed to Vault under `secret/oidc/<app>` for ESO to sync
 
-**Before running**, register the OAuth apps to obtain the Client ID and Secret:
+**Before running**, register the Google OAuth app to obtain the Client ID and Secret:
 
-**Google:**
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
 2. Create → OAuth 2.0 Client ID → Web application
 3. Under "Authorized redirect URIs" add: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`
-4. Copy the Client ID and Client Secret into `terraform.tfvars`
-
-**GitHub:**
-1. Go to GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
-2. Set "Authorization callback URL" to: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/github/endpoint`
-3. After saving, click "Generate a new client secret"
 4. Copy the Client ID and Client Secret into `terraform.tfvars`
 
 **Step 6 — Configure each app** to use Keycloak as its OIDC provider:

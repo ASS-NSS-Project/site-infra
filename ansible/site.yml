@@ -30,18 +30,6 @@
   connection: local
   tags: "argocd,apps"
   tasks:
-    - name: Ensure namespaces exist for bootstrap secrets                                                                                                                                                                                      
-      kubernetes.core.k8s:                                                                                                                                                                                                                   
-        api_version: v1                                                                                                                                                                                                                      
-        kind: Namespace                                                                                                                                                                                                                        
-        name: "{{ item }}"                                                                                                                                                                                                                     
-        state: present                                                                                                                                                                                                                         
-        kubeconfig: "{{ playbook_dir }}/artifacts/kubeconfig"                                                                                                                                                                                  
-      loop:
-        - monitoring
-        - keycloak
-        - vault
-
     - name: Create Vault KMS SA secret
       kubernetes.core.k8s:
         state: present
