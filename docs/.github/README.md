@@ -28,7 +28,7 @@ Runs [tfsec](https://github.com/aquasecurity/tfsec) across all three modules. Fl
 
 ### Ansible lint
 
-Runs `ansible-lint` on `ansible/site.yml` with all collections installed first. Catches deprecated syntax, missing `changed_when`, incorrect module usage, and other best-practice violations. Config in `.ansible-lint` — suppresses `galaxy[no-runtime]` (local roles don't need `runtime.yml`) and `yaml[line-length]` (handled by the YAML lint job).
+Runs `ansible-lint` on `ansible/site.yml` with all collections installed first. Catches deprecated syntax, missing `changed_when`, incorrect module usage, and other best-practice violations. Config in `.github/config/ansible-lint.yaml` — suppresses `galaxy[no-runtime]` (local roles don't need `runtime.yml`) and `yaml[line-length]` (handled by the YAML lint job).
 
 ### Terraform tfvars example sync
 

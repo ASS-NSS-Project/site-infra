@@ -19,16 +19,16 @@ Current files:
 ```text
 terraform/
 ├── infra/
-│   ├── 00-providers.tf          # GCS backend + OpenStack + GCP providers
-│   ├── 01-network.tf            # router, subnet, network
-│   ├── 02-secgroups.tf          # external and internal security groups
-│   ├── 03-ports.tf              # fixed-IP ports for each node
-│   ├── 04-instances.tf          # control plane and worker VMs
-│   ├── 05-volumes.tf            # Cinder volumes for RKE2 and Longhorn
-│   ├── 06-loadbalancers.tf      # Octavia LB for API and ingress
-│   ├── 07-floating-ips.tf       # FIPs for cp-0 and ingress LB
-│   ├── 08-ansible-inventory.tf  # writes host_vars and group_vars for Ansible
-│   └── 09-gcp-kms.tf            # KMS key ring and key for Vault auto-unseal
+│   ├── 00-providers.tf                   # GCS backend + OpenStack + GCP providers
+│   ├── 01-openstack-network.tf           # router, subnet, network
+│   ├── 02-openstack-secgroups.tf         # external and internal security groups
+│   ├── 03-openstack-ports.tf             # fixed-IP ports for each node
+│   ├── 04-openstack-instances.tf         # control plane and worker VMs
+│   ├── 05-openstack-volumes.tf           # Cinder volumes for RKE2 and Longhorn
+│   ├── 06-openstack-loadbalancers.tf     # Octavia LB for API and ingress
+│   ├── 07-openstack-floating-ips.tf      # FIPs for cp-0 and ingress LB
+│   ├── 08-ansible-inventory.tf           # writes host_vars and group_vars for Ansible
+│   └── 09-gcp-kms.tf                     # KMS key ring and key for Vault auto-unseal
 ├── vault/
 │   ├── 00-providers.tf          # GCS backend + Vault provider
 │   ├── 01-vault.tf              # KV v2 engine and service credentials
