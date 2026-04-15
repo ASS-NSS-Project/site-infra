@@ -82,7 +82,7 @@ All four modules use the GCS backend (`site-infra` bucket) — authenticate with
 
 `terraform init` may succeed (the bucket is reachable) but `terraform apply` then fails with a misleading 404 on the lock file:
 
-```
+```text
 Error loading state: writing "gs://site-infra/terraform/gcp/state/default.tflock" failed:
 googleapi: Error 404: The specified bucket does not exist., notFound
 ```
