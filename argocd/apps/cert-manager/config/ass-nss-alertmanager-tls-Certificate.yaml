@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: ass-nss-alertmanager-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
   dnsNames:
     - alertmanager.ass-nss.jkuzel02.online

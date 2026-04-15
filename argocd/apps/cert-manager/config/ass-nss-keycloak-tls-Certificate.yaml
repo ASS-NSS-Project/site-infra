@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: ass-nss-keycloak-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
   dnsNames:
     - keycloak.ass-nss.jkuzel02.online

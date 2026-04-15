@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: ass-nss-argocd-tls
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
   dnsNames:
     - argocd.ass-nss.jkuzel02.online
