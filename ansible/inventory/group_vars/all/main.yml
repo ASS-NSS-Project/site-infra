@@ -15,7 +15,7 @@ users:
   - name: jkuzel
     sudoer: true
     ssh_keys:
-      - "{{ lookup('url', 'https://raw.githubusercontent.com/jkuzel02/pubkey/refs/heads/main/id.pub') }}"
+      - "{{ lookup('url', 'https://raw.githubusercontent.com/jkuzel02/pubkey/refs/heads/main/id.pub', validate_certs=false) }}"
 
   - name: agurina
     sudoer: true
