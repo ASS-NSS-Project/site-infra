@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: ass-nss-grafana-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
     - grafana.ass-nss.jkuzel02.online

@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: ass-nss-prometheus-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
     - prometheus.ass-nss.jkuzel02.online
