@@ -47,18 +47,6 @@ resource "keycloak_openid_group_membership_protocol_mapper" "grafana_groups" {
   full_path  = false
 }
 
-# Harbor
-resource "keycloak_openid_client" "harbor" {
-  realm_id              = keycloak_realm.main.id
-  client_id             = "harbor"
-  name                  = "Harbor"
-  enabled               = true
-  access_type           = "CONFIDENTIAL"
-  standard_flow_enabled = true
-  valid_redirect_uris   = ["https://harbor.ass-nss.jkuzel02.online/*"]
-  web_origins           = ["https://harbor.ass-nss.jkuzel02.online"]
-}
-
 # oauth2-proxy (covers apps without native OIDC — e.g. Longhorn, Prometheus, ...)
 resource "keycloak_openid_client" "oauth2_proxy" {
   realm_id              = keycloak_realm.main.id

@@ -24,17 +24,6 @@ resource "vault_kv_secret_v2" "oidc_grafana" {
   })
 }
 
-resource "vault_kv_secret_v2" "oidc_harbor" {
-  mount = "secret"
-  name  = "oidc/harbor"
-
-  data_json = jsonencode({
-    client_id     = keycloak_openid_client.harbor.client_id
-    client_secret = keycloak_openid_client.harbor.client_secret
-    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
-  })
-}
-
 resource "vault_kv_secret_v2" "oidc_oauth2_proxy" {
   mount = "secret"
   name  = "oidc/oauth2-proxy"

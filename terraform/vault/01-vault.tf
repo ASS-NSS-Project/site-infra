@@ -32,18 +32,6 @@ variable "keycloak_password" {
   sensitive   = true
 }
 
-variable "harbor_username" {
-  description = "Harbor username"
-  type        = string
-  sensitive   = true
-}
-
-variable "harbor_password" {
-  description = "Harbor password"
-  type        = string
-  sensitive   = true
-}
-
 variable "longhorn_htpasswd" {
   description = "Longhorn UI basic auth in htpasswd format (bcrypt). Generate with: htpasswd -nb -B <user> <password>"
   type        = string
@@ -76,15 +64,6 @@ resource "vault_kv_secret_v2" "keycloak" {
   })
 }
 
-resource "vault_kv_secret_v2" "harbor" {
-  mount = vault_mount.secret.path
-  name  = "harbor"
-
-  data_json = jsonencode({
-    username = var.harbor_username
-    password = var.harbor_password
-  })
-}
 
 resource "vault_kv_secret_v2" "longhorn" {
   mount = vault_mount.secret.path
