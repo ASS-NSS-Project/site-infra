@@ -32,6 +32,18 @@ variable "keycloak_password" {
   sensitive   = true
 }
 
+variable "longhorn_s3_access_key" {
+  description = "Metacentrum S3 access key for Longhorn backups"
+  type        = string
+  sensitive   = true
+}
+
+variable "longhorn_s3_secret_key" {
+  description = "Metacentrum S3 secret key for Longhorn backups"
+  type        = string
+  sensitive   = true
+}
+
 variable "longhorn_htpasswd" {
   description = "Longhorn UI basic auth in htpasswd format (bcrypt). Generate with: htpasswd -nb -B <user> <password>"
   type        = string
@@ -71,6 +83,16 @@ resource "vault_kv_secret_v2" "longhorn" {
 
   data_json = jsonencode({
     htpasswd = var.longhorn_htpasswd
+  })
+}
+
+resource "vault_kv_secret_v2" "longhorn_s3" {
+  mount = vault_mount.secret.path
+  name  = "longhorn/s3-backup"
+
+  data_json = jsonencode({
+    access_key = var.longhorn_s3_access_key
+    secret_key = var.longhorn_s3_secret_key
   })
 }
 

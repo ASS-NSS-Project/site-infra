@@ -11,6 +11,10 @@ defaultSettings:
   defaultDataPath: /var/lib/longhorn
   defaultReplicaCount: 2
 
+  # S3 backup target — Metacentrum CESNET object storage
+  backupTarget: s3://longhorn-backup@cl4/
+  backupTargetCredentialSecret: longhorn-s3-backup
+
   # Only schedule storage on worker nodes — control plane has no Longhorn disk
   replicaSoftAntiAffinity: true
   storageMinimalAvailablePercentage: 10

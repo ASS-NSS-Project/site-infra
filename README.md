@@ -275,21 +275,6 @@ kubectl delete pod simulate
 
 The `SimulatedAlert` rule fires within ~1 minute — check `https://alertmanager.nss.jkzl.eu`.
 
-### Delete a specific log entry from Loki
-
-Loki exposes a delete API (`allow_deletes: true` must be set). Port-forward first, then call the API:
-
-```bash
-kubectl port-forward -n monitoring svc/loki 3100:3100 &
-sleep 2
-START=$(date -u -v-1d +%Y-%m-%dT%H:%M:%SZ)
-END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-curl -g -X POST "http://localhost:3100/loki/api/v1/delete?query=%7Bnamespace%3D%22default%22%7D+%7C%3D+%22SIMULATE_ALERT%22&start=${START}&end=${END}"
-kill %1
-```
-
-Deletion is async — the compactor removes the entry on the next compaction cycle.
-
 ```bash
 pkill -f "port-forward.*3100"
 ```
