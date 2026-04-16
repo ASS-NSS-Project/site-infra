@@ -263,10 +263,13 @@ Logs are collected by Grafana Alloy (Deployment, `alloy` namespace) via the Kube
 
 Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into Loki at `/var/loki/rules/fake/`.
 
-### Simulate an alert
+### Simulate a log alert
 
 ```bash
-kubectl run simulate --image=busybox --restart=Never -- sh -c 'echo "SIMULATE_ALERT test"'
+# Start — alert fires within ~1 minute
+kubectl run simulate --image=busybox --restart=Never -- sh -c 'while true; do echo "SIMULATE_ALERT test"; sleep 9999999999; done'
+
+# Stop — alert resolves within ~1 minute
 kubectl delete pod simulate
 ```
 

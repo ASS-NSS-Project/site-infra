@@ -18,6 +18,9 @@ loki:
         index:
           prefix: index_
           period: 24h
+  limits_config:
+    allow_deletes: true
+
   rulerConfig:
     alertmanager_url: http://alertmanager-operated.monitoring.svc.cluster.local:9093
     enable_api: true
