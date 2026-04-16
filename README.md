@@ -87,13 +87,14 @@ gcloud auth application-default login
 # place clouds.yaml in terraform/openstack/clouds.yaml
 ```
 
-### 1. terraform/gcp and terraform/openstack
+### 1. terraform/gcp, terraform/openstack, terraform/metacentrum-s3
 
-These two modules are independent — run them in parallel or in either order:
+These three modules are independent — run them in parallel or in any order:
 
 ```bash
 cd terraform/gcp && terraform init && terraform apply
 cd terraform/openstack && terraform init && terraform apply
+cd terraform/metacentrum-s3 && terraform init && terraform apply  # creates Longhorn S3 backup bucket
 ```
 
 Note the ingress LB IP for the next step:
@@ -282,3 +283,21 @@ pkill -f "port-forward.*3100"
 ## Longhorn
 
 UI: `https://longhorn.nss.jkzl.eu` (oauth2-proxy protected). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).
+
+### S3 backups
+
+Backups go to Metacentrum CESNET S3 (`https://s3.cl4.du.cesnet.cz`, bucket `longhorn-backup`). A recurring job runs daily at 02:00 UTC and retains 7 backups.
+
+**Setup** (once per cluster build):
+
+1. Create the bucket:
+```bash
+cd terraform/metacentrum-s3 && terraform apply -auto-approve
+```
+
+2. Store credentials in Vault:
+```bash
+cd terraform/vault && terraform apply -auto-approve
+```
+
+ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `BackupTarget` and `RecurringJob` CRs are managed by ArgoCD from `argocd/apps/longhorn/config/`.

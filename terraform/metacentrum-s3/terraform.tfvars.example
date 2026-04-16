@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in the values.
+# terraform.tfvars is gitignored — never commit it.
+# Credentials from https://access.du.cesnet.cz
+
+s3_access_key = ""
+s3_secret_key  = ""
