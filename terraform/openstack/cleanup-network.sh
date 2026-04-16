@@ -10,9 +10,15 @@ set -euo pipefail
 read -rp "This will delete group-project-router, group-project-network-subnet, and group-project-network. Continue? [y/N] " confirm
 [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }
 
-openstack router remove subnet group-project-router group-project-network-subnet
-openstack router delete group-project-router
-openstack subnet delete group-project-network-subnet
-openstack network delete group-project-network
+openstack router remove subnet group-project-router group-project-network-subnet || true
+openstack router delete group-project-router || true
+openstack subnet delete group-project-network-subnet || true
+openstack network delete group-project-network || true
+
+openstack router list
+openstack subnet list
+openstack network list
 
 echo "Done. Run: terraform apply"
+
+terraform apply -auto-approve

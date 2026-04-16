@@ -5,7 +5,7 @@
 resource "cloudflare_record" "root" {
   zone_id = var.cloudflare_zone_id
   name    = "nss"
-  value   = var.openstack_lb_ip
+  content = var.openstack_lb_ip
   type    = "A"
   ttl     = 300
   proxied = false
@@ -28,7 +28,7 @@ resource "cloudflare_record" "subdomains" {
 
   zone_id = var.cloudflare_zone_id
   name    = "${each.value}.nss"
-  value   = "nss.jkzl.eu"
+  content = "nss.jkzl.eu"
   type    = "CNAME"
   ttl     = 300
   proxied = false

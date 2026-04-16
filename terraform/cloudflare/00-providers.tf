@@ -28,6 +28,6 @@ variable "cloudflare_zone_id" {
 }
 
 variable "openstack_lb_ip" {
-  description = "Cluster ingress LB floating IP — written automatically by terraform/openstack into ingress.auto.tfvars"
+  description = "Cluster ingress LB floating IP — written automatically by terraform/openstack into openstack-lb-ip.auto.tfvars"
   type        = string
 }

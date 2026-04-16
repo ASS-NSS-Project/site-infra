@@ -1,4 +1,4 @@
-# --- Ansible Inventory Generation ---
+# --- Ansible Inventory & Cloudflare tfvars Generation ---
 # Writes inventory files directly after `terraform apply`.
 # No manual IP copy-paste required.
 
@@ -26,7 +26,7 @@ resource "local_file" "ansible_terraform_vars" {
 
 # Writes the ingress IP into terraform/cloudflare/ so the next apply picks it up automatically.
 # *.auto.tfvars files are loaded by Terraform without any flags — no manual copy-paste needed.
-resource "local_file" "cloudflare_ingress_ip" {
-  filename = "${local.cloudflare_root}/ingress.auto.tfvars"
+resource "local_file" "cloudflare_openstack_lb_ip" {
+  filename = "${local.cloudflare_root}/openstack-lb-ip.auto.tfvars"
   content  = "openstack_lb_ip = \"${openstack_networking_floatingip_v2.cluster_lb.address}\"\n"
 }
