@@ -95,9 +95,11 @@ resource "vault_kv_secret_v2" "longhorn" {
   })
 }
 
-# oauth2-proxy cookie secret — randomly generated, stored in Vault
-resource "random_bytes" "oauth2_proxy_cookie" {
-  length = 32
+# oauth2-proxy cookie secret — randomly generated, stored in Vault.
+# Must be a printable 32-byte string — binary values break env var injection.
+resource "random_password" "oauth2_proxy_cookie" {
+  length  = 32
+  special = false
 }
 
 resource "vault_kv_secret_v2" "oauth2_proxy_cookie" {
@@ -105,6 +107,6 @@ resource "vault_kv_secret_v2" "oauth2_proxy_cookie" {
   name  = "oidc/oauth2-proxy-cookie"
 
   data_json = jsonencode({
-    cookie_secret = random_bytes.oauth2_proxy_cookie.base64
+    cookie_secret = random_password.oauth2_proxy_cookie.result
   })
 }
