@@ -9,7 +9,7 @@ This repo uses [Claude Code](https://claude.ai/code) for AI-assisted development
 ## Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | Infrastructure | OpenStack (Metacentrum MetaVO, Brno) |
 | Provisioning | Terraform |
 | Configuration | Ansible |
@@ -256,6 +256,21 @@ Initial admin password (before SSO):
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d
 ```
+
+## Logging and alerting
+
+Logs are collected by Grafana Alloy (Deployment, `alloy` namespace) via the Kubernetes API and shipped to Loki (SingleBinary, `monitoring` namespace). Loki's ruler evaluates LogQL alert rules and forwards firing alerts to Alertmanager.
+
+Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into Loki at `/var/loki/rules/fake/`.
+
+### Simulate an alert
+
+```bash
+kubectl run simulate --image=busybox --restart=Never -- sh -c 'echo "SIMULATE_ALERT test"'
+kubectl delete pod simulate
+```
+
+The `SimulatedAlert` rule fires within ~1 minute — check `https://alertmanager.nss.jkzl.eu`.
 
 ## Longhorn
 

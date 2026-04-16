@@ -60,6 +60,11 @@ chunksCache:
 resultsCache:
   enabled: false
 
+test:
+  enabled: false
+lokiCanary:
+  enabled: false
+
 monitoring:
   selfMonitoring:
     enabled: false
