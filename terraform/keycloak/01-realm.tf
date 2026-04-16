@@ -1,7 +1,7 @@
 resource "keycloak_realm" "main" {
-  realm        = "ass-nss"
+  realm        = "ass-nss-project"
   enabled      = true
-  display_name = "ASS-NSS"
+  display_name = "ASS-NSS-Project"
 
   registration_allowed     = false
   reset_password_allowed   = true

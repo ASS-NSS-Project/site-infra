@@ -4,7 +4,7 @@
 # Any other authenticated user gets the default policy (no access beyond their own token).
 
 locals {
-  keycloak_issuer = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
+  keycloak_issuer = "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
 }
 
 resource "vault_jwt_auth_backend" "oidc" {

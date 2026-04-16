@@ -149,7 +149,7 @@ This pushes all service credentials into Vault. ESO will now sync them into Kube
 
 ### 7. terraform/keycloak
 
-Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.nss.jkzl.eu/realms/ass-nss/broker/google/endpoint`), then:
+Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.nss.jkzl.eu/realms/ass-nss-project/broker/google/endpoint`), then:
 
 ```bash
 cd terraform/keycloak

@@ -40,7 +40,7 @@ resource "keycloak_authentication_execution" "auto_link_set_existing" {
 
 # Google — built-in Keycloak provider, OIDC
 # Callback URL to register in GCP Console:
-# https://keycloak.nss.jkzl.eu/realms/ass-nss/broker/google/endpoint
+# https://keycloak.nss.jkzl.eu/realms/ass-nss-project/broker/google/endpoint
 resource "keycloak_oidc_google_identity_provider" "google" {
   realm         = keycloak_realm.main.id
   client_id     = var.google_client_id

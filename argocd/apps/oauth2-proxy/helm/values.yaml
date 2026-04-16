@@ -8,7 +8,7 @@ config:
 
 extraArgs:
   provider: keycloak-oidc
-  oidc-issuer-url: https://keycloak.nss.jkzl.eu/realms/ass-nss
+  oidc-issuer-url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project
   email-domain: "*"
   upstream: static://200
   cookie-secure: "true"

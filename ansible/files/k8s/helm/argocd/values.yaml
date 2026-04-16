@@ -17,7 +17,7 @@ configs:
   cm:
     oidc.config: |
       name: Keycloak
-      issuer: https://keycloak.nss.jkzl.eu/realms/ass-nss
+      issuer: https://keycloak.nss.jkzl.eu/realms/ass-nss-project
       clientID: argocd
       clientSecret: $argocd-oidc-secret:client_secret
       requestedScopes:

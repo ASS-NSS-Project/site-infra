@@ -41,9 +41,9 @@ grafana:
       client_id: grafana
       client_secret: $__env{client_secret}
       scopes: openid profile email
-      auth_url: https://keycloak.nss.jkzl.eu/realms/ass-nss/protocol/openid-connect/auth
-      token_url: https://keycloak.nss.jkzl.eu/realms/ass-nss/protocol/openid-connect/token
-      api_url: https://keycloak.nss.jkzl.eu/realms/ass-nss/protocol/openid-connect/userinfo
+      auth_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/auth
+      token_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/token
+      api_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/userinfo
       role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'analytic') && 'Viewer'
       role_attribute_strict: true
 
