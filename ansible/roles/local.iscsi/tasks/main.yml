@@ -1,0 +1,4 @@
+- name: Install open-iscsi (required by Longhorn on all nodes)
+  ansible.builtin.apt:
+    name: open-iscsi
+    state: present

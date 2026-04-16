@@ -5,6 +5,13 @@
   tags: system
   roles: ["local.system"]
 
+# Install open-iscsi on all nodes — required by Longhorn for block storage access
+- name: Install iSCSI initiator
+  hosts: rke2_cluster
+  become: true
+  tags: iscsi
+  roles: ["local.iscsi"]
+
 # Install RKE2 on all cluster nodes.
 # The role dispatches init / join / worker logic by group membership.
 # cp-0 runs init; join and worker tasks gate on port 9345 being reachable,
