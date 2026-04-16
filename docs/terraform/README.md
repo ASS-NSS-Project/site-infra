@@ -4,11 +4,13 @@ Four independent root modules — each has its own GCS backend state and must be
 
 ## Modules and their dependencies
 
-`gcp/` and `openstack/` run first and are independent of each other — apply them in parallel or in either order.
+`gcp/` and `openstack/` run first and are independent of each other — apply them in parallel or in either order. `cloudflare/` runs immediately after `openstack/`, before Ansible, so DNS resolves when cert-manager starts issuing certificates.
 
 `gcp/` provisions all GCP resources: the KMS key ring and crypto key for Vault auto-unseal, the service account with encrypter/decrypter permissions, and writes the service account JSON key to `ansible/files/vault/kms-sa-key.json` for Ansible to pick up.
 
 `openstack/` provisions all OpenStack resources and writes two files that Ansible needs: `ansible/inventory/host_vars/cp-0.yml` and `ansible/inventory/group_vars/all/terraform.yml`. If those files are missing, re-run `terraform apply` in `openstack/`.
+
+`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains.
 
 `vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials, and sets up Kubernetes auth for ESO.
 
@@ -40,6 +42,9 @@ Current files:
 
 ```text
 terraform/
+├── cloudflare/
+│   ├── 00-providers.tf  # GCS backend + Cloudflare provider
+│   └── 01-dns.tf        # A record for nss.jkzl.eu + CNAME records for all subdomains
 ├── gcp/
 │   ├── 00-providers.tf  # GCS backend + GCP provider
 │   └── 01-kms.tf        # KMS key ring, crypto key, service account for Vault auto-unseal

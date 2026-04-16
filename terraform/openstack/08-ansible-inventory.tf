@@ -3,10 +3,11 @@
 # No manual IP copy-paste required.
 
 locals {
-  ansible_root = "${path.module}/../../ansible"
+  ansible_root    = "${path.module}/../../ansible"
+  cloudflare_root = "${path.module}/../cloudflare"
 }
 
-# cp-0's ansible_host must be the floating IP — generated here, gitignored.
+# cp-0's ansible_host must be the floating IP — generated here.
 resource "local_file" "cp0_host_vars" {
   filename = "${local.ansible_root}/inventory/host_vars/cp-0.yml"
   content = templatefile(
@@ -19,6 +20,13 @@ resource "local_file" "ansible_terraform_vars" {
   filename = "${local.ansible_root}/inventory/group_vars/all/terraform.yml"
   content = templatefile(
     "${path.module}/templates/terraform-vars.yml.tpl",
-    { api_lb_fip = openstack_networking_floatingip_v2.cluster_lb.address }
+    { openstack_lb_ip = openstack_networking_floatingip_v2.cluster_lb.address }
   )
+}
+
+# Writes the ingress IP into terraform/cloudflare/ so the next apply picks it up automatically.
+# *.auto.tfvars files are loaded by Terraform without any flags — no manual copy-paste needed.
+resource "local_file" "cloudflare_ingress_ip" {
+  filename = "${local.cloudflare_root}/ingress.auto.tfvars"
+  content  = "openstack_lb_ip = \"${openstack_networking_floatingip_v2.cluster_lb.address}\"\n"
 }

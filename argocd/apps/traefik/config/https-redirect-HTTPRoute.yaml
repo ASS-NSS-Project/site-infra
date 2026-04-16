@@ -12,14 +12,14 @@ spec:
       namespace: traefik
       sectionName: web
   hostnames:
-    - ass-nss.jkuzel02.online
-    - argocd.ass-nss.jkuzel02.online
-    - longhorn.ass-nss.jkuzel02.online
-    - vault.ass-nss.jkuzel02.online
-    - keycloak.ass-nss.jkuzel02.online
-    - grafana.ass-nss.jkuzel02.online
-    - prometheus.ass-nss.jkuzel02.online
-    - alertmanager.ass-nss.jkuzel02.online
+    - nss.jkzl.eu
+    - argocd.nss.jkzl.eu
+    - longhorn.nss.jkzl.eu
+    - vault.nss.jkzl.eu
+    - keycloak.nss.jkzl.eu
+    - grafana.nss.jkzl.eu
+    - prometheus.nss.jkzl.eu
+    - alertmanager.nss.jkzl.eu
   rules:
     - filters:
         - type: RequestRedirect

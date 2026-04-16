@@ -9,4 +9,4 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - longhorn.ass-nss.jkuzel02.online
+    - longhorn.nss.jkzl.eu

@@ -9,7 +9,7 @@ spec:
       namespace: traefik
       sectionName: websecure-argocd
   hostnames:
-    - argocd.ass-nss.jkuzel02.online
+    - argocd.nss.jkzl.eu
   rules:
     - backendRefs:
         - name: argocd-server

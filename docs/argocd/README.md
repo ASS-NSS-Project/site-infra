@@ -33,7 +33,7 @@ File naming is always `<name>-<Kind>.yaml`, e.g. `grafana-credentials-ExternalSe
 
 Wave N must be fully healthy before wave N+1 starts. Confirm the wave assignment with the developer before committing.
 
-Wave 1 — Helm charts and operators with no runtime dependencies: traefik, cert-manager, longhorn, vault, cnpg, kube-prometheus-stack, keycloak-operator, eso, oauth2-proxy
+Wave 1 — Helm charts and operators with no runtime dependencies: traefik, cert-manager, longhorn, vault, cnpg, kube-prometheus-stack, loki, alloy, keycloak-operator, eso, oauth2-proxy
 
 Wave 2 — requires wave 1 CRDs: traefik-config (Gateway + GatewayClass), cert-manager-config (ClusterIssuers), eso-config (ClusterSecretStore)
 
@@ -103,4 +103,4 @@ spec:
 New apps go into one of the two existing projects — do not create new ones without discussion.
 
 - `infrastructure` — traefik, cert-manager, longhorn, vault, cnpg, eso, keycloak, oauth2-proxy, argocd-config
-- `observability` — kube-prometheus-stack, grafana-config
+- `observability` — kube-prometheus-stack, loki, alloy

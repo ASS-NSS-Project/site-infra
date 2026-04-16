@@ -29,7 +29,7 @@
       token: {{ rke2_token }}
       tls-san:
         - {{ rke2_api_lb_vip }}
-        - {{ rke2_api_lb_fip }}
+        - {{ openstack_lb_ip }}
       disable:
         - rke2-ingress-nginx
     mode: "0644"

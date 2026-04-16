@@ -23,6 +23,7 @@ This repo uses [Claude Code](https://claude.ai/code) for AI-assisted development
 | Identity | Keycloak (Keycloak Operator) |
 | SSO | oauth2-proxy (ForwardAuth) |
 | Monitoring | kube-prometheus-stack |
+| Logging | Loki + Grafana Alloy |
 
 ## Cluster layout
 
@@ -62,7 +63,7 @@ ansible-galaxy collection install -r ansible/requirements.yml
 ## Deployment
 
 ```text
-terraform/gcp + terraform/openstack → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
+terraform/gcp + terraform/openstack → terraform/cloudflare → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
 ```
 
 Each step gates the next — do not skip ahead.
@@ -95,22 +96,32 @@ cd terraform/gcp && terraform init && terraform apply
 cd terraform/openstack && terraform init && terraform apply
 ```
 
-Update DNS A records after apply — all hostnames point to the ingress LB IP:
+Note the ingress LB IP for the next step:
 
 ```bash
 terraform output ingress_lb_public_ip
 ```
 
-### 2. Ansible
+### 2. terraform/cloudflare
+
+Creates the A record for `nss.jkzl.eu` and CNAME records for all subdomains. DNS must resolve before cert-manager can issue certificates.
+
+```bash
+cd terraform/cloudflare
+cp terraform.tfvars.example terraform.tfvars  # fill in cloudflare_api_token, cloudflare_zone_id (ingress_ip is written automatically by openstack)
+terraform init && terraform apply
+```
+
+### 3. Ansible
 
 ```bash
 export KUBECONFIG=$(pwd)/ansible/artifacts/kubeconfig
 cd ansible && ansible-playbook site.yml
 ```
 
-### 3. Wait for ArgoCD wave 1
+### 4. Wait for ArgoCD wave 1
 
-Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 5.
+Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 6.
 
 ```bash
 kubectl -n argocd get applications -w
@@ -118,7 +129,7 @@ kubectl -n argocd get applications -w
 
 Wait until Vault is `Healthy` (it will stay `Degraded` until initialized — that is expected at this point).
 
-### 4. Vault init (one-time manual)
+### 5. Vault init (one-time manual)
 
 ```bash
 kubectl exec -n vault vault-helm-0 -- vault operator init
@@ -126,7 +137,7 @@ kubectl exec -n vault vault-helm-0 -- vault operator init
 
 Save all recovery keys and the root token in a password manager. Vault auto-unseals via GCP KMS on every restart — the keys are only needed for break-glass recovery.
 
-### 5. terraform/vault
+### 6. terraform/vault
 
 ```bash
 cd terraform/vault
@@ -136,9 +147,9 @@ terraform init && terraform apply
 
 This pushes all service credentials into Vault. ESO will now sync them into Kubernetes — wait for all wave 1 and wave 2 apps to become `Healthy` before continuing.
 
-### 6. terraform/keycloak
+### 7. terraform/keycloak
 
-Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss/broker/google/endpoint`), then:
+Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.nss.jkzl.eu/realms/ass-nss/broker/google/endpoint`), then:
 
 ```bash
 cd terraform/keycloak
@@ -177,18 +188,18 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 
 ## DNS records
 
-All A records → Ingress LB floating IP (`terraform output ingress_lb_public_ip`):
+Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are CNAMEs to it.
 
-| Hostname | Service |
-|----------|---------|
-| `ass-nss.jkuzel02.online` | Root |
-| `argocd.ass-nss.jkuzel02.online` | ArgoCD |
-| `longhorn.ass-nss.jkuzel02.online` | Longhorn |
-| `vault.ass-nss.jkuzel02.online` | Vault |
-| `keycloak.ass-nss.jkuzel02.online` | Keycloak |
-| `grafana.ass-nss.jkuzel02.online` | Grafana |
-| `prometheus.ass-nss.jkuzel02.online` | Prometheus |
-| `alertmanager.ass-nss.jkuzel02.online` | Alertmanager |
+| Hostname | Type | Target |
+|----------|------|--------|
+| `nss.jkzl.eu` | A | Ingress LB floating IP |
+| `argocd.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `longhorn.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `vault.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `keycloak.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `grafana.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `prometheus.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `alertmanager.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 
 ## SSO
 
@@ -229,7 +240,7 @@ Push to `kost` — ArgoCD applies automatically.
 
 ## Vault
 
-UI: `https://vault.ass-nss.jkuzel02.online` — login via OIDC (leave role blank) or root token (break-glass only).
+UI: `https://vault.nss.jkzl.eu` — login via OIDC (leave role blank) or root token (break-glass only).
 
 Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-key`) on every restart. OIDC auth is configured by `terraform/keycloak/05-vault-oidc.tf` — re-running it after a cluster rebuild restores access.
 
@@ -237,7 +248,7 @@ Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-ke
 
 ## ArgoCD
 
-UI: `https://argocd.ass-nss.jkuzel02.online`
+UI: `https://argocd.nss.jkzl.eu`
 
 Initial admin password (before SSO):
 
@@ -248,4 +259,4 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 
 ## Longhorn
 
-UI: `https://longhorn.ass-nss.jkuzel02.online` (oauth2-proxy protected). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).
+UI: `https://longhorn.nss.jkzl.eu` (oauth2-proxy protected). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).

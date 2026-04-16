@@ -17,6 +17,6 @@ terraform {
 }
 
 provider "vault" {
-  address = "https://vault.ass-nss.jkuzel02.online"
+  address = "https://vault.nss.jkzl.eu"
   token   = var.vault_root_token
 }

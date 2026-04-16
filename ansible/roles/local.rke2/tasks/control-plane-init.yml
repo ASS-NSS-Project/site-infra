@@ -10,7 +10,7 @@
     content: |
       tls-san:
         - {{ rke2_api_lb_vip }}
-        - {{ rke2_api_lb_fip }}
+        - {{ openstack_lb_ip }}
       disable:
         - rke2-ingress-nginx
     mode: "0644"
@@ -59,6 +59,6 @@
   ansible.builtin.replace:
     path: "{{ playbook_dir }}/artifacts/kubeconfig"
     regexp: 'https://127\.0\.0\.1:6443'
-    replace: "https://{{ rke2_api_lb_fip }}:6443"
+    replace: "https://{{ openstack_lb_ip }}:6443"
   delegate_to: localhost
   become: false

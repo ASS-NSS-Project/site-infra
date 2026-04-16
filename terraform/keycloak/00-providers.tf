@@ -31,7 +31,7 @@ provider "keycloak" {
   client_id = "admin-cli"
   username  = var.keycloak_username
   password  = var.keycloak_password
-  url       = "https://keycloak.ass-nss.jkuzel02.online"
+  url       = "https://keycloak.nss.jkzl.eu"
 }
 
 variable "vault_root_token" {
@@ -68,6 +68,6 @@ variable "user_members" {
 }
 
 provider "vault" {
-  address = "https://vault.ass-nss.jkuzel02.online"
+  address = "https://vault.nss.jkzl.eu"
   token   = var.vault_root_token
 }

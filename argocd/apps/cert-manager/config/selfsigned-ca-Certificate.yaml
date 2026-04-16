@@ -9,7 +9,7 @@ metadata:
   namespace: cert-manager
 spec:
   isCA: true
-  commonName: ass-nss.jkuzel02.online
+  commonName: nss.jkzl.eu
   secretName: selfsigned-ca-tls
   privateKey:
     algorithm: ECDSA

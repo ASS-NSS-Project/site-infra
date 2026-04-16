@@ -8,7 +8,7 @@ spec:
   image: quay.io/keycloak/keycloak:26.5.5
   startOptimized: false
   hostname:
-    hostname: keycloak.ass-nss.jkuzel02.online
+    hostname: keycloak.nss.jkzl.eu
     strict: false
   http:
     httpEnabled: true

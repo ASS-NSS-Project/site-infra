@@ -9,7 +9,7 @@ resource "vault_kv_secret_v2" "oidc_argocd" {
   data_json = jsonencode({
     client_id     = keycloak_openid_client.argocd.client_id
     client_secret = keycloak_openid_client.argocd.client_secret
-    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+    issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
   })
 }
 
@@ -20,7 +20,7 @@ resource "vault_kv_secret_v2" "oidc_grafana" {
   data_json = jsonencode({
     client_id     = keycloak_openid_client.grafana.client_id
     client_secret = keycloak_openid_client.grafana.client_secret
-    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+    issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
   })
 }
 
@@ -31,7 +31,7 @@ resource "vault_kv_secret_v2" "oidc_oauth2_proxy" {
   data_json = jsonencode({
     client_id     = keycloak_openid_client.oauth2_proxy.client_id
     client_secret = keycloak_openid_client.oauth2_proxy.client_secret
-    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+    issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
   })
 }
 
@@ -42,6 +42,6 @@ resource "vault_kv_secret_v2" "oidc_vault" {
   data_json = jsonencode({
     client_id     = keycloak_openid_client.vault.client_id
     client_secret = keycloak_openid_client.vault.client_secret
-    issuer        = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+    issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
   })
 }

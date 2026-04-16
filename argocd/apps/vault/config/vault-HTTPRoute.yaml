@@ -9,7 +9,7 @@ spec:
       namespace: traefik
       sectionName: websecure-vault
   hostnames:
-    - vault.ass-nss.jkuzel02.online
+    - vault.nss.jkzl.eu
   rules:
     - backendRefs:
         - name: vault-helm-ui

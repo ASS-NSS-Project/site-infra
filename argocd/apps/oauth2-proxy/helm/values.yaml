@@ -8,12 +8,12 @@ config:
 
 extraArgs:
   provider: keycloak-oidc
-  oidc-issuer-url: https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss
+  oidc-issuer-url: https://keycloak.nss.jkzl.eu/realms/ass-nss
   email-domain: "*"
   upstream: static://200
   cookie-secure: "true"
-  cookie-domain: ".ass-nss.jkuzel02.online"
-  whitelist-domain: ".ass-nss.jkuzel02.online"
+  cookie-domain: ".nss.jkzl.eu"
+  whitelist-domain: ".nss.jkzl.eu"
   skip-provider-button: "true"
   silence-ping-logging: "true"
   # groups is a protocol mapper claim, not a Keycloak scope — request only standard scopes

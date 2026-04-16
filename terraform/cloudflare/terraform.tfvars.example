@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and fill in the values.
+# terraform.tfvars is gitignored — never commit it.
+
+cloudflare_api_token = ""
+cloudflare_zone_id   = ""
+
+# From: cd terraform/openstack && terraform output ingress_lb_public_ip
+openstack_lb_ip = ""

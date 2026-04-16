@@ -5,7 +5,7 @@
 # TLS termination: one HTTPS listener per hostname (HTTP-01 limitation —
 # wildcard certs require DNS-01).
 #
-# To add a new subdomain (e.g. website.ass-nss.jkuzel02.online):
+# To add a new subdomain (e.g. website.nss.jkzl.eu):
 #   1. Add a new listener block below (copy the websecure-root example)
 #   2. Add a Certificate resource in argocd/apps/cert-manager/config/
 #   3. ArgoCD will sync both, cert-manager handles the rest
@@ -31,7 +31,7 @@ spec:
     - name: websecure-root
       port: 443
       protocol: HTTPS
-      hostname: ass-nss.jkuzel02.online
+      hostname: nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
@@ -44,7 +44,7 @@ spec:
     - name: websecure-argocd
       port: 443
       protocol: HTTPS
-      hostname: argocd.ass-nss.jkuzel02.online
+      hostname: argocd.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
@@ -57,7 +57,7 @@ spec:
     - name: websecure-vault
       port: 443
       protocol: HTTPS
-      hostname: vault.ass-nss.jkuzel02.online
+      hostname: vault.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
@@ -70,7 +70,7 @@ spec:
     - name: websecure-keycloak
       port: 443
       protocol: HTTPS
-      hostname: keycloak.ass-nss.jkuzel02.online
+      hostname: keycloak.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
@@ -83,7 +83,7 @@ spec:
     - name: websecure-grafana
       port: 443
       protocol: HTTPS
-      hostname: grafana.ass-nss.jkuzel02.online
+      hostname: grafana.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
@@ -97,7 +97,7 @@ spec:
     # - name: websecure-<name>
     #   port: 443
     #   protocol: HTTPS
-    #   hostname: <name>.ass-nss.jkuzel02.online
+    #   hostname: <name>.nss.jkzl.eu
     #   allowedRoutes:
     #     namespaces:
     #       from: All

@@ -4,7 +4,7 @@
 # flows through to the app for RBAC (e.g. "admins" group → admin role).
 
 locals {
-  base_url = "https://ass-nss.jkuzel02.online"
+  base_url = "https://nss.jkzl.eu"
 }
 
 # ArgoCD
@@ -15,8 +15,8 @@ resource "keycloak_openid_client" "argocd" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris   = ["https://argocd.ass-nss.jkuzel02.online/*"]
-  web_origins           = ["https://argocd.ass-nss.jkuzel02.online"]
+  valid_redirect_uris   = ["https://argocd.nss.jkzl.eu/*"]
+  web_origins           = ["https://argocd.nss.jkzl.eu"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "argocd_groups" {
@@ -35,8 +35,8 @@ resource "keycloak_openid_client" "grafana" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris   = ["https://grafana.ass-nss.jkuzel02.online/*"]
-  web_origins           = ["https://grafana.ass-nss.jkuzel02.online"]
+  valid_redirect_uris   = ["https://grafana.nss.jkzl.eu/*"]
+  web_origins           = ["https://grafana.nss.jkzl.eu"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "grafana_groups" {
@@ -57,9 +57,9 @@ resource "keycloak_openid_client" "oauth2_proxy" {
   standard_flow_enabled = true
 
   valid_redirect_uris = [
-    "https://longhorn.ass-nss.jkuzel02.online/oauth2/callback",
-    "https://prometheus.ass-nss.jkuzel02.online/oauth2/callback",
-    "https://alertmanager.ass-nss.jkuzel02.online/oauth2/callback"
+    "https://longhorn.nss.jkzl.eu/oauth2/callback",
+    "https://prometheus.nss.jkzl.eu/oauth2/callback",
+    "https://alertmanager.nss.jkzl.eu/oauth2/callback"
   ]
 
   web_origins = ["*"]
@@ -83,11 +83,11 @@ resource "keycloak_openid_client" "vault" {
   standard_flow_enabled = true
 
   valid_redirect_uris = [
-    "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
+    "https://vault.nss.jkzl.eu/ui/vault/auth/oidc/oidc/callback",
     "http://localhost:8250/oidc/callback",
   ]
 
-  web_origins = ["https://vault.ass-nss.jkuzel02.online"]
+  web_origins = ["https://vault.nss.jkzl.eu"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "vault_groups" {

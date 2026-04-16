@@ -4,7 +4,7 @@
 # Any other authenticated user gets the default policy (no access beyond their own token).
 
 locals {
-  keycloak_issuer = "https://keycloak.ass-nss.jkuzel02.online/realms/ass-nss"
+  keycloak_issuer = "https://keycloak.nss.jkzl.eu/realms/ass-nss"
 }
 
 resource "vault_jwt_auth_backend" "oidc" {
@@ -40,7 +40,7 @@ resource "vault_jwt_auth_backend_role" "default" {
   oidc_scopes     = ["openid", "profile", "email"]
 
   allowed_redirect_uris = [
-    "https://vault.ass-nss.jkuzel02.online/ui/vault/auth/oidc/oidc/callback",
+    "https://vault.nss.jkzl.eu/ui/vault/auth/oidc/oidc/callback",
     "http://localhost:8250/oidc/callback",
   ]
 

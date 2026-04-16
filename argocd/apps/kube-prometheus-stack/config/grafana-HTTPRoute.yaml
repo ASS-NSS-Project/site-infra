@@ -9,7 +9,7 @@ spec:
       namespace: traefik
       sectionName: websecure-grafana
   hostnames:
-    - grafana.ass-nss.jkuzel02.online
+    - grafana.nss.jkzl.eu
   rules:
     - backendRefs:
         - name: kube-prometheus-stack-helm-grafana

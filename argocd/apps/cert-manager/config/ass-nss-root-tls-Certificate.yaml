@@ -9,4 +9,4 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - ass-nss.jkuzel02.online
+    - nss.jkzl.eu

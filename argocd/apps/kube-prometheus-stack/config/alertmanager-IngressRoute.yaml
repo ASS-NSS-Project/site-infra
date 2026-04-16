@@ -7,12 +7,12 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`alertmanager.ass-nss.jkuzel02.online`) && PathPrefix(`/oauth2/`)
+    - match: Host(`alertmanager.nss.jkzl.eu`) && PathPrefix(`/oauth2/`)
       kind: Rule
       services:
         - name: oauth2-proxy-ext
           port: 80
-    - match: Host(`alertmanager.ass-nss.jkuzel02.online`)
+    - match: Host(`alertmanager.nss.jkzl.eu`)
       kind: Rule
       services:
         - name: alertmanager-operated
