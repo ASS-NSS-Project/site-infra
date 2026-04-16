@@ -8,11 +8,14 @@ spec:
   sourceRepos:
     - https://github.com/ASS-NSS-Project/site-infra
     - https://prometheus-community.github.io/helm-charts
+    - https://grafana.github.io/helm-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: monitoring
     - server: https://kubernetes.default.svc
       namespace: kube-system
+    - server: https://kubernetes.default.svc
+      namespace: alloy
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

@@ -1,0 +1,32 @@
+# Wave 1 — Loki log aggregation backend (single-binary, filesystem storage)
+# No finalizer — Loki owns a Longhorn PVC for log chunks
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-helm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  revisionHistoryLimit: 0
+  project: observability
+  sources:
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      targetRevision: ">=6.0.0"
+      helm:
+        releaseName: loki
+        valueFiles:
+          - $values/argocd/apps/loki/helm/values.yaml
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
