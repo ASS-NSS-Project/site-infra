@@ -78,7 +78,7 @@ All validation runs in GitHub Actions on push to `kost`. Jobs are documented in 
 - Never read or suggest committing: `terraform.tfvars`, `*.tfstate`, `clouds.yaml`, `*-Secret.yaml`, `kubeconfig`, `kms-sa-key.json`, private keys.
 - Rollback via `git revert` — never `argocd app rollback`. ArgoCD self-heals from git.
 - Secrets live in Vault. Kubernetes gets them only via ExternalSecret → ESO → Vault. Never inject them directly.
-- Do not touch stateful helm apps (longhorn-helm, vault-helm, harbor-helm) without explicit confirmation — they own PVCs.
+- Do not touch stateful helm apps (longhorn-helm, vault-helm) without explicit confirmation — they own PVCs.
 
 ## Layer documentation
 

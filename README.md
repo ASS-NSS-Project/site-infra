@@ -18,7 +18,6 @@ This repo uses [Claude Code](https://claude.ai/code) for AI-assisted development
 | Ingress | Traefik v3 (Gateway API, DaemonSet on CPs) |
 | TLS | cert-manager + Let's Encrypt HTTP-01 |
 | Storage | Longhorn (LVM over Cinder volumes) |
-| Registry | Harbor |
 | Secrets | HashiCorp Vault + External Secrets Operator |
 | Database | CloudNativePG |
 | Identity | Keycloak (Keycloak Operator) |
@@ -111,7 +110,7 @@ cd ansible && ansible-playbook site.yml
 
 ### 3. Wait for ArgoCD wave 1
 
-Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, Harbor, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 5.
+Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 5.
 
 ```bash
 kubectl -n argocd get applications -w
@@ -172,10 +171,8 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 |------------|-------------------|-----------|
 | `secret/grafana` | `grafana-credentials` | `monitoring` |
 | `secret/keycloak` | `keycloak-credentials` | `keycloak` |
-| `secret/harbor` | `harbor-credentials` | `harbor` |
 | `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` |
 | `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` |
-| `secret/oidc/harbor` | `harbor-oidc-secret` | `harbor` |
 | `secret/oidc/oauth2-proxy` | `oauth2-proxy-credentials` | `oauth2-proxy` |
 
 ## DNS records
@@ -187,7 +184,6 @@ All A records → Ingress LB floating IP (`terraform output ingress_lb_public_ip
 | `ass-nss.jkuzel02.online` | Root |
 | `argocd.ass-nss.jkuzel02.online` | ArgoCD |
 | `longhorn.ass-nss.jkuzel02.online` | Longhorn |
-| `harbor.ass-nss.jkuzel02.online` | Harbor |
 | `vault.ass-nss.jkuzel02.online` | Vault |
 | `keycloak.ass-nss.jkuzel02.online` | Keycloak |
 | `grafana.ass-nss.jkuzel02.online` | Grafana |
@@ -198,15 +194,13 @@ All A records → Ingress LB floating IP (`terraform output ingress_lb_public_ip
 
 All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of five groups managed by `terraform/keycloak`:
 
-| Group | ArgoCD | Grafana | Harbor | Vault | Longhorn / Prometheus / Alertmanager |
-|-------|--------|---------|--------|-------|--------------------------------------|
-| `admin` | full admin | Admin | Harbor admin | full access | allowed |
-| `curator` | — | — | account only† | no access | blocked |
-| `analytic` | — | Viewer | account only† | no access | blocked |
-| `user` | — | — | account only† | no access | blocked |
-| `unauthorized` | — | — | account only† | no access | blocked |
-
-**†** Harbor auto-creates an account on first login but grants no project access unless explicitly added.
+| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager |
+|-------|--------|---------|-------|--------------------------------------|
+| `admin` | full admin | Admin | full access | allowed |
+| `curator` | — | — | no access | blocked |
+| `analytic` | — | Viewer | no access | blocked |
+| `user` | — | — | no access | blocked |
+| `unauthorized` | — | — | no access | blocked |
 
 To add a user, put their Gmail address in `admin_members`, `curator_members`, `analytic_members`, or `user_members` in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 
