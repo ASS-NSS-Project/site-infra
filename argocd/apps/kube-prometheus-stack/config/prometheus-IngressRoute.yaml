@@ -18,7 +18,7 @@ spec:
         - name: prometheus-operated
           port: 9090
       middlewares:
-        - name: monitoring-auth
         - name: monitoring-auth-errors
+        - name: monitoring-auth
   tls:
     secretName: ass-nss-prometheus-tls
