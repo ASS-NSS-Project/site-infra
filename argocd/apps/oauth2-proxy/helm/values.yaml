@@ -2,6 +2,14 @@
 # Protects apps without native OIDC (Longhorn, Prometheus, Alertmanager)
 # Secrets are injected via environment variables from ESO-synced K8s secrets.
 
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
 config:
   # clientID, clientSecret and cookieSecret are all provided via existingSecret
   existingSecret: oauth2-proxy-credentials

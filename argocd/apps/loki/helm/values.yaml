@@ -20,6 +20,11 @@ loki:
           period: 24h
   limits_config:
     allow_deletes: true
+    retention_period: 30d
+
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
 
   rulerConfig:
     alertmanager_url: http://alertmanager-operated.monitoring.svc.cluster.local:9093
@@ -35,6 +40,13 @@ loki:
 
 singleBinary:
   replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
   persistence:
     storageClass: longhorn
     size: 20Gi

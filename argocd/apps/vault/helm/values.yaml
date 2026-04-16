@@ -50,6 +50,14 @@ server:
         crypto_key = "vault-unseal-key"
       }
 
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
   dataStorage:
     enabled: true
     size: 2Gi

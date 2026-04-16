@@ -1,5 +1,12 @@
 alertmanager:
   alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
     storage:
       volumeClaimTemplate:
         spec:
@@ -10,6 +17,13 @@ alertmanager:
               storage: 2Gi
 
 grafana:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   additionalDataSources:
     - name: Loki
       type: loki
@@ -57,6 +71,13 @@ nodeExporter:
 prometheus:
   prometheusSpec:
     retention: 14d
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 2Gi
     storageSpec:
       volumeClaimTemplate:
         spec:

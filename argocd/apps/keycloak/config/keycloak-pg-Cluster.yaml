@@ -5,6 +5,13 @@ metadata:
   namespace: keycloak
 spec:
   instances: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   storage:
     storageClass: longhorn
     size: 2Gi

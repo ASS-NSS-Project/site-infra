@@ -26,5 +26,12 @@ spec:
   bootstrapAdmin:
     user:
       secret: keycloak-credentials
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
   ingress:
     enabled: false
