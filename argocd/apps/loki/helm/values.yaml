@@ -20,12 +20,29 @@ loki:
           period: 24h
   rulerConfig:
     alertmanager_url: http://alertmanager-operated.monitoring.svc.cluster.local:9093
+    enable_api: true
+    storage:
+      type: local
+      local:
+        directory: /var/loki/rules
+    rule_path: /var/loki/rules-temp
+    ring:
+      kvstore:
+        store: inmemory
 
 singleBinary:
   replicas: 1
   persistence:
     storageClass: longhorn
     size: 20Gi
+  extraVolumes:
+    - name: rules
+      configMap:
+        name: loki-rules
+  extraVolumeMounts:
+    - name: rules
+      mountPath: /var/loki/rules/fake
+      readOnly: true
 
 # Disable distributed-mode components
 read:

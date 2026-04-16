@@ -21,6 +21,9 @@ spec:
     - repoURL: https://github.com/ASS-NSS-Project/site-infra
       targetRevision: kost
       ref: values
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      path: argocd/apps/loki/config
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
