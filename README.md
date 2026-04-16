@@ -282,10 +282,9 @@ Loki exposes a delete API (`allow_deletes: true` must be set). Port-forward firs
 ```bash
 kubectl port-forward -n monitoring svc/loki 3100:3100 &
 sleep 2
-curl -g -X POST 'http://localhost:3100/loki/api/v1/delete' \
-  --data-urlencode 'query={namespace="default"} |= "SIMULATE_ALERT"' \
-  --data-urlencode "start=$(date -u -v-1d +%Y-%m-%dT%H:%M:%SZ)" \
-  --data-urlencode "end=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+START=$(date -u -v-1d +%Y-%m-%dT%H:%M:%SZ)
+END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+curl -g -X POST "http://localhost:3100/loki/api/v1/delete?query=%7Bnamespace%3D%22default%22%7D+%7C%3D+%22SIMULATE_ALERT%22&start=${START}&end=${END}"
 kill %1
 ```
 

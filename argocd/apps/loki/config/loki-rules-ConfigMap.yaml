@@ -12,7 +12,7 @@ data:
         rules:
           - alert: SimulatedAlert
             expr: |
-              sum(rate({namespace=~".+"} |= "SIMULATE_ALERT" [1m])) > 0
+              sum(count_over_time({namespace=~".+"} |= "SIMULATE_ALERT" [1m])) > 0
             for: 0m
             labels:
               severity: warning
