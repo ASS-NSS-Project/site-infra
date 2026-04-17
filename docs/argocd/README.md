@@ -33,11 +33,29 @@ File naming is always `<name>-<Kind>.yaml`, e.g. `grafana-credentials-ExternalSe
 
 Wave N must be fully healthy before wave N+1 starts. Confirm the wave assignment with the developer before committing.
 
-Wave 1 — Helm charts and operators with no runtime dependencies: traefik, cert-manager, longhorn, vault, cnpg, kube-prometheus-stack, loki, alloy, keycloak-operator, eso, oauth2-proxy
+Each app follows a strict helm → config pairing in dependency order. Stateful apps (longhorn, vault) and the keycloak-operator do not have an immediate config wave — their configs are deferred until all their dependencies (ESO, Keycloak) are ready.
 
-Wave 2 — requires wave 1 CRDs: traefik-config (Gateway + GatewayClass), cert-manager-config (ClusterIssuers), eso-config (ClusterSecretStore)
-
-Wave 3 — requires wave 2 resources: all HTTPRoutes, ExternalSecrets, Keycloak CR, CNPG Cluster, argocd-config
+| Wave | Application(s) | Reason |
+|------|---------------|--------|
+| 1 | longhorn-helm | Storage first — PVCs must exist before dependents |
+| 2 | cert-manager-helm | TLS infrastructure |
+| 3 | cert-manager-config | ClusterIssuers + Certificates (needs wave 2 CRDs) |
+| 4 | traefik-helm | Ingress — depends on cert-manager certificates (wave 3) |
+| 5 | traefik-config | Gateway + GatewayClass (needs wave 4 CRDs) |
+| 6 | vault-helm | Secret store |
+| 7 | vault-config | HTTPRoute + SA ClusterRoleBinding (must exist before ESO wave 8) |
+| 8 | eso-helm | External Secrets Operator CRDs + controller |
+| 9 | eso-config | ClusterSecretStore → Vault (needs ESO wave 8 + Vault wave 6-7) |
+| 10 | cnpg-helm | CloudNativePG operator — Keycloak's database provider |
+| 11 | keycloak-operator | Keycloak CRDs + controller (after cnpg wave 10) |
+| 12 | keycloak-config | Keycloak CR + CNPG Cluster + ExternalSecret (needs waves 9-11) |
+| 13 | oauth2-proxy-helm | ForwardAuth proxy (depends on Keycloak wave 12) |
+| 14 | oauth2-proxy-config | Credentials via ESO + Traefik middleware |
+| 15 | argocd-config, longhorn-config | HTTPRoutes + ExternalSecrets now resolvable (after wave 14) |
+| 16 | alloy-helm | Log collector |
+| 17 | loki-helm | Log backend (needs Alloy wave 16, uses Longhorn PVC) |
+| 18 | kube-prometheus-stack-helm | Prometheus + Grafana + Alertmanager (needs Loki wave 17) |
+| 19 | kube-prometheus-stack-config | IngressRoutes + Grafana ExternalSecrets |
 
 Set the wave via annotation: `argocd.argoproj.io/sync-wave: "1"`
 
@@ -75,7 +93,7 @@ For Helm charts from external registries, use multi-source — the chart from it
 
 ## ExternalSecret pattern
 
-All secrets come from Vault via ESO. The `ClusterSecretStore` named `vault` (wave 2) must exist before any ExternalSecret (wave 3).
+All secrets come from Vault via ESO. The `ClusterSecretStore` named `vault` (wave 9) must exist before any ExternalSecret.
 
 ```yaml
 apiVersion: external-secrets.io/v1

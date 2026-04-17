@@ -120,15 +120,15 @@ export KUBECONFIG=$(pwd)/ansible/artifacts/kubeconfig
 cd ansible && ansible-playbook site.yml
 ```
 
-### 4. Wait for ArgoCD wave 1
+### 4. Wait for ArgoCD waves 1–6
 
-Wave 1 apps (Vault, cert-manager, Traefik, Keycloak Operator, ESO) must be healthy before proceeding. Vault and Keycloak will not be ready until their secrets exist in Vault — that happens in step 6.
+Waves 1–6 deploy storage, TLS, ingress, and Vault. Vault will stay `Degraded` until initialized — that is expected at this point. All other apps in this range should reach `Healthy`.
 
 ```bash
 kubectl -n argocd get applications -w
 ```
 
-Wait until Vault is `Healthy` (it will stay `Degraded` until initialized — that is expected at this point).
+Wait until `vault-helm` is `Synced` before continuing (it will not be `Healthy` yet).
 
 ### 5. Vault init (one-time manual)
 
@@ -146,7 +146,7 @@ cp terraform.tfvars.example terraform.tfvars  # fill in vault_root_token
 terraform init && terraform apply
 ```
 
-This pushes all service credentials into Vault. ESO will now sync them into Kubernetes — wait for all wave 1 and wave 2 apps to become `Healthy` before continuing.
+This pushes all service credentials into Vault. ESO will now sync them into Kubernetes — wait for waves 7–9 (`vault-config`, `eso-helm`, `eso-config`) to become `Healthy` before continuing.
 
 ### 7. terraform/keycloak
 
