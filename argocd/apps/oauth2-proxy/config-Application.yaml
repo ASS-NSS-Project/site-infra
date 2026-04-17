@@ -1,4 +1,4 @@
-# Wave 3 — oauth2-proxy config (credentials secret via ESO + Traefik middleware)
+# Wave 14 — oauth2-proxy config (credentials via ESO + Traefik middleware)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "14"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure

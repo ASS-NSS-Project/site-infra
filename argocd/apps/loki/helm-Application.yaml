@@ -1,4 +1,4 @@
-# Wave 1 — Loki log aggregation backend (single-binary, filesystem storage)
+# Wave 17 — Loki log aggregation backend (after Alloy wave 16, before kube-prometheus-stack wave 18)
 # No finalizer — Loki owns a Longhorn PVC for log chunks
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -6,7 +6,7 @@ metadata:
   name: loki-helm
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "17"
 spec:
   revisionHistoryLimit: 0
   project: observability

@@ -1,4 +1,4 @@
-# Wave 1 — CloudNativePG operator (Helm chart, default values are sufficient)
+# Wave 10 — CloudNativePG operator (Helm chart; must exist before keycloak-operator wave 11)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure

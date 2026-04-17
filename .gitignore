@@ -234,6 +234,9 @@ ansible/artifacts/
 # GCP service account keys
 ansible/files/vault/kms-sa-key.json
 
+# Vault Operator Init
+vault-operator-init.txt
+
 # Others
 test-values
 .DS_Store

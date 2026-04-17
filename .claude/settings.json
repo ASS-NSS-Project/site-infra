@@ -99,7 +99,8 @@
       "Read(**/credentials.json)",
       "Read(**/service-account*.json)",
       "Read(**/*sa-key*.json)",
-      "Read(**/kms-sa-key.json)"
+      "Read(**/kms-sa-key.json)",
+      "Read(**/vault-operator-init.txt)"
     ]
   }
 }

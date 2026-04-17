@@ -1,11 +1,11 @@
-# Wave 1 — HashiCorp Vault (Helm chart + values from git)
+# Wave 6 — HashiCorp Vault (Helm chart + values from git)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: vault-helm
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "6"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure

@@ -1,4 +1,4 @@
-# Wave 1 — kube-prometheus-stack (Prometheus + Grafana + Alertmanager)
+# Wave 18 — kube-prometheus-stack (Prometheus + Grafana + Alertmanager; after Loki wave 17)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "18"
 spec:
   revisionHistoryLimit: 0
   project: observability

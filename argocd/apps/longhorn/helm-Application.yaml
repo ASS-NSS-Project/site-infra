@@ -1,4 +1,4 @@
-# Wave 1 — Longhorn distributed storage (Helm chart + values from git)
+# Wave 1 — Longhorn distributed storage (storage first, PVCs must exist before dependents)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

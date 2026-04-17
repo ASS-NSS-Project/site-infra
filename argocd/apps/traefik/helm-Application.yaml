@@ -1,4 +1,4 @@
-# Wave 1 — Traefik ingress controller (Helm chart + values from git)
+# Wave 4 — Traefik ingress controller (depends on cert-manager wave 3 for certificates)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure

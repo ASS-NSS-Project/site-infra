@@ -1,4 +1,4 @@
-# Wave 1 — External Secrets Operator (CRDs + controller)
+# Wave 8 — External Secrets Operator (CRDs + controller)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "8"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure
