@@ -1,0 +1,42 @@
+# Wave 19 — RabbitMQ Cluster Operator (must exist before RabbitmqCluster CRDs in wave 21)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rabbitmq-operator-helm
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "19"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  source:
+    repoURL: https://charts.rabbitmq.com/
+    chart: rabbitmq-cluster-operator
+    targetRevision: ">=0.1.0"
+    helm:
+      values: |
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rabbitmq-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

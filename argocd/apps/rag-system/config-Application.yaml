@@ -1,0 +1,32 @@
+# Wave 21 — RAG system (depends on: cnpg wave 10, rabbitmq-operator-helm wave 19, qdrant-helm wave 20)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rag-system-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/rag-system/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rag-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

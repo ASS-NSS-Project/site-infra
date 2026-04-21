@@ -14,6 +14,8 @@ spec:
     - https://helm.releases.hashicorp.com
     - https://charts.external-secrets.io
     - https://oauth2-proxy.github.io/manifests
+    - https://charts.rabbitmq.com/
+    - https://qdrant.github.io/qdrant-helm
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
@@ -35,6 +37,10 @@ spec:
       namespace: external-secrets
     - server: https://kubernetes.default.svc
       namespace: oauth2-proxy
+    - server: https://kubernetes.default.svc
+      namespace: rabbitmq-system
+    - server: https://kubernetes.default.svc
+      namespace: rag-system
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

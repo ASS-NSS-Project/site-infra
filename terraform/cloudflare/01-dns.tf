@@ -20,6 +20,8 @@ locals {
     "grafana",
     "prometheus",
     "alertmanager",
+    "rag-sys",
+    "rabbitmq-mgmt",
   ]
 }
 

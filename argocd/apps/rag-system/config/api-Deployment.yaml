@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: rag-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-api
+  template:
+    metadata:
+      labels:
+        app: rag-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/ass-nss-project/rag-api:latest
+          command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+          env:
+            # PostgreSQL — from CNPG-managed secret rag-pg-app
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rag-pg-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rag-pg-app
+                  key: password
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rag-pg-app
+                  key: host
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: rag-pg-app
+                  key: dbname
+            # RabbitMQ — from RabbitMQ Cluster Operator secret
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rag-rabbitmq-default-user
+                  key: username
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rag-rabbitmq-default-user
+                  key: password
+            - name: RABBITMQ_URL
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+            # Qdrant
+            - name: QDRANT_HOST
+              value: qdrant
+            - name: QDRANT_PORT
+              value: "6333"
+            # S3 / MinIO
+            - name: S3_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: s3-endpoint-url
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: s3-access-key
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: s3-secret-key
+            - name: S3_REGION
+              value: us-east-1
+            - name: S3_USE_PATH_STYLE
+              value: "true"
+            - name: S3_BUCKET_EVIDENCE
+              value: rag-evidence
+            - name: S3_BUCKET_DOCS
+              value: rag-documents
+            # LLM
+            - name: LLM_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: llm-base-url
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: llm-api-key
+            - name: LLM_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: llm-model
+            # Auth
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: jwt-secret
+            - name: FIRST_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: admin-email
+            - name: FIRST_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: admin-password
+            # Google OAuth
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: google-client-secret
+            - name: GOOGLE_REDIRECT_URI
+              value: "https://rag-sys.nss.jkzl.eu/auth/google/callback"
+            - name: FRONTEND_URL
+              value: "https://rag-sys.nss.jkzl.eu"
+            - name: SERVICE_NAME
+              value: api
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim:
+            claimName: rag-api-hf-cache

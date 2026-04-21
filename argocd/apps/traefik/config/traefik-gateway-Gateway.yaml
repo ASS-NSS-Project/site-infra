@@ -93,6 +93,32 @@ spec:
           - name: ass-nss-grafana-tls
             namespace: traefik
 
+    - name: websecure-rag-sys
+      port: 443
+      protocol: HTTPS
+      hostname: rag-sys.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-rag-sys-tls
+            namespace: traefik
+
+    - name: websecure-rabbitmq-mgmt
+      port: 443
+      protocol: HTTPS
+      hostname: rabbitmq-mgmt.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ass-nss-rabbitmq-mgmt-tls
+            namespace: traefik
+
     # --- Add new subdomain listeners here ---
     # - name: websecure-<name>
     #   port: 443
