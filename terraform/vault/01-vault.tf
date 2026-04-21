@@ -154,15 +154,15 @@ resource "vault_kv_secret_v2" "rag" {
   name  = "rag"
 
   data_json = jsonencode({
-    jwt-secret               = var.rag_jwt_secret
-    admin-email              = var.rag_admin_email
-    admin-password           = var.rag_admin_password
-    s3-endpoint-url          = var.rag_s3_endpoint_url
-    s3-access-key            = var.rag_s3_access_key
-    s3-secret-key            = var.rag_s3_secret_key
-    llm-base-url = var.rag_llm_base_url
-    llm-api-key  = var.rag_llm_api_key
-    llm-model    = var.rag_llm_model
+    jwt-secret      = var.rag_jwt_secret
+    admin-email     = var.rag_admin_email
+    admin-password  = var.rag_admin_password
+    s3-endpoint-url = var.rag_s3_endpoint_url
+    s3-access-key   = var.rag_s3_access_key
+    s3-secret-key   = var.rag_s3_secret_key
+    llm-base-url    = var.rag_llm_base_url
+    llm-api-key     = var.rag_llm_api_key
+    llm-model       = var.rag_llm_model
   })
 }
 
