@@ -149,34 +149,20 @@ variable "rag_llm_model" {
   type        = string
 }
 
-variable "rag_google_client_id" {
-  description = "Google OAuth client ID for RAG system"
-  type        = string
-  sensitive   = true
-}
-
-variable "rag_google_client_secret" {
-  description = "Google OAuth client secret for RAG system"
-  type        = string
-  sensitive   = true
-}
-
 resource "vault_kv_secret_v2" "rag" {
   mount = vault_mount.secret.path
   name  = "rag"
 
   data_json = jsonencode({
-    jwt-secret           = var.rag_jwt_secret
-    admin-email          = var.rag_admin_email
-    admin-password       = var.rag_admin_password
-    s3-endpoint-url      = var.rag_s3_endpoint_url
-    s3-access-key        = var.rag_s3_access_key
-    s3-secret-key        = var.rag_s3_secret_key
-    llm-base-url         = var.rag_llm_base_url
-    llm-api-key          = var.rag_llm_api_key
-    llm-model            = var.rag_llm_model
-    google-client-id     = var.rag_google_client_id
-    google-client-secret = var.rag_google_client_secret
+    jwt-secret               = var.rag_jwt_secret
+    admin-email              = var.rag_admin_email
+    admin-password           = var.rag_admin_password
+    s3-endpoint-url          = var.rag_s3_endpoint_url
+    s3-access-key            = var.rag_s3_access_key
+    s3-secret-key            = var.rag_s3_secret_key
+    llm-base-url = var.rag_llm_base_url
+    llm-api-key  = var.rag_llm_api_key
+    llm-model    = var.rag_llm_model
   })
 }
 

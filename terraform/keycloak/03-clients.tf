@@ -73,6 +73,26 @@ resource "keycloak_openid_group_membership_protocol_mapper" "oauth2_proxy_groups
   full_path  = false
 }
 
+# RAG System
+resource "keycloak_openid_client" "rag_system" {
+  realm_id              = keycloak_realm.main.id
+  client_id             = "rag-system"
+  name                  = "RAG System"
+  enabled               = true
+  access_type           = "CONFIDENTIAL"
+  standard_flow_enabled = true
+  valid_redirect_uris   = ["https://rag-sys.nss.jkzl.eu/auth/keycloak/callback"]
+  web_origins           = ["https://rag-sys.nss.jkzl.eu"]
+}
+
+resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" {
+  realm_id   = keycloak_realm.main.id
+  client_id  = keycloak_openid_client.rag_system.id
+  name       = "groups"
+  claim_name = "groups"
+  full_path  = false
+}
+
 # Vault
 resource "keycloak_openid_client" "vault" {
   realm_id              = keycloak_realm.main.id

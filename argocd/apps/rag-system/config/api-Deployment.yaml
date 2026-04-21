@@ -137,19 +137,23 @@ spec:
                 secretKeyRef:
                   name: rag-secrets
                   key: admin-password
-            # Google OAuth
-            - name: GOOGLE_CLIENT_ID
+            # Keycloak OIDC — URL/realm/redirect are non-secret config
+            - name: KEYCLOAK_URL
+              value: "https://keycloak.nss.jkzl.eu"
+            - name: KEYCLOAK_REALM
+              value: "ass-nss-project"
+            - name: KEYCLOAK_REDIRECT_URI
+              value: "https://rag-sys.nss.jkzl.eu/auth/keycloak/callback"
+            - name: KEYCLOAK_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
-                  key: google-client-id
-            - name: GOOGLE_CLIENT_SECRET
+                  key: keycloak-client-id
+            - name: KEYCLOAK_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
-                  key: google-client-secret
-            - name: GOOGLE_REDIRECT_URI
-              value: "https://rag-sys.nss.jkzl.eu/auth/google/callback"
+                  key: keycloak-client-secret
             - name: FRONTEND_URL
               value: "https://rag-sys.nss.jkzl.eu"
             - name: SERVICE_NAME

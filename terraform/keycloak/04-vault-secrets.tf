@@ -35,6 +35,17 @@ resource "vault_kv_secret_v2" "oidc_oauth2_proxy" {
   })
 }
 
+resource "vault_kv_secret_v2" "oidc_rag_system" {
+  mount = "secret"
+  name  = "oidc/rag-system"
+
+  data_json = jsonencode({
+    client_id     = keycloak_openid_client.rag_system.client_id
+    client_secret = keycloak_openid_client.rag_system.client_secret
+    issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
+  })
+}
+
 resource "vault_kv_secret_v2" "oidc_vault" {
   mount = "secret"
   name  = "oidc/vault"
