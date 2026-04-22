@@ -44,11 +44,6 @@ variable "longhorn_s3_secret_key" {
   sensitive   = true
 }
 
-variable "longhorn_htpasswd" {
-  description = "Longhorn UI basic auth in htpasswd format (bcrypt). Generate with: htpasswd -nb -B <user> <password>"
-  type        = string
-  sensitive   = true
-}
 
 resource "vault_mount" "secret" {
   path        = "secret"
@@ -77,14 +72,6 @@ resource "vault_kv_secret_v2" "keycloak" {
 }
 
 
-resource "vault_kv_secret_v2" "longhorn" {
-  mount = vault_mount.secret.path
-  name  = "longhorn"
-
-  data_json = jsonencode({
-    htpasswd = var.longhorn_htpasswd
-  })
-}
 
 resource "vault_kv_secret_v2" "longhorn_s3" {
   mount = vault_mount.secret.path
