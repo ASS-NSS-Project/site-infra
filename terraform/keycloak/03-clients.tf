@@ -93,6 +93,66 @@ resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" 
   full_path  = false
 }
 
+# RabbitMQ
+# PUBLIC client — no client secret required.
+# Token validation uses Keycloak's JWKS endpoint (public key, no secret).
+# All authenticated users receive rabbitmq.tag:administrator via the hardcoded
+# scope mapper, granting full management UI access.
+resource "keycloak_openid_client" "rabbitmq" {
+  realm_id              = keycloak_realm.main.id
+  client_id             = "rabbitmq"
+  name                  = "RabbitMQ"
+  enabled               = true
+  access_type           = "PUBLIC"
+  standard_flow_enabled = true
+  valid_redirect_uris   = ["https://rabbitmq.nss.jkzl.eu/*"]
+  web_origins           = ["https://rabbitmq.nss.jkzl.eu"]
+}
+
+# Audience mapper — adds "rabbitmq" to the aud claim so RabbitMQ accepts the token
+resource "keycloak_openid_audience_protocol_mapper" "rabbitmq_audience" {
+  realm_id                 = keycloak_realm.main.id
+  client_id                = keycloak_openid_client.rabbitmq.id
+  name                     = "rabbitmq-audience"
+  included_client_audience = keycloak_openid_client.rabbitmq.client_id
+}
+
+# Client role — only users who hold this role get rabbitmq.tag:administrator in their JWT
+resource "keycloak_role" "rabbitmq_administrator" {
+  realm_id  = keycloak_realm.main.id
+  client_id = keycloak_openid_client.rabbitmq.id
+  name      = "administrator"
+}
+
+# Assign the administrator role to the admin group only
+resource "keycloak_group_roles" "admin_rabbitmq" {
+  realm_id  = keycloak_realm.main.id
+  group_id  = keycloak_group.admin.id
+  role_ids  = [keycloak_role.rabbitmq_administrator.id]
+  exhaustive = false
+}
+
+# Map client roles → rabbitmq_scopes claim with "rabbitmq.tag:" prefix.
+# For the admin group this produces: rabbitmq_scopes = ["rabbitmq.tag:administrator"]
+# For everyone else the claim is absent → no management tag → access denied.
+resource "keycloak_generic_protocol_mapper" "rabbitmq_roles_scope_mapper" {
+  realm_id        = keycloak_realm.main.id
+  client_id       = keycloak_openid_client.rabbitmq.id
+  name            = "rabbitmq-roles-as-scopes"
+  protocol        = "openid-connect"
+  protocol_mapper = "oidc-usermodel-client-role-mapper"
+  config = {
+    "access.token.claim"                     = "true"
+    "id.token.claim"                         = "true"
+    "claim.name"                             = "rabbitmq_scopes"
+    "jsonType.label"                         = "String"
+    "multivalued"                            = "true"
+    "userinfo.token.claim"                   = "false"
+    "usermodel.clientRoleMapping.clientId"   = "rabbitmq"
+    "usermodel.clientRoleMapping.rolePrefix" = "rabbitmq.tag:"
+  }
+}
+
 # Vault
 resource "keycloak_openid_client" "vault" {
   realm_id              = keycloak_realm.main.id

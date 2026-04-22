@@ -1,0 +1,37 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: rag-system
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  persistence:
+    storageClassName: longhorn
+    storage: 5Gi
+  rabbitmq:
+    additionalPlugins:
+      - rabbitmq_auth_backend_oauth2
+    additionalConfig: |
+      log.console.level = info
+      consumer_timeout = 3600000
+
+      ## OAuth2 auth backend — validates JWT tokens issued by Keycloak
+      auth_backends.1 = rabbit_auth_backend_oauth2
+      auth_backends.2 = rabbit_auth_backend_internal
+      auth_oauth2.resource_server_id = rabbitmq
+      auth_oauth2.issuer = https://keycloak.nss.jkzl.eu/realms/ass-nss-project
+      ## rabbitmq_scopes claim carries rabbitmq.tag:administrator (set in Keycloak mapper)
+      auth_oauth2.additional_scopes_key = rabbitmq_scopes
+
+      ## Management UI — show Keycloak login button
+      management.oauth_enabled = true
+      management.oauth_client_id = rabbitmq
+      management.oauth_provider_url = https://keycloak.nss.jkzl.eu/realms/ass-nss-project
+      management.oauth_metadata_url = https://keycloak.nss.jkzl.eu/realms/ass-nss-project/.well-known/openid-configuration

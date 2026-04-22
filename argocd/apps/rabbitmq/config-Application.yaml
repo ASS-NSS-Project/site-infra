@@ -1,0 +1,32 @@
+# Wave 20 — RabbitMQ cluster instance (depends on: rabbitmq-operator-helm wave 19)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rabbitmq-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/rabbitmq/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rag-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

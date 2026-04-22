@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-bcd3c5b
+          image: ghcr.io/ass-nss-project/rag-api:kost-eeaf465
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
           ports:
             - containerPort: 8000
@@ -67,15 +67,15 @@ spec:
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbitmq.rag-system.svc:5672/"
             # Qdrant
             - name: QDRANT_HOST
               value: qdrant.qdrant.svc

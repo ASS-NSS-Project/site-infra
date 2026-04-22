@@ -51,15 +51,15 @@ spec:
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbitmq.rag-system.svc:5672/"
             - name: QDRANT_HOST
               value: qdrant.qdrant.svc
             - name: QDRANT_PORT

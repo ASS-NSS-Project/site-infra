@@ -106,17 +106,17 @@ spec:
           - name: ass-nss-rag-sys-tls
             namespace: traefik
 
-    - name: websecure-rabbitmq-mgmt
+    - name: websecure-rabbitmq
       port: 443
       protocol: HTTPS
-      hostname: rabbitmq-mgmt.nss.jkzl.eu
+      hostname: rabbitmq.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-rabbitmq-mgmt-tls
+          - name: ass-nss-rabbitmq-tls
             namespace: traefik
 
     # --- Add new subdomain listeners here ---

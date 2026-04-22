@@ -42,6 +42,8 @@ spec:
       namespace: rabbitmq-system
     - server: https://kubernetes.default.svc
       namespace: qdrant
+    - server: https://kubernetes.default.svc
+      namespace: rag-system
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

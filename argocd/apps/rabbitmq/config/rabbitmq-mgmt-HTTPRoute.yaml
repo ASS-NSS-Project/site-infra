@@ -7,10 +7,10 @@ spec:
   parentRefs:
     - name: traefik-gateway
       namespace: traefik
-      sectionName: websecure-rabbitmq-mgmt
+      sectionName: websecure-rabbitmq
   hostnames:
-    - rabbitmq-mgmt.nss.jkzl.eu
+    - rabbitmq.nss.jkzl.eu
   rules:
     - backendRefs:
-        - name: rag-rabbitmq
+        - name: rabbitmq
           port: 15672
