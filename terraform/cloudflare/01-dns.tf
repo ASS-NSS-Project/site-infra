@@ -13,15 +13,15 @@ resource "cloudflare_record" "root" {
 
 locals {
   subdomains = [
-    "argocd",
-    "longhorn",
-    "vault",
-    "keycloak",
-    "grafana",
-    "prometheus",
     "alertmanager",
+    "argocd",
+    "grafana",
+    "keycloak",
+    "longhorn",
+    "prometheus",
     "rabbitmq",
-    "rag"
+    "rag",
+    "vault"
   ]
 }
 
