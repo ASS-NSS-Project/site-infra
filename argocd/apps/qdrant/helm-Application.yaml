@@ -19,6 +19,9 @@ spec:
       releaseName: qdrant
       values: |
         replicaCount: 1
+        image:
+          repository: docker.io/qdrant/qdrant
+          tag: "v1.13.6"
         persistence:
           accessModes: ["ReadWriteOnce"]
           storageClassName: longhorn
