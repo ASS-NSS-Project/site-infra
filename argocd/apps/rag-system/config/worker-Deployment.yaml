@@ -4,7 +4,7 @@ metadata:
   name: rag-worker
   namespace: rag-system
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: rag-worker
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/ass-nss-project/rag-api:kost-bcd3c5b
+          image: ghcr.io/ass-nss-project/rag-api:kost-eeaf465
           command: ["python", "worker.py"]
           resources:
             requests:
