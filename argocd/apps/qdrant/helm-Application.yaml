@@ -38,7 +38,7 @@ spec:
           initialDelaySeconds: 10
   destination:
     server: https://kubernetes.default.svc
-    namespace: rag-system
+    namespace: qdrant
   syncPolicy:
     automated:
       prune: true

@@ -78,7 +78,7 @@ spec:
               value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
             # Qdrant
             - name: QDRANT_HOST
-              value: qdrant
+              value: qdrant.qdrant.svc
             - name: QDRANT_PORT
               value: "6333"
             # S3 / MinIO

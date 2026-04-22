@@ -38,6 +38,8 @@ spec:
       namespace: oauth2-proxy
     - server: https://kubernetes.default.svc
       namespace: rabbitmq-system
+    - server: https://kubernetes.default.svc
+      namespace: qdrant
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
