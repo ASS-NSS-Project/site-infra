@@ -12,5 +12,5 @@ spec:
     - rabbitmq.nss.jkzl.eu
   rules:
     - backendRefs:
-        - name: rabbitmq
+        - name: rag-rabbitmq-mgmt
           port: 15672

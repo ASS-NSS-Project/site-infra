@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: nss-prometheus-tls
-  namespace: monitoring
+  name: nss-alertmanager-tls
+  namespace: traefik
 spec:
-  secretName: nss-prometheus-tls
+  secretName: nss-alertmanager-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - prometheus.nss.jkzl.eu
+    - alertmanager.nss.jkzl.eu
