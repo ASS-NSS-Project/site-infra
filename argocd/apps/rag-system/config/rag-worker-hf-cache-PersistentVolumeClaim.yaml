@@ -5,7 +5,7 @@ metadata:
   name: rag-worker-hf-cache
   namespace: rag-system
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes: [ReadWriteMany]
   storageClassName: longhorn
   resources:
     requests:
