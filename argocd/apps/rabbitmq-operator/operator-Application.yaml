@@ -12,18 +12,9 @@ spec:
   revisionHistoryLimit: 0
   project: infrastructure
   source:
-    repoURL: https://charts.rabbitmq.com/
-    chart: rabbitmq-cluster-operator
-    targetRevision: ">=0.1.0"
-    helm:
-      values: |
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/rabbitmq-operator/operator
   destination:
     server: https://kubernetes.default.svc
     namespace: rabbitmq-system
