@@ -51,12 +51,12 @@ spec:
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rabbitmq-default-user
+                  name: rag-rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rabbitmq-default-user
+                  name: rag-rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
               value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbitmq.rag-system.svc:5672/"
