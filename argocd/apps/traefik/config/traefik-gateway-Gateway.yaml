@@ -38,7 +38,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-root-tls
+          - name: nss-root-tls
             namespace: traefik
 
     - name: websecure-argocd
@@ -51,7 +51,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-argocd-tls
+          - name: nss-argocd-tls
             namespace: traefik
 
     - name: websecure-vault
@@ -64,7 +64,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-vault-tls
+          - name: nss-vault-tls
             namespace: traefik
 
     - name: websecure-keycloak
@@ -77,7 +77,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-keycloak-tls
+          - name: nss-keycloak-tls
             namespace: traefik
 
     - name: websecure-grafana
@@ -90,7 +90,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-grafana-tls
+          - name: nss-grafana-tls
             namespace: traefik
 
     - name: websecure-rag-sys
@@ -103,7 +103,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-rag-sys-tls
+          - name: nss-rag-sys-tls
             namespace: traefik
 
     - name: websecure-rabbitmq
@@ -116,7 +116,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: ass-nss-rabbitmq-tls
+          - name: nss-rabbitmq-tls
             namespace: traefik
 
     # --- Add new subdomain listeners here ---
@@ -130,5 +130,5 @@ spec:
     #   tls:
     #     mode: Terminate
     #     certificateRefs:
-    #       - name: ass-nss-<name>-tls
+    #       - name: nss-<name>-tls
     #         namespace: traefik
