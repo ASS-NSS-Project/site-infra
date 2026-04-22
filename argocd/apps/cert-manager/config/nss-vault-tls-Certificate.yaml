@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ass-nss-longhorn-tls
-  namespace: longhorn-system
+  name: nss-vault-tls
+  namespace: traefik
 spec:
-  secretName: ass-nss-longhorn-tls
+  secretName: nss-vault-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - longhorn.nss.jkzl.eu
+    - vault.nss.jkzl.eu

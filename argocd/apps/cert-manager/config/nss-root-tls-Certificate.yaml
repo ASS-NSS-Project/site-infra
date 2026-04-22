@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ass-nss-vault-tls
+  name: nss-root-tls
   namespace: traefik
 spec:
-  secretName: ass-nss-vault-tls
+  secretName: nss-root-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - vault.nss.jkzl.eu
+    - nss.jkzl.eu

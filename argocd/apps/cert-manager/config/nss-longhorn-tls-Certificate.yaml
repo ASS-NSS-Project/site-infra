@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ass-nss-keycloak-tls
-  namespace: traefik
+  name: nss-longhorn-tls
+  namespace: longhorn-system
 spec:
-  secretName: ass-nss-keycloak-tls
+  secretName: nss-longhorn-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - keycloak.nss.jkzl.eu
+    - longhorn.nss.jkzl.eu

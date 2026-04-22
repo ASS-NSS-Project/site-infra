@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ass-nss-grafana-tls
+  name: nss-keycloak-tls
   namespace: traefik
 spec:
-  secretName: ass-nss-grafana-tls
+  secretName: nss-keycloak-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - grafana.nss.jkzl.eu
+    - keycloak.nss.jkzl.eu

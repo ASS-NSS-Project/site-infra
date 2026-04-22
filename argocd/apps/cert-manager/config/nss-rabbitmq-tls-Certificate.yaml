@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: ass-nss-rag-sys-tls
+  name: nss-rabbitmq-tls
   namespace: traefik
 spec:
-  secretName: ass-nss-rag-sys-tls
+  secretName: nss-rabbitmq-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - rag.nss.jkzl.eu
+    - rabbitmq.nss.jkzl.eu
