@@ -93,7 +93,7 @@ spec:
           - name: nss-grafana-tls
             namespace: traefik
 
-    - name: websecure-rag-sys
+    - name: websecure-rag
       port: 443
       protocol: HTTPS
       hostname: rag.nss.jkzl.eu
@@ -103,7 +103,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: nss-rag-sys-tls
+          - name: nss-rag-tls
             namespace: traefik
 
     - name: websecure-rabbitmq

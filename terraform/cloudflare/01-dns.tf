@@ -21,7 +21,7 @@ locals {
     "prometheus",
     "alertmanager",
     "rabbitmq",
-    "rag-sys"
+    "rag"
   ]
 }
 
