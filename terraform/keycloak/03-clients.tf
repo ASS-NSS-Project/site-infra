@@ -81,8 +81,8 @@ resource "keycloak_openid_client" "rag_system" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris   = ["https://rag-sys.nss.jkzl.eu/auth/keycloak/callback"]
-  web_origins           = ["https://rag-sys.nss.jkzl.eu"]
+  valid_redirect_uris   = ["https://rag.nss.jkzl.eu/auth/keycloak/callback"]
+  web_origins           = ["https://rag.nss.jkzl.eu"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" {
@@ -126,9 +126,9 @@ resource "keycloak_role" "rabbitmq_administrator" {
 
 # Assign the administrator role to the admin group only
 resource "keycloak_group_roles" "admin_rabbitmq" {
-  realm_id  = keycloak_realm.main.id
-  group_id  = keycloak_group.admin.id
-  role_ids  = [keycloak_role.rabbitmq_administrator.id]
+  realm_id   = keycloak_realm.main.id
+  group_id   = keycloak_group.admin.id
+  role_ids   = [keycloak_role.rabbitmq_administrator.id]
   exhaustive = false
 }
 

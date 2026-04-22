@@ -9,4 +9,4 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - rag-sys.nss.jkzl.eu
+    - rag.nss.jkzl.eu

@@ -14,7 +14,7 @@ spec:
   source:
     repoURL: https://github.com/ASS-NSS-Project/site-infra
     targetRevision: kost
-    path: argocd/apps/rabbitmq-operator/operator
+    path: argocd/apps/rabbitmq/operator
   destination:
     server: https://kubernetes.default.svc
     namespace: rabbitmq-system

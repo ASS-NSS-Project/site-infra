@@ -20,8 +20,8 @@ spec:
     - grafana.nss.jkzl.eu
     - prometheus.nss.jkzl.eu
     - alertmanager.nss.jkzl.eu
-    - rag-sys.nss.jkzl.eu
     - rabbitmq.nss.jkzl.eu
+    - rag.nss.jkzl.eu
   rules:
     - filters:
         - type: RequestRedirect

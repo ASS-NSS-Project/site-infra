@@ -9,7 +9,7 @@ spec:
       namespace: traefik
       sectionName: websecure-rag-sys
   hostnames:
-    - rag-sys.nss.jkzl.eu
+    - rag.nss.jkzl.eu
   rules:
     - matches:
         - path:

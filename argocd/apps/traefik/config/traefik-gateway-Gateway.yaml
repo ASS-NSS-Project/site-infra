@@ -96,7 +96,7 @@ spec:
     - name: websecure-rag-sys
       port: 443
       protocol: HTTPS
-      hostname: rag-sys.nss.jkzl.eu
+      hostname: rag.nss.jkzl.eu
       allowedRoutes:
         namespaces:
           from: All
