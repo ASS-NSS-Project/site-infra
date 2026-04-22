@@ -10,7 +10,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "21"
 spec:
   revisionHistoryLimit: 0
-  project: infrastructure
+  project: rag-system
   source:
     repoURL: https://github.com/ASS-NSS-Project/site-infra
     targetRevision: kost

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: rag-system
+  namespace: argocd
+spec:
+  description: RAG system — API, worker, frontend, and backing services
+  sourceRepos:
+    - https://github.com/ASS-NSS-Project/site-infra
+    - https://github.com/ASS-NSS-Project/repo
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: rag-system
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
