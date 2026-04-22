@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/ass-nss-project/rag-api:latest
+          image: ghcr.io/ass-nss-project/rag-api:kost-bcd3c5b
           command: ["python", "worker.py"]
           resources:
             requests:
