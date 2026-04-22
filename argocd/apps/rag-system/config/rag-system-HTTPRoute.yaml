@@ -7,7 +7,7 @@ spec:
   parentRefs:
     - name: traefik-gateway
       namespace: traefik
-      sectionName: websecure-rag-sys
+      sectionName: websecure-rag
   hostnames:
     - rag.nss.jkzl.eu
   rules:

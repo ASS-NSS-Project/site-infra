@@ -21,4 +21,4 @@ spec:
         - name: monitoring-auth-errors
         - name: monitoring-auth
   tls:
-    secretName: ass-nss-prometheus-tls
+    secretName: nss-prometheus-tls

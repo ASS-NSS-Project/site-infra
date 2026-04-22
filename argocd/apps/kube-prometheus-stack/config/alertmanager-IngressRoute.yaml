@@ -21,4 +21,4 @@ spec:
         - name: monitoring-auth-errors
         - name: monitoring-auth
   tls:
-    secretName: ass-nss-alertmanager-tls
+    secretName: nss-alertmanager-tls

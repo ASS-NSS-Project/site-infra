@@ -54,6 +54,19 @@ spec:
           - name: nss-argocd-tls
             namespace: traefik
 
+    - name: websecure-longhorn
+      port: 443
+      protocol: HTTPS
+      hostname: longhorn.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nss-longhorn-tls
+            namespace: traefik
+
     - name: websecure-vault
       port: 443
       protocol: HTTPS
@@ -91,6 +104,32 @@ spec:
         mode: Terminate
         certificateRefs:
           - name: nss-grafana-tls
+            namespace: traefik
+
+    - name: websecure-prometheus
+      port: 443
+      protocol: HTTPS
+      hostname: prometheus.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nss-prometheus-tls
+            namespace: traefik
+
+    - name: websecure-alertmanager
+      port: 443
+      protocol: HTTPS
+      hostname: alertmanager.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nss-alertmanager-tls
             namespace: traefik
 
     - name: websecure-rag
