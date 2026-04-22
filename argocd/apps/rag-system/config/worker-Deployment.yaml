@@ -4,7 +4,7 @@ metadata:
   name: rag-worker
   namespace: rag-system
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: rag-worker
