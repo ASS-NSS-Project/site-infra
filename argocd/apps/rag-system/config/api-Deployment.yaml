@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-ce7bb65
+          image: ghcr.io/ass-nss-project/rag-api:kost-e1913ef
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
           ports:
             - containerPort: 8000
@@ -77,10 +77,8 @@ spec:
             - name: RABBITMQ_URL
               value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
             # Qdrant
-            - name: QDRANT_HOST
-              value: qdrant.qdrant.svc
-            - name: QDRANT_PORT
-              value: "6333"
+            - name: QDRANT_URL
+              value: "http://qdrant.qdrant.svc.cluster.local:6333"
             # S3 / MinIO
             - name: S3_ENDPOINT_URL
               valueFrom:
