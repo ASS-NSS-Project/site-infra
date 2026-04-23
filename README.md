@@ -2,10 +2,6 @@
 
 Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terraform + Ansible + ArgoCD (GitOps).
 
-## AI-assisted development (Claude Code)
-
-This repo uses [Claude Code](https://claude.ai/code) for AI-assisted development. `.claude/settings.json` is committed intentionally — it enforces shared guardrails (sensitive file access, blocked commands) for every contributor using Claude Code. See `CLAUDE.md` for project conventions.
-
 ## Stack
 
 | Layer | Technology |
