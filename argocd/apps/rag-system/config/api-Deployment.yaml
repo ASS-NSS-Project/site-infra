@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-e1913ef 
+          image: ghcr.io/ass-nss-project/rag-api:kost-6d8b22a 
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
           ports:
             - containerPort: 8000
@@ -103,22 +103,27 @@ spec:
               value: rag-evidence
             - name: S3_BUCKET_DOCS
               value: rag-documents
-            # LLM
-            - name: LLM_BASE_URL
+            # AIaaS (shared base URL + key for LLM and VLM)
+            - name: AIAAS_BASE_URL
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-base-url
-            - name: LLM_API_KEY
+            - name: AIAAS_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-api-key
-            - name: LLM_MODEL
+            - name: AIAAS_LLM_MODEL
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-model
+            - name: AIAAS_VLM_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: vlm-model
             # Auth
             - name: JWT_SECRET
               valueFrom:

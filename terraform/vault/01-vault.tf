@@ -132,7 +132,12 @@ variable "rag_llm_api_key" {
 }
 
 variable "rag_llm_model" {
-  description = "LLM model name"
+  description = "LLM model name (text generation)"
+  type        = string
+}
+
+variable "rag_vlm_model" {
+  description = "VLM model name (vision extraction)"
   type        = string
 }
 
@@ -150,6 +155,7 @@ resource "vault_kv_secret_v2" "rag" {
     llm-base-url    = var.rag_llm_base_url
     llm-api-key     = var.rag_llm_api_key
     llm-model       = var.rag_llm_model
+    vlm-model       = var.rag_vlm_model
   })
 }
 

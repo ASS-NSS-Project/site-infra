@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/ass-nss-project/rag-api:kost-e1913ef 
+          image: ghcr.io/ass-nss-project/rag-api:kost-6d8b22a 
           command: ["python", "worker.py"]
           resources:
             requests:
@@ -23,7 +23,7 @@ spec:
               memory: 512Mi
             limits:
               cpu: "2"
-              memory: 3Gi
+              memory: 4Gi
           volumeMounts:
             - name: hf-cache
               mountPath: /root/.cache/huggingface
@@ -85,21 +85,26 @@ spec:
               value: rag-evidence
             - name: S3_BUCKET_DOCS
               value: rag-documents
-            - name: LLM_BASE_URL
+            - name: AIAAS_BASE_URL
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-base-url
-            - name: LLM_API_KEY
+            - name: AIAAS_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-api-key
-            - name: LLM_MODEL
+            - name: AIAAS_LLM_MODEL
               valueFrom:
                 secretKeyRef:
                   name: rag-secrets
                   key: llm-model
+            - name: AIAAS_VLM_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: vlm-model
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
