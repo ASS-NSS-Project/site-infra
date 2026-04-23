@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-bf8b6b2
+          image: ghcr.io/ass-nss-project/rag-api:kost-e1913ef 
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
           ports:
             - containerPort: 8000
