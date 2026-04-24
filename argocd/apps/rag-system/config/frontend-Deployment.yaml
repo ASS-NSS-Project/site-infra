@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/ass-nss-project/rag-frontend:kost-6d8b22a 
+          image: ghcr.io/ass-nss-project/rag-frontend:kost-bccf233  
           ports:
             - containerPort: 80
           resources:
