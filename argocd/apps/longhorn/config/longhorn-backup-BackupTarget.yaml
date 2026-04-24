@@ -6,4 +6,4 @@ metadata:
 spec:
   backupTargetURL: s3://longhorn-backups@cl4/
   credentialSecret: longhorn-s3-backup
-  pollInterval: 5m0s
+  pollInterval: 30m0s
