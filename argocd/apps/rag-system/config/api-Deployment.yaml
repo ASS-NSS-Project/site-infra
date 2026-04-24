@@ -134,6 +134,11 @@ spec:
                 secretKeyRef:
                   name: rag-secrets
                   key: jwt-secret
+            - name: FIRST_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: admin-username
             - name: FIRST_ADMIN_EMAIL
               valueFrom:
                 secretKeyRef:
