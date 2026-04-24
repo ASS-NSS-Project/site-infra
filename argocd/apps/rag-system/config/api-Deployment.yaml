@@ -44,6 +44,8 @@ spec:
           env:
             - name: HF_HUB_DISABLE_PROGRESS_BARS
               value: "1"
+            - name: DEFAULT_SOURCE_URLS
+              value: "https://mendelu.cz"
             # PostgreSQL — from CNPG-managed secret rag-pg-app
             - name: POSTGRES_USER
               valueFrom:
