@@ -28,6 +28,8 @@ spec:
             - name: hf-cache
               mountPath: /root/.cache/huggingface
           env:
+            - name: HF_HUB_DISABLE_PROGRESS_BARS
+              value: "1"
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
