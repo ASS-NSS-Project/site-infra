@@ -84,9 +84,9 @@ spec:
             - name: S3_USE_PATH_STYLE
               value: "false" # true
             - name: S3_BUCKET_EVIDENCE
-              value: rag-evidence
+              value: rag-evidence-prod
             - name: S3_BUCKET_DOCS
-              value: rag-documents
+              value: rag-documents-prod
             - name: AIAAS_BASE_URL
               valueFrom:
                 secretKeyRef:
@@ -117,4 +117,4 @@ spec:
       volumes:
         - name: hf-cache
           persistentVolumeClaim:
-            claimName: rag-worker-hf-cache
+            claimName: rag-worker

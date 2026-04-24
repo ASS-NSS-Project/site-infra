@@ -1,50 +1,139 @@
-resource "aws_s3_bucket" "longhorn_backup" {
-  bucket = "longhorn-backup"
+resource "aws_s3_bucket" "longhorn_backups" {
+  bucket = "longhorn-backups"
 }
 
-resource "aws_s3_bucket_acl" "longhorn_backup" {
-  bucket = aws_s3_bucket.longhorn_backup.id
-  acl    = "private"
+resource "aws_s3_bucket" "rag_evidence_prod" {
+  bucket = "rag-evidence-prod"
 }
 
-resource "aws_s3_bucket_public_access_block" "longhorn_backup" {
-  bucket                  = aws_s3_bucket.longhorn_backup.id
-  block_public_acls       = true
-  ignore_public_acls      = true
-  block_public_policy     = true
-  restrict_public_buckets = true
+resource "aws_s3_bucket" "rag_documents_prod" {
+  bucket = "rag-documents-prod"
 }
 
-resource "aws_s3_bucket" "rag_evidence" {
-  bucket = "rag-evidence"
+resource "aws_s3_bucket" "rag_evidence_dev" {
+  bucket = "rag-evidence-dev"
 }
 
-resource "aws_s3_bucket_acl" "rag_evidence" {
-  bucket = aws_s3_bucket.rag_evidence.id
-  acl    = "private"
+resource "aws_s3_bucket" "rag_documents_dev" {
+  bucket = "rag-documents-dev"
 }
 
-resource "aws_s3_bucket_public_access_block" "rag_evidence" {
-  bucket                  = aws_s3_bucket.rag_evidence.id
-  block_public_acls       = true
-  ignore_public_acls      = true
-  block_public_policy     = true
-  restrict_public_buckets = true
+resource "aws_s3_bucket_policy" "longhorn_backups" {
+  bucket = aws_s3_bucket.longhorn_backups.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::longhorn-backups",
+          "arn:aws:s3:::longhorn-backups/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
 }
 
-resource "aws_s3_bucket" "rag_documents" {
-  bucket = "rag-documents"
+resource "aws_s3_bucket_policy" "rag_evidence_prod" {
+  bucket = aws_s3_bucket.rag_evidence_prod.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::rag-evidence-prod",
+          "arn:aws:s3:::rag-evidence-prod/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
 }
 
-resource "aws_s3_bucket_acl" "rag_documents" {
-  bucket = aws_s3_bucket.rag_documents.id
-  acl    = "private"
+resource "aws_s3_bucket_policy" "rag_evidence_dev" {
+  bucket = aws_s3_bucket.rag_evidence_dev.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::rag-evidence-dev",
+          "arn:aws:s3:::rag-evidence-dev/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
 }
 
-resource "aws_s3_bucket_public_access_block" "rag_documents" {
-  bucket                  = aws_s3_bucket.rag_documents.id
-  block_public_acls       = true
-  ignore_public_acls      = true
-  block_public_policy     = true
-  restrict_public_buckets = true
+resource "aws_s3_bucket_policy" "rag_documents_prod" {
+  bucket = aws_s3_bucket.rag_documents_prod.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::rag-documents-prod",
+          "arn:aws:s3:::rag-documents-prod/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_policy" "rag_documents_dev" {
+  bucket = aws_s3_bucket.rag_documents_dev.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::rag-documents-dev",
+          "arn:aws:s3:::rag-documents-dev/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
 }

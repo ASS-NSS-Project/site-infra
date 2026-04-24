@@ -104,9 +104,9 @@ spec:
             - name: S3_USE_PATH_STYLE
               value: "false" # true
             - name: S3_BUCKET_EVIDENCE
-              value: rag-evidence
+              value: rag-evidence-prod
             - name: S3_BUCKET_DOCS
-              value: rag-documents
+              value: rag-documents-prod
             # AIaaS (shared base URL + key for LLM and VLM)
             - name: AIAAS_BASE_URL
               valueFrom:
@@ -168,4 +168,4 @@ spec:
       volumes:
         - name: hf-cache
           persistentVolumeClaim:
-            claimName: rag-api-hf-cache
+            claimName: rag-api
