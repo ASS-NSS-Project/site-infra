@@ -24,6 +24,7 @@ extraArgs:
   whitelist-domain: ".nss.jkzl.eu"
   skip-provider-button: "true"
   silence-ping-logging: "true"
+  reverse-proxy: "true"
   # groups is a protocol mapper claim, not a Keycloak scope — request only standard scopes
   scope: "openid email profile"
   # Only members of the admin Keycloak group can access oauth2-proxy-protected apps
