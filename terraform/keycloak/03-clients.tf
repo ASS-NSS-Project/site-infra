@@ -47,27 +47,27 @@ resource "keycloak_openid_group_membership_protocol_mapper" "grafana_groups" {
   full_path  = false
 }
 
-# oauth2-proxy (covers apps without native OIDC — e.g. Longhorn, Prometheus, ...)
-resource "keycloak_openid_client" "oauth2_proxy" {
+# Traefik keycloakopenid plugin (covers apps without native OIDC — Longhorn, Prometheus, Alertmanager)
+resource "keycloak_openid_client" "traefik" {
   realm_id              = keycloak_realm.main.id
-  client_id             = "oauth2-proxy"
-  name                  = "oauth2-proxy"
+  client_id             = "traefik"
+  name                  = "Traefik"
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
 
   valid_redirect_uris = [
-    "https://longhorn.nss.jkzl.eu/oauth2/callback",
-    "https://prometheus.nss.jkzl.eu/oauth2/callback",
-    "https://alertmanager.nss.jkzl.eu/oauth2/callback"
+    "https://longhorn.nss.jkzl.eu/*",
+    "https://prometheus.nss.jkzl.eu/*",
+    "https://alertmanager.nss.jkzl.eu/*"
   ]
 
   web_origins = ["*"]
 }
 
-resource "keycloak_openid_group_membership_protocol_mapper" "oauth2_proxy_groups" {
+resource "keycloak_openid_group_membership_protocol_mapper" "traefik_groups" {
   realm_id   = keycloak_realm.main.id
-  client_id  = keycloak_openid_client.oauth2_proxy.id
+  client_id  = keycloak_openid_client.traefik.id
   name       = "groups"
   claim_name = "groups"
   full_path  = false
@@ -81,8 +81,14 @@ resource "keycloak_openid_client" "rag_system" {
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
-  valid_redirect_uris   = ["https://rag.nss.jkzl.eu/auth/keycloak/callback"]
-  web_origins           = ["https://rag.nss.jkzl.eu"]
+  valid_redirect_uris = [
+    "https://rag.nss.jkzl.eu/auth/keycloak/callback",
+    "http://localhost:8080/auth/keycloak/callback",
+  ]
+  web_origins = [
+    "https://rag.nss.jkzl.eu",
+    "http://localhost:8080",
+  ]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" {
@@ -91,6 +97,36 @@ resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" 
   name       = "groups"
   claim_name = "groups"
   full_path  = false
+}
+
+# RAG RBAC Service Account — client-credentials grant used by the API to sync
+# role changes made in the WebRAG UI back to Keycloak group membership.
+resource "keycloak_openid_client" "rag_rbac_sa" {
+  realm_id                 = keycloak_realm.main.id
+  client_id                = "rag-rbac-sa"
+  name                     = "RAG RBAC Service Account"
+  enabled                  = true
+  access_type              = "CONFIDENTIAL"
+  standard_flow_enabled    = false
+  service_accounts_enabled = true
+}
+
+data "keycloak_openid_client" "realm_management" {
+  realm_id  = keycloak_realm.main.id
+  client_id = "realm-management"
+}
+
+data "keycloak_role" "manage_users" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "manage-users"
+}
+
+resource "keycloak_openid_client_service_account_role" "rag_rbac_sa_manage_users" {
+  realm_id                = keycloak_realm.main.id
+  service_account_user_id = keycloak_openid_client.rag_rbac_sa.service_account_user_id
+  client_id               = data.keycloak_openid_client.realm_management.id
+  role                    = data.keycloak_role.manage_users.name
 }
 
 # RabbitMQ

@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-grafana-metrics-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  rag-metrics.json: |
+    {
+      "title": "WebRAG — Metrics",
+      "uid": "rag-metrics",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "time": { "from": "now-24h", "to": "now" },
+      "panels": [
+        {
+          "id": 1, "type": "stat", "title": "Active Sources",
+          "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+          "targets": [{ "expr": "rag_active_sources", "datasource": { "type": "prometheus" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 2, "type": "stat", "title": "Open Incidents",
+          "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+          "targets": [{ "expr": "rag_open_incidents", "datasource": { "type": "prometheus" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
+        },
+        {
+          "id": 3, "type": "stat", "title": "Qdrant Vectors",
+          "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+          "targets": [{ "expr": "rag_qdrant_collection_size", "datasource": { "type": "prometheus" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 4, "type": "stat", "title": "Chunks Embedded (24h)",
+          "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+          "targets": [{ "expr": "increase(rag_chunks_embedded_total[24h])", "datasource": { "type": "prometheus" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 5, "type": "timeseries", "title": "Ingest Jobs / min (by status)",
+          "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "sum by (status) (rate(rag_ingest_jobs_total[5m])) * 60", "legendFormat": "{{status}}", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "reqpm", "custom": { "lineWidth": 2 } } }
+        },
+        {
+          "id": 6, "type": "timeseries", "title": "Ingest Duration (P50 / P90 by strategy)",
+          "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum by (le, strategy) (rate(rag_ingest_duration_seconds_bucket[5m])))", "legendFormat": "p50 {{strategy}}", "datasource": { "type": "prometheus" } },
+            { "expr": "histogram_quantile(0.90, sum by (le, strategy) (rate(rag_ingest_duration_seconds_bucket[5m])))", "legendFormat": "p90 {{strategy}}", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "lineWidth": 2 } } }
+        },
+        {
+          "id": 7, "type": "timeseries", "title": "CAPTCHA Incidents / hour (by strategy)",
+          "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "sum by (strategy) (rate(rag_captcha_incidents_total[5m])) * 3600", "legendFormat": "{{strategy}}", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2 }, "color": { "fixedColor": "orange", "mode": "fixed" } } }
+        },
+        {
+          "id": 8, "type": "timeseries", "title": "Query Latency P50 / P90 (by mode)",
+          "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "histogram_quantile(0.50, sum by (le, mode) (rate(rag_query_latency_seconds_bucket[5m])))", "legendFormat": "p50 {{mode}}", "datasource": { "type": "prometheus" } },
+            { "expr": "histogram_quantile(0.90, sum by (le, mode) (rate(rag_query_latency_seconds_bucket[5m])))", "legendFormat": "p90 {{mode}}", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "lineWidth": 2 } } }
+        },
+        {
+          "id": 9, "type": "timeseries", "title": "Query Requests / min (by mode)",
+          "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "sum by (mode) (rate(rag_query_requests_total[5m])) * 60", "legendFormat": "{{mode}}", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "reqpm", "custom": { "lineWidth": 2 } } }
+        },
+        {
+          "id": 10, "type": "timeseries", "title": "Embedding Duration P50 / P90",
+          "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+          "targets": [
+            { "expr": "histogram_quantile(0.50, rate(rag_embedding_duration_seconds_bucket[5m]))", "legendFormat": "p50", "datasource": { "type": "prometheus" } },
+            { "expr": "histogram_quantile(0.90, rate(rag_embedding_duration_seconds_bucket[5m]))", "legendFormat": "p90", "datasource": { "type": "prometheus" } }
+          ],
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "lineWidth": 2 } } }
+        }
+      ]
+    }

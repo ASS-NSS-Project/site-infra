@@ -166,6 +166,16 @@ spec:
                 secretKeyRef:
                   name: rag-secrets
                   key: keycloak-client-secret
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: keycloak-admin-client-id
+            - name: KEYCLOAK_ADMIN_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: keycloak-admin-client-secret
             - name: FRONTEND_URL
               value: "https://rag.nss.jkzl.eu"
             - name: SERVICE_NAME

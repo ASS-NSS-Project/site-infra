@@ -6,7 +6,7 @@ metadata:
   name: loki-helm
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "17"
+    argocd.argoproj.io/sync-wave: "15"
 spec:
   revisionHistoryLimit: 0
   project: observability

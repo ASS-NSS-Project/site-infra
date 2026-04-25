@@ -49,13 +49,13 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 10 | cnpg-helm | CloudNativePG operator — Keycloak's database provider |
 | 11 | keycloak-operator | Keycloak CRDs + controller (after cnpg wave 10) |
 | 12 | keycloak-config | Keycloak CR + CNPG Cluster + ExternalSecret (needs waves 9-11) |
-| 13 | oauth2-proxy-helm | ForwardAuth proxy (depends on Keycloak wave 12) |
-| 14 | oauth2-proxy-config | Credentials via ESO + Traefik middleware |
-| 15 | argocd-config, longhorn-config | HTTPRoutes + ExternalSecrets now resolvable (after wave 14) |
-| 16 | alloy-helm | Log collector |
-| 17 | loki-helm | Log backend (needs Alloy wave 16, uses Longhorn PVC) |
-| 18 | kube-prometheus-stack-helm | Prometheus + Grafana + Alertmanager (needs Loki wave 17) |
-| 19 | kube-prometheus-stack-config | IngressRoutes + Grafana ExternalSecrets |
+| 13 | argocd-config, longhorn-config | HTTPRoutes + ExternalSecrets now resolvable (after Keycloak wave 12) |
+| 14 | alloy-helm | Log collector |
+| 15 | loki-helm | Log backend (needs Alloy wave 14, uses Longhorn PVC) |
+| 16 | kube-prometheus-stack-helm | Prometheus + Grafana + Alertmanager (needs Loki wave 15) |
+| 17 | kube-prometheus-stack-config, rabbitmq-operator | IngressRoutes + Grafana ExternalSecrets; RabbitMQ CRDs |
+| 18 | qdrant-helm, rabbitmq-config | Vector DB + RabbitMQ cluster CR |
+| 19 | rag-system-config | RAG application (needs all upstream waves) |
 
 Set the wave via annotation: `argocd.argoproj.io/sync-wave: "1"`
 
@@ -120,5 +120,5 @@ spec:
 
 New apps go into one of the two existing projects — do not create new ones without discussion.
 
-- `infrastructure` — traefik, cert-manager, longhorn, vault, cnpg, eso, keycloak, oauth2-proxy, argocd-config
+- `infrastructure` — traefik, cert-manager, longhorn, vault, cnpg, eso, keycloak, argocd-config
 - `observability` — kube-prometheus-stack, loki, alloy

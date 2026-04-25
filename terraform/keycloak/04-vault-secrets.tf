@@ -24,13 +24,13 @@ resource "vault_kv_secret_v2" "oidc_grafana" {
   })
 }
 
-resource "vault_kv_secret_v2" "oidc_oauth2_proxy" {
+resource "vault_kv_secret_v2" "oidc_traefik" {
   mount = "secret"
-  name  = "oidc/oauth2-proxy"
+  name  = "oidc/traefik"
 
   data_json = jsonencode({
-    client_id     = keycloak_openid_client.oauth2_proxy.client_id
-    client_secret = keycloak_openid_client.oauth2_proxy.client_secret
+    client_id     = keycloak_openid_client.traefik.client_id
+    client_secret = keycloak_openid_client.traefik.client_secret
     issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
   })
 }
@@ -43,6 +43,16 @@ resource "vault_kv_secret_v2" "oidc_rag_system" {
     client_id     = keycloak_openid_client.rag_system.client_id
     client_secret = keycloak_openid_client.rag_system.client_secret
     issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
+  })
+}
+
+resource "vault_kv_secret_v2" "oidc_rag_rbac_sa" {
+  mount = "secret"
+  name  = "oidc/rag-rbac-sa"
+
+  data_json = jsonencode({
+    client_id     = keycloak_openid_client.rag_rbac_sa.client_id
+    client_secret = keycloak_openid_client.rag_rbac_sa.client_secret
   })
 }
 

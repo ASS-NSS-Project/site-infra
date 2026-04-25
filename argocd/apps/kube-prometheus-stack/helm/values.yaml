@@ -1,5 +1,8 @@
 alertmanager:
   alertmanagerSpec:
+    # Pick up AlertmanagerConfig CRDs from all namespaces
+    alertmanagerConfigSelector: {}
+    alertmanagerConfigNamespaceSelector: {}
     resources:
       requests:
         cpu: 50m
@@ -17,6 +20,12 @@ alertmanager:
               storage: 2Gi
 
 grafana:
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
   resources:
     requests:
       cpu: 100m

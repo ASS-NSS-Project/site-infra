@@ -54,7 +54,36 @@ alloy:
       // Stream logs from each container via the Kubernetes API
       loki.source.kubernetes "pod_logs" {
         targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.process.rag_labels.receiver]
+      }
+
+      // Tag rag-system structured logs with a rag_app label for Loki queries:
+      //   rag_app=audit    → login / user-management events
+      //   rag_app=incident → CAPTCHA detection events
+      //   rag_app=pipeline → ingest / embedding / search events
+      loki.process "rag_labels" {
         forward_to = [loki.write.default.receiver]
+
+        stage.match {
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(login_success|login_failed|user_registered|keycloak_role_synced|keycloak_sync_failed)\""`
+          stage.static_labels {
+            values = { rag_app = "audit" }
+          }
+        }
+
+        stage.match {
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"captcha_detected\""`
+          stage.static_labels {
+            values = { rag_app = "incident" }
+          }
+        }
+
+        stage.match {
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(ingest_started|ingest_completed|ingest_failed|embedding_completed|embedding_failed|search_start|search_complete|search_failed)\""`
+          stage.static_labels {
+            values = { rag_app = "pipeline" }
+          }
+        }
       }
 
       loki.write "default" {

@@ -1,4 +1,4 @@
-# Wave 15 — ArgoCD config: HTTPRoute + OIDC ExternalSecret (after oauth2-proxy wave 14)
+# Wave 15 — ArgoCD config: HTTPRoute + OIDC ExternalSecret (after Keycloak wave 12)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "15"
+    argocd.argoproj.io/sync-wave: "13"
 spec:
   revisionHistoryLimit: 0
   project: infrastructure

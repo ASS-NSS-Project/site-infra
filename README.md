@@ -17,7 +17,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Secrets | HashiCorp Vault + External Secrets Operator |
 | Database | CloudNativePG |
 | Identity | Keycloak (Keycloak Operator) |
-| SSO | oauth2-proxy (ForwardAuth) |
+| SSO | Traefik keycloakopenid plugin (Keycloak OIDC) |
 | Monitoring | kube-prometheus-stack |
 | Logging | Loki + Grafana Alloy |
 
@@ -154,6 +154,8 @@ cp terraform.tfvars.example terraform.tfvars  # fill in keycloak + vault + googl
 terraform init && terraform apply
 ```
 
+This also creates the `rag-rbac-sa` service account (`03-clients.tf`) and pushes its credentials to Vault (`secret/oidc/rag-rbac-sa`). ESO syncs them into the `rag-system` deployment as `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`, enabling role changes made in the WebRAG UI to be synced back to Keycloak group membership.
+
 ## Teardown
 
 Destroy in reverse order to respect dependencies:
@@ -181,7 +183,10 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 | `secret/keycloak` | `keycloak-credentials` | `keycloak` |
 | `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` |
 | `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` |
-| `secret/oidc/oauth2-proxy` | `oauth2-proxy-credentials` | `oauth2-proxy` |
+| `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` |
+| `secret/oidc/rag-system` | `rag-secrets` (`keycloak-client-id/secret`) | `rag-system` |
+| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `rag-system` |
+| `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` |
 
 ## DNS records
 
@@ -227,11 +232,13 @@ Always test with staging first — DNS and port 80 routing must be reachable for
 3. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
 4. Add `HTTPRoute` in `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
 
-**Via Traefik IngressRoute** — for ForwardAuth or other middleware:
+**With keycloakopenid authentication** — for apps that need Keycloak SSO via the plugin middleware:
 
 1. Add DNS A record
-2. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: app's namespace)
-3. Add `IngressRoute` in `argocd/apps/<app>/config/<app>-IngressRoute.yaml`
+2. Add HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
+3. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
+4. Add a `Middleware` CRD (plugin: keycloakopenid) in `argocd/apps/<app>/config/<app>-auth-Middleware.yaml`
+5. Add `HTTPRoute` referencing the middleware via `ExtensionRef`
 
 Push to `kost` — ArgoCD applies automatically.
 
@@ -242,6 +249,17 @@ UI: `https://vault.nss.jkzl.eu` — login via OIDC (leave role blank) or root to
 Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-key`) on every restart. OIDC auth is configured by `terraform/keycloak/05-vault-oidc.tf` — re-running it after a cluster rebuild restores access.
 
 > Vault data lives on a Longhorn PVC. The GCP KMS key ring is permanent — import it back into Terraform state on a full rebuild.
+
+## Grafana dashboards
+
+Two dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces):
+
+| Dashboard | UID | ConfigMap | Panels |
+|-----------|-----|-----------|--------|
+| WebRAG — Metrics | `rag-metrics` | `rag-grafana-metrics-dashboard` | Active sources, open incidents, ingest rate/duration, query latency/rate, CAPTCHA rate, embedding duration, Qdrant size |
+| WebRAG — Log Streams | `rag-logs` | `rag-grafana-loki-dashboard` | Audit / incident / pipeline log panels with pre-built Loki queries using the `rag_app` label |
+
+Both ConfigMaps live in `argocd/apps/kube-prometheus-stack/config/` and are applied by ArgoCD automatically.
 
 ## ArgoCD
 
@@ -259,6 +277,24 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 Logs are collected by Grafana Alloy (Deployment, `alloy` namespace) via the Kubernetes API and shipped to Loki (SingleBinary, `monitoring` namespace). Loki's ruler evaluates LogQL alert rules and forwards firing alerts to Alertmanager.
 
 Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into Loki at `/var/loki/rules/fake/`.
+
+### rag_app Loki labels
+
+Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `rag-system` namespace with a `rag_app` label for easy querying:
+
+| `rag_app` value | Events captured | Example LogQL |
+|-----------------|-----------------|---------------|
+| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="rag-system", rag_app="audit"}` |
+| `incident` | `captcha_detected` | `{namespace="rag-system", rag_app="incident"}` |
+| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="rag-system", rag_app="pipeline"}` |
+
+### CAPTCHA alerting (Telegram)
+
+Firing condition: any `captcha_detected` log event in the `rag-system` namespace within the past 5 minutes. Defined in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml` (`rag-captcha` group). Alertmanager routes it via `argocd/apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` to a Telegram bot.
+
+**Provisioning**: credentials are pushed to Vault via Terraform (`terraform/vault/01-vault.tf`, resource `vault_kv_secret_v2.alertmanager_telegram`). Add `telegram_bot_token` and `telegram_chat_id` to `terraform.tfvars` and run `terraform apply`.
+
+ESO syncs `bot_token` → `bot-token` and `chat_id` → `chat-id` in the `alertmanager-telegram` Secret. The `AlertmanagerConfig` reads `botToken` and `chatIDRef` from that Secret (prometheus-operator ≥0.75 `chatIDRef` field — available in kube-prometheus-stack ≥68).
 
 ### Simulate a log alert
 
@@ -278,7 +314,7 @@ pkill -f "port-forward.*3100"
 
 ## Longhorn
 
-UI: `https://longhorn.nss.jkzl.eu` (oauth2-proxy protected). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).
+UI: `https://longhorn.nss.jkzl.eu` (keycloakopenid protected — requires Keycloak login). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).
 
 ### S3 backups
 

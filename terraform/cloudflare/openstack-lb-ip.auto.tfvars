@@ -1,1 +1,1 @@
-openstack_lb_ip = "195.113.167.227"
+openstack_lb_ip = "195.113.167.52"

@@ -166,18 +166,25 @@ resource "vault_kv_secret_v2" "rag" {
   })
 }
 
-# oauth2-proxy cookie secret — randomly generated, stored in Vault.
-# Must be a printable 32-byte string — binary values break env var injection.
-resource "random_password" "oauth2_proxy_cookie" {
-  length  = 32
-  special = false
+# ── Alertmanager Telegram ──────────────────────────────────────────────────────
+
+variable "telegram_bot_token" {
+  description = "Telegram bot token for CAPTCHA alerting (from @BotFather)"
+  type        = string
+  sensitive   = true
 }
 
-resource "vault_kv_secret_v2" "oauth2_proxy_cookie" {
+variable "telegram_chat_id" {
+  description = "Telegram chat ID to send CAPTCHA alerts to (integer, e.g. -1001234567890)"
+  type        = number
+}
+
+resource "vault_kv_secret_v2" "alertmanager_telegram" {
   mount = vault_mount.secret.path
-  name  = "oidc/oauth2-proxy-cookie"
+  name  = "alertmanager/telegram"
 
   data_json = jsonencode({
-    cookie_secret = random_password.oauth2_proxy_cookie.result
+    bot_token = var.telegram_bot_token
+    chat_id   = var.telegram_chat_id
   })
 }

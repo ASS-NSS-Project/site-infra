@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: rag-captcha-alerts
+  namespace: monitoring
+  labels:
+    # picked up by alertmanagerConfigSelector: {}
+    alertmanagerConfig: "true"
+spec:
+  route:
+    groupBy: ["alertname"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: telegram-captcha
+    matchers:
+      - name: rag_app
+        value: incident
+  receivers:
+    - name: telegram-captcha
+      telegramConfigs:
+        - botToken:
+            name: alertmanager-telegram
+            key: bot-token
+          chatIDRef:
+            name: alertmanager-telegram
+            key: chat-id
+          parseMode: HTML
+          message: |
+            <b>CAPTCHA Incident</b>
+            {{ range .Alerts }}{{ .Annotations.description }}{{ end }}

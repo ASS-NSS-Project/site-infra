@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-grafana-loki-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  rag-logs.json: |
+    {
+      "title": "WebRAG — Log Streams",
+      "uid": "rag-logs",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "time": { "from": "now-6h", "to": "now" },
+      "panels": [
+        {
+          "id": 1, "type": "stat", "title": "Audit Events (6h)",
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 3 },
+          "targets": [{ "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"audit\"} [6h]))", "datasource": { "type": "loki" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
+        },
+        {
+          "id": 2, "type": "stat", "title": "Incidents (6h)",
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 3 },
+          "targets": [{ "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} [6h]))", "datasource": { "type": "loki" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] } } }
+        },
+        {
+          "id": 3, "type": "stat", "title": "Pipeline Events (6h)",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 3 },
+          "targets": [{ "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"pipeline\"} [6h]))", "datasource": { "type": "loki" } }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 4, "type": "logs", "title": "Audit Log (login, user management)",
+          "gridPos": { "x": 0, "y": 3, "w": 24, "h": 8 },
+          "targets": [{
+            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "datasource": { "type": "loki" }
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 5, "type": "logs", "title": "Incident Log (CAPTCHA detections)",
+          "gridPos": { "x": 0, "y": 11, "w": 24, "h": 8 },
+          "targets": [{
+            "expr": "{namespace=\"rag-system\", rag_app=\"incident\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "datasource": { "type": "loki" }
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 6, "type": "logs", "title": "Pipeline Log (ingest, embedding, search)",
+          "gridPos": { "x": 0, "y": 19, "w": 24, "h": 8 },
+          "targets": [{
+            "expr": "{namespace=\"rag-system\", rag_app=\"pipeline\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "datasource": { "type": "loki" }
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        }
+      ]
+    }

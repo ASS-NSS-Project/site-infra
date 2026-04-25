@@ -66,3 +66,25 @@ logs:
     level: INFO
   access:
     enabled: true
+
+# keycloakopenid plugin — replaces oauth2-proxy for Longhorn / Prometheus / Alertmanager
+experimental:
+  plugins:
+    keycloakopenid:
+      moduleName: "github.com/Gwojda/keycloakopenid"
+      version: "v0.1.36"
+
+# Inject Keycloak client credentials as env vars so the plugin middleware
+# CRDs can reference them via $KEYCLOAK_CLIENT_ID / $KEYCLOAK_CLIENT_SECRET.
+# The secret is created by ESO from Vault (oidc/keycloakopenid).
+env:
+  - name: KEYCLOAK_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: traefik-keycloak-credentials
+        key: client-id
+  - name: KEYCLOAK_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: traefik-keycloak-credentials
+        key: client-secret

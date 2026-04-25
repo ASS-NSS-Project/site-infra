@@ -19,3 +19,16 @@ data:
             annotations:
               summary: "Simulated alert triggered"
               description: "A log line containing SIMULATE_ALERT was detected."
+
+      - name: rag-captcha
+        rules:
+          - alert: CaptchaIncident
+            expr: |
+              sum(count_over_time({namespace="rag-system"} | json | event = "captcha_detected" [5m])) > 0
+            for: 0m
+            labels:
+              severity: warning
+              rag_app: incident
+            annotations:
+              summary: "CAPTCHA incident detected in RAG ingest pipeline"
+              description: "One or more ingest jobs were blocked by a CAPTCHA in the last 5 minutes. Check the Incidents page."
