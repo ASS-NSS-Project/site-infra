@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-a6eab50   
+          image: ghcr.io/ass-nss-project/rag-api:kost-764f624  
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
           ports:
             - containerPort: 8000
@@ -178,9 +178,28 @@ spec:
                   key: keycloak-admin-client-secret
             - name: FRONTEND_URL
               value: "https://rag.nss.jkzl.eu"
+            # Optional external LLM providers — empty string disables the provider
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: openai-api-key
+                  optional: true
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: gemini-api-key
+                  optional: true
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: anthropic-api-key
+                  optional: true
             - name: SERVICE_NAME
               value: api
       volumes:
         - name: hf-cache
           persistentVolumeClaim:
-            claimName: rag-api
+            claimName: hf-cache-rag-api

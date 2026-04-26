@@ -147,22 +147,47 @@ variable "rag_vlm_model" {
   type        = string
 }
 
+# Optional external LLM provider keys — leave empty to disable the provider in the UI
+variable "rag_openai_api_key" {
+  description = "OpenAI API key (enables GPT-4o / GPT-4o Mini in query UI)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "rag_gemini_api_key" {
+  description = "Google Gemini API key (enables Gemini 2.5 Pro / Flash in query UI)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "rag_anthropic_api_key" {
+  description = "Anthropic API key (enables Claude Opus 4.7 / Sonnet 4.6 directly)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 resource "vault_kv_secret_v2" "rag" {
   mount = vault_mount.secret.path
   name  = "rag"
 
   data_json = jsonencode({
-    jwt-secret      = var.rag_jwt_secret
-    admin-username  = var.rag_admin_username
-    admin-email     = var.rag_admin_email
-    admin-password  = var.rag_admin_password
-    s3-endpoint-url = var.rag_s3_endpoint_url
-    s3-access-key   = var.rag_s3_access_key
-    s3-secret-key   = var.rag_s3_secret_key
-    llm-base-url    = var.rag_llm_base_url
-    llm-api-key     = var.rag_llm_api_key
-    llm-model       = var.rag_llm_model
-    vlm-model       = var.rag_vlm_model
+    jwt-secret         = var.rag_jwt_secret
+    admin-username     = var.rag_admin_username
+    admin-email        = var.rag_admin_email
+    admin-password     = var.rag_admin_password
+    s3-endpoint-url    = var.rag_s3_endpoint_url
+    s3-access-key      = var.rag_s3_access_key
+    s3-secret-key      = var.rag_s3_secret_key
+    llm-base-url       = var.rag_llm_base_url
+    llm-api-key        = var.rag_llm_api_key
+    llm-model          = var.rag_llm_model
+    vlm-model          = var.rag_vlm_model
+    openai-api-key     = var.rag_openai_api_key
+    gemini-api-key     = var.rag_gemini_api_key
+    anthropic-api-key = var.rag_anthropic_api_key
   })
 }
 

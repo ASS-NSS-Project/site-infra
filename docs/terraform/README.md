@@ -72,6 +72,67 @@ terraform/
     └── 05-vault-oidc.tf         # Vault OIDC auth method
 ```
 
+## Keycloak OIDC for internal services (Longhorn, Prometheus, Alertmanager)
+
+Longhorn, Prometheus, and Alertmanager do not have native OIDC support. They are protected by the **Traefik keycloakopenid plugin** — Traefik intercepts every request and redirects unauthenticated users to Keycloak before forwarding to the backend.
+
+### How the credentials flow
+
+```
+terraform/keycloak/03-clients.tf
+  → creates one "traefik" OIDC client in Keycloak
+  → valid_redirect_uris covers all three services
+
+terraform/keycloak/04-vault-secrets.tf
+  → pushes client_id + client_secret to Vault at secret/oidc/traefik
+
+argocd/apps/traefik/config/traefik-keycloak-ExternalSecret.yaml
+  → ESO syncs secret/oidc/traefik → K8s Secret "traefik-keycloak-credentials"
+    in the traefik namespace (keys: client-id, client-secret)
+
+argocd/apps/traefik/helm/values.yaml
+  → Traefik Deployment env:
+      KEYCLOAK_CLIENT_ID     ← secretKeyRef traefik-keycloak-credentials/client-id
+      KEYCLOAK_CLIENT_SECRET ← secretKeyRef traefik-keycloak-credentials/client-secret
+
+argocd/apps/longhorn/config/longhorn-auth-Middleware.yaml
+argocd/apps/kube-prometheus-stack/config/monitoring-auth-Middleware.yaml
+  → Traefik Middleware CRDs reference $KEYCLOAK_CLIENT_ID / $KEYCLOAK_CLIENT_SECRET
+    (Traefik plugin substitutes from its own env at runtime)
+
+argocd/apps/longhorn/config/longhorn-ui-HTTPRoute.yaml
+argocd/apps/kube-prometheus-stack/config/prometheus-HTTPRoute.yaml
+argocd/apps/kube-prometheus-stack/config/alertmanager-HTTPRoute.yaml
+  → HTTPRoutes attach the respective Middleware — all traffic goes through OIDC
+```
+
+### Why "Client not found" appears
+
+`terraform/keycloak` has not been applied yet, so Vault has no value at `secret/oidc/traefik`. ESO cannot sync the secret, Traefik starts with empty env vars (`optional: true` prevents a crash), and the plugin cannot locate the client in Keycloak.
+
+### How to fix it
+
+1. Confirm Keycloak pod is running and healthy (`kubectl get pods -n keycloak`)
+2. Confirm Vault is unsealed and ESO's `ClusterSecretStore` is ready
+3. Apply the Keycloak Terraform module:
+   ```bash
+   cd terraform/keycloak
+   terraform apply
+   ```
+4. Force ESO to re-sync immediately (instead of waiting up to 1 hour):
+   ```bash
+   kubectl annotate externalsecret traefik-keycloak-credentials \
+     -n traefik force-sync="$(date +%s)" --overwrite
+   ```
+5. Restart Traefik to pick up the new env vars:
+   ```bash
+   kubectl rollout restart deployment/traefik -n traefik
+   ```
+
+After the rollout completes, `https://longhorn.nss.jkzl.eu`, `https://prometheus.nss.jkzl.eu`, and `https://alertmanager.nss.jkzl.eu` will redirect to Keycloak on first visit and admit users whose group membership is validated by the plugin.
+
+---
+
 ## Secrets and auth
 
 `terraform.tfvars` is gitignored — never commit it. `terraform.tfvars.example` is committed with placeholder values — keep it in sync with actual variables when adding new ones. CI enforces this automatically for `vault/` and `keycloak/` via `.github/scripts/check-tfvars-example.sh`.

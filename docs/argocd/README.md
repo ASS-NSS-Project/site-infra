@@ -140,6 +140,24 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 ---
 
+## rag-system worker — StatefulSet
+
+`apps/rag-system/config/worker-Deployment.yaml` is a **StatefulSet** (not a Deployment). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:
+
+```
+hf-cache-rag-worker-0   (5 Gi, Longhorn RWO)
+hf-cache-rag-worker-1   (5 Gi, Longhorn RWO)
+…
+```
+
+`apps/rag-system/config/rag-worker-PersistentVolumeClaim.yaml` holds the **headless Service** (`clusterIP: None`) required by the StatefulSet — not a PVC (the StatefulSet owns its own PVCs). The old standalone `rag-worker` PVC was replaced by the `volumeClaimTemplates` entry.
+
+**Scaling workers:** set `replicas` in `worker-Deployment.yaml` to any odd number (1, 3, 5, 7, 9, …). Each replica independently pulls jobs from the shared RabbitMQ `ingest` queue (`prefetch_count=1`) — N replicas process N jobs in parallel with no coordination needed.
+
+**Caution:** StatefulSet PVCs are not pruned automatically when the StatefulSet is deleted or scaled down. Delete orphaned PVCs manually if you scale down permanently.
+
+---
+
 ## AppProjects
 
 New apps go into one of the two existing projects — do not create new ones without discussion.
