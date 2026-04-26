@@ -140,6 +140,37 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 ---
 
+## rag-system — Prometheus scraping
+
+`apps/rag-system/config/rag-api-ServiceMonitor.yaml` tells kube-prometheus-stack to scrape the RAG API's `/metrics` endpoint every 30 s. The `rag-api` Service (`rag-api-Service.yaml`) exposes port `http` (8000) with a matching `app: rag-api` metadata label so the ServiceMonitor selector can find it.
+
+The ServiceMonitor carries `release: kube-prometheus-stack` which matches the default `serviceMonitorSelector` used by the Prometheus operator in this cluster.
+
+Dashboard ConfigMaps (`rag-grafana-metrics-dashboard-ConfigMap.yaml`, `rag-grafana-loki-dashboard-ConfigMap.yaml`) carry `grafana_dashboard: "1"` which the Grafana sidecar picks up automatically and loads as dashboards.
+
+---
+
+## rag-system API HTTPRoute — `/api` prefix
+
+`apps/rag-system/config/rag-system-HTTPRoute.yaml` includes a rule that routes `https://rag.nss.jkzl.eu/api/*` to the backend API, stripping the `/api` prefix before forwarding (Gateway API `URLRewrite` filter with `ReplacePrefixMatch: /`). This lets `cURL` users and external scripts call a stable public endpoint without knowing which path the frontend nginx proxies:
+
+```bash
+# Login
+curl -s -X POST https://rag.nss.jkzl.eu/api/auth/login \
+  -d "username=user@example.com&password=secret" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
+
+# Query (replace TOKEN)
+curl -s -X POST https://rag.nss.jkzl.eu/api/query/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What are the latest findings?", "top_k": 5}'
+```
+
+The `/api` rule is placed before the catch-all frontend rule so Gateway API specificity routing does not interfere.
+
+---
+
 ## rag-system worker — StatefulSet
 
 `apps/rag-system/config/worker-Deployment.yaml` is a **StatefulSet** (not a Deployment). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:

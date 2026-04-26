@@ -67,6 +67,19 @@ spec:
       backendRefs:
         - name: rag-api
           port: 8000
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: rag-api
+          port: 8000
     - backendRefs:
         - name: rag-frontend
           port: 80

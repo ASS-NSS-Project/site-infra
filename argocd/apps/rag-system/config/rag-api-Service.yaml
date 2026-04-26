@@ -3,9 +3,12 @@ kind: Service
 metadata:
   name: rag-api
   namespace: rag-system
+  labels:
+    app: rag-api
 spec:
   selector:
     app: rag-api
   ports:
-    - port: 8000
+    - name: http
+      port: 8000
       targetPort: 8000
