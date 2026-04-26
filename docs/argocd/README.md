@@ -116,6 +116,30 @@ spec:
         property: <field>
 ```
 
+## Secret bootstrap ordering
+
+Some apps in early sync waves reference secrets that are only populated by `terraform/keycloak`, which runs after Keycloak is deployed (wave 11–12). To prevent early-wave pods from entering `CreateContainerConfigError` while waiting for those secrets, mark `secretKeyRef` entries as optional:
+
+```yaml
+env:
+  - name: KEYCLOAK_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: traefik-keycloak-credentials
+        key: client-id
+        optional: true
+```
+
+The pod starts with an empty env var. Once ESO syncs the real value from Vault, Kubernetes injects it on the next pod restart (or the app reads it from the mounted secret path, depending on how it consumes the env).
+
+Any secret that is sourced from `terraform/keycloak` but consumed by an app before wave 12 **must** be marked optional. Current cases:
+
+| App | Secret | Vault path |
+|-----|--------|------------|
+| traefik (wave 4) | `traefik-keycloak-credentials` | `secret/oidc/traefik` |
+
+---
+
 ## AppProjects
 
 New apps go into one of the two existing projects — do not create new ones without discussion.

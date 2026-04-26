@@ -59,9 +59,10 @@ terraform/
 │   ├── 07-floating-ips.tf    # FIPs for cp-0 and ingress LB
 │   └── 08-ansible-inventory.tf  # writes host_vars and group_vars for Ansible
 ├── vault/
-│   ├── 00-providers.tf          # GCS backend + Vault provider
+│   ├── terraform.tf             # GCS backend + Vault provider (vault_address variable for port-forward bootstrap)
 │   ├── 01-vault.tf              # KV v2 engine and service credentials
-│   └── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
+│   ├── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
+│   └── bootstrap.sh             # Emergency script: port-forwards Vault pod, runs apply, forces ESO re-sync
 └── keycloak/
     ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
     ├── 01-realm.tf              # realm definition
@@ -82,6 +83,48 @@ All four modules use the GCS backend (`site-infra` bucket) — authenticate with
 `.terraform.lock.hcl` is committed for all four modules. It pins exact provider versions and checksums. Update it intentionally with `terraform init -upgrade` when upgrading a provider, then commit the result.
 
 ## Troubleshooting
+
+### Stale GCS state lock
+
+If a previous `terraform apply` was interrupted, the GCS lock file may be left behind:
+
+```text
+Error: Error acquiring the state lock
+Lock Info:
+  ID:  1777160824954221
+  Who: xkuzel@fedora
+```
+
+Force-unlock it — it is safe if no other apply is actually in progress (check the `Who` and `Created` fields):
+
+```bash
+terraform force-unlock 1777160824954221
+```
+
+---
+
+### Bootstrap deadlock: Vault TLS broken, Traefik down, secrets missing
+
+On a fresh cluster boot or after cert expiry, the following circular dependency can form:
+
+```
+Vault TLS broken → ESO can't sync → Traefik secret missing → Traefik down
+→ ACME challenges fail → certs can't issue → Vault TLS broken
+```
+
+Break it using `bootstrap.sh`, which port-forwards directly to the Vault pod (bypassing external TLS) and runs `terraform apply`:
+
+```bash
+export VAULT_TOKEN=<root-or-admin-token>
+cd terraform/vault
+./bootstrap.sh
+```
+
+The script uses `-var="vault_address=http://localhost:8200"` to override the provider's hardcoded URL. After apply succeeds, ESO re-syncs all secrets in the `traefik` namespace, Traefik pods start, ACME challenges run, and all certificates issue within ~2 minutes.
+
+The root cause of Traefik being stuck is that the `traefik-keycloak-credentials` secret (synced from Vault path `secret/oidc/traefik`) did not exist yet. The Traefik Helm values mark this secret as `optional: true` so a missing secret no longer prevents startup — but the env vars will be empty until ESO syncs the real values.
+
+---
 
 ### GCS backend: state writes fail with 404
 
