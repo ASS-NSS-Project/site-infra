@@ -12,7 +12,11 @@ terraform {
   }
 }
 
+variable "vault_address" {
+  default = "https://vault.nss.jkzl.eu"
+}
+
 provider "vault" {
-  address = "https://vault.nss.jkzl.eu"
+  address = var.vault_address
   token   = var.vault_root_token
 }

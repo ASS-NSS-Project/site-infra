@@ -83,8 +83,10 @@ env:
       secretKeyRef:
         name: traefik-keycloak-credentials
         key: client-id
+        optional: true
   - name: KEYCLOAK_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: traefik-keycloak-credentials
         key: client-secret
+        optional: true

@@ -27,3 +27,7 @@ rag_llm_base_url    = ""
 rag_llm_api_key     = ""
 rag_llm_model       = ""
 rag_vlm_model       = ""
+
+# Alertmanager
+telegram_bot_token = ""
+telegram_chat_id   = ""
