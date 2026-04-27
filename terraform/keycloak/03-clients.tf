@@ -122,11 +122,43 @@ data "keycloak_role" "manage_users" {
   name      = "manage-users"
 }
 
+# rag-rbac-sa service account: manage-users so the API can sync roles back to Keycloak
 resource "keycloak_openid_client_service_account_role" "rag_rbac_sa_manage_users" {
   realm_id                = keycloak_realm.main.id
   service_account_user_id = keycloak_openid_client.rag_rbac_sa.service_account_user_id
   client_id               = data.keycloak_openid_client.realm_management.id
   role                    = data.keycloak_role.manage_users.name
+}
+
+# realm-management roles needed for rag_admin to manage RAG group memberships in the admin console
+data "keycloak_role" "view_users" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "view-users"
+}
+
+data "keycloak_role" "query_users" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "query-users"
+}
+
+data "keycloak_role" "query_groups" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "query-groups"
+}
+
+# Grant rag_admin group the ability to view users and manage RAG group memberships
+resource "keycloak_group_roles" "rag_admin_realm_management" {
+  realm_id   = keycloak_realm.main.id
+  group_id   = keycloak_group.rag_admin.id
+  exhaustive = false
+  role_ids = [
+    data.keycloak_role.view_users.id,
+    data.keycloak_role.query_users.id,
+    data.keycloak_role.query_groups.id,
+  ]
 }
 
 # RabbitMQ

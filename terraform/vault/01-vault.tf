@@ -199,17 +199,11 @@ variable "telegram_bot_token" {
   sensitive   = true
 }
 
-variable "telegram_chat_id" {
-  description = "Telegram chat ID to send CAPTCHA alerts to (integer, e.g. -1001234567890)"
-  type        = number
-}
-
 resource "vault_kv_secret_v2" "alertmanager_telegram" {
   mount = vault_mount.secret.path
   name  = "alertmanager/telegram"
 
   data_json = jsonencode({
     bot_token = var.telegram_bot_token
-    chat_id   = var.telegram_chat_id
   })
 }

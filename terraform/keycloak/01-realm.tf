@@ -12,34 +12,36 @@ resource "keycloak_realm" "main" {
   ssl_required = "external"
 }
 
-# admin — full access to all services and infrastructure
+# --- Realm admin group (infrastructure / full Keycloak access) ---
 resource "keycloak_group" "admin" {
   realm_id = keycloak_realm.main.id
   name     = "admin"
 }
 
-# curator — data source management, collection rules, legal titles
-resource "keycloak_group" "curator" {
+# --- RAG application groups ---
+
+# rag_admin — app admin, Grafana RAG dashboards, Keycloak RAG group management
+resource "keycloak_group" "rag_admin" {
   realm_id = keycloak_realm.main.id
-  name     = "curator"
+  name     = "rag_admin"
 }
 
-# analytic — experiments, model testing, index quality evaluation; Grafana viewer
-resource "keycloak_group" "analytic" {
+# rag_curator — source/pipeline/incident management
+resource "keycloak_group" "rag_curator" {
   realm_id = keycloak_realm.main.id
-  name     = "analytic"
+  name     = "rag_curator"
 }
 
-# user — standard end user; submits queries, views answers with citations
-resource "keycloak_group" "user" {
+# rag_analyst — experiments, model testing, index quality evaluation
+resource "keycloak_group" "rag_analyst" {
   realm_id = keycloak_realm.main.id
-  name     = "user"
+  name     = "rag_analyst"
 }
 
-# unauthorized — explicitly blocked; no access to any service
-resource "keycloak_group" "unauthorized" {
+# rag_user — standard end user; submits queries, views answers
+resource "keycloak_group" "rag_user" {
   realm_id = keycloak_realm.main.id
-  name     = "unauthorized"
+  name     = "rag_user"
 }
 
 # --- Group memberships ---
@@ -50,9 +52,9 @@ resource "keycloak_group" "unauthorized" {
 #   terraform import 'keycloak_user.admin["their@gmail.com"]' {realm-id}/users/{user-id}
 
 /*
-required_actions = [] 👈 Without this, Keycloak applies the realm's default UPDATE_PROFILE 
+required_actions = [] 👈 Without this, Keycloak applies the realm's default UPDATE_PROFILE
                          action to every newly-created user, which triggers the name/surname
-                         prompt on first login. 
+                         prompt on first login.
 */
 
 resource "keycloak_user" "admin" {
@@ -71,8 +73,8 @@ resource "keycloak_group_memberships" "admin" {
   members  = [for u in keycloak_user.admin : u.username]
 }
 
-resource "keycloak_user" "curator" {
-  for_each         = toset(var.curator_members)
+resource "keycloak_user" "rag_admin" {
+  for_each         = toset(var.rag_admin_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -81,14 +83,14 @@ resource "keycloak_user" "curator" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "curator" {
+resource "keycloak_group_memberships" "rag_admin" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.curator.id
-  members  = [for u in keycloak_user.curator : u.username]
+  group_id = keycloak_group.rag_admin.id
+  members  = [for u in keycloak_user.rag_admin : u.username]
 }
 
-resource "keycloak_user" "analytic" {
-  for_each         = toset(var.analytic_members)
+resource "keycloak_user" "rag_curator" {
+  for_each         = toset(var.rag_curator_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -97,14 +99,14 @@ resource "keycloak_user" "analytic" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "analytic" {
+resource "keycloak_group_memberships" "rag_curator" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.analytic.id
-  members  = [for u in keycloak_user.analytic : u.username]
+  group_id = keycloak_group.rag_curator.id
+  members  = [for u in keycloak_user.rag_curator : u.username]
 }
 
-resource "keycloak_user" "user" {
-  for_each         = toset(var.user_members)
+resource "keycloak_user" "rag_analyst" {
+  for_each         = toset(var.rag_analyst_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -113,8 +115,24 @@ resource "keycloak_user" "user" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "user" {
+resource "keycloak_group_memberships" "rag_analyst" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.user.id
-  members  = [for u in keycloak_user.user : u.username]
+  group_id = keycloak_group.rag_analyst.id
+  members  = [for u in keycloak_user.rag_analyst : u.username]
+}
+
+resource "keycloak_user" "rag_user" {
+  for_each         = toset(var.rag_user_members)
+  realm_id         = keycloak_realm.main.id
+  username         = each.value
+  email            = each.value
+  email_verified   = true
+  enabled          = true
+  required_actions = []
+}
+
+resource "keycloak_group_memberships" "rag_user" {
+  realm_id = keycloak_realm.main.id
+  group_id = keycloak_group.rag_user.id
+  members  = [for u in keycloak_user.rag_user : u.username]
 }

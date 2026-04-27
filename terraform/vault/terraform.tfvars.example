@@ -8,9 +8,6 @@ grafana_password  = ""
 keycloak_username = ""
 keycloak_password = ""
 
-# Generate with: htpasswd -nb -B <user> <password>
-longhorn_htpasswd = ""
-
 # Metacentrum S3 backup — https://s3.cl4.du.cesnet.cz
 longhorn_s3_access_key = ""
 longhorn_s3_secret_key = ""
@@ -35,4 +32,3 @@ rag_anthropic_api_key = ""   # enables Claude Opus 4.7, Sonnet 4.6
 
 # Alertmanager
 telegram_bot_token = ""
-telegram_chat_id   = ""

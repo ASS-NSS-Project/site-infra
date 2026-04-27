@@ -22,9 +22,7 @@ spec:
         - botToken:
             name: alertmanager-telegram
             key: bot-token
-          chatIDRef:
-            name: alertmanager-telegram
-            key: chat-id
+          chatID: -5210398670
           parseMode: HTML
           message: |
             <b>CAPTCHA Incident</b>
