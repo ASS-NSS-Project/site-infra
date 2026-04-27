@@ -18,6 +18,7 @@ locals {
     "grafana",
     "keycloak",
     "longhorn",
+    "oauth2",
     "prometheus",
     "rabbitmq",
     "rag",

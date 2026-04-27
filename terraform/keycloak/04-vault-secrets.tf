@@ -24,6 +24,12 @@ resource "vault_kv_secret_v2" "oidc_grafana" {
   })
 }
 
+variable "oauth2_proxy_cookie_secret" {
+  description = "oauth2-proxy cookie encryption secret — 32 random bytes, base64-encoded. Generate: openssl rand -base64 32"
+  type        = string
+  sensitive   = true
+}
+
 resource "vault_kv_secret_v2" "oidc_traefik" {
   mount = "secret"
   name  = "oidc/traefik"
@@ -31,6 +37,7 @@ resource "vault_kv_secret_v2" "oidc_traefik" {
   data_json = jsonencode({
     client_id     = keycloak_openid_client.traefik.client_id
     client_secret = keycloak_openid_client.traefik.client_secret
+    cookie_secret = var.oauth2_proxy_cookie_secret
     issuer        = "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
   })
 }

@@ -1,0 +1,59 @@
+# Wave 13 — oauth2-proxy (ForwardAuth gate for Longhorn, Prometheus, Alertmanager)
+# Depends on: ESO wave 9 (traefik-keycloak-credentials secret), Keycloak wave 12
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy-helm
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  sources:
+    - repoURL: https://oauth2-proxy.github.io/manifests
+      chart: oauth2-proxy
+      targetRevision: ">=7.0.0"
+      helm:
+        releaseName: oauth2-proxy
+        valueFiles:
+          - $values/argocd/apps/oauth2-proxy/helm/values.yaml
+    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+      targetRevision: kost
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+---
+# Wave 13 — oauth2-proxy HTTPRoute
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/oauth2-proxy/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

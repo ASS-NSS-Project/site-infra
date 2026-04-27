@@ -17,7 +17,7 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Secrets | HashiCorp Vault + External Secrets Operator |
 | Database | CloudNativePG |
 | Identity | Keycloak (Keycloak Operator) |
-| SSO | Traefik keycloakopenid plugin (Keycloak OIDC) |
+| SSO | oauth2-proxy + Traefik ForwardAuth (Keycloak OIDC) |
 | Monitoring | kube-prometheus-stack |
 | Logging | Loki + Grafana Alloy |
 
@@ -200,6 +200,7 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 | `vault.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `keycloak.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `grafana.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `oauth2.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `prometheus.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `alertmanager.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 

@@ -1,0 +1,30 @@
+config:
+  existingSecret: traefik-keycloak-credentials
+
+extraArgs:
+  provider: keycloak-oidc
+  oidc-issuer-url: "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
+  redirect-url: "https://oauth2.nss.jkzl.eu/oauth2/callback"
+  email-domain: "*"
+  allowed-group: admin
+  upstream: "file:///dev/null"
+  skip-provider-button: "true"
+  cookie-domain: ".nss.jkzl.eu"
+  whitelist-domain: ".nss.jkzl.eu"
+  cookie-secure: "true"
+  cookie-samesite: lax
+  set-xauthrequest: "true"
+  reverse-proxy: "true"
+  real-client-ip-header: X-Forwarded-For
+
+service:
+  type: ClusterIP
+  portNumber: 4180
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

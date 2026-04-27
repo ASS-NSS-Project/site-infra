@@ -49,7 +49,7 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 10 | cnpg-helm | CloudNativePG operator — Keycloak's database provider |
 | 11 | keycloak-operator | Keycloak CRDs + controller (after cnpg wave 10) |
 | 12 | keycloak-config | Keycloak CR + CNPG Cluster + ExternalSecret (needs waves 9-11) |
-| 13 | argocd-config, longhorn-config | HTTPRoutes + ExternalSecrets now resolvable (after Keycloak wave 12) |
+| 13 | argocd-config, longhorn-config, oauth2-proxy-helm, oauth2-proxy-config | HTTPRoutes + ExternalSecrets now resolvable; oauth2-proxy ForwardAuth gate for Longhorn/Prometheus/Alertmanager |
 | 14 | alloy-helm | Log collector |
 | 15 | loki-helm | Log backend (needs Alloy wave 14, uses Longhorn PVC) |
 | 16 | kube-prometheus-stack-helm | Prometheus + Grafana + Alertmanager (needs Loki wave 15) |

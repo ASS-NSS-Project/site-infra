@@ -47,22 +47,17 @@ resource "keycloak_openid_group_membership_protocol_mapper" "grafana_groups" {
   full_path  = false
 }
 
-# Traefik keycloakopenid plugin (covers apps without native OIDC — Longhorn, Prometheus, Alertmanager)
+# oauth2-proxy (covers apps without native OIDC — Longhorn, Prometheus, Alertmanager)
 resource "keycloak_openid_client" "traefik" {
   realm_id              = keycloak_realm.main.id
   client_id             = "traefik"
-  name                  = "Traefik"
+  name                  = "oauth2-proxy"
   enabled               = true
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
 
-  valid_redirect_uris = [
-    "https://longhorn.nss.jkzl.eu/*",
-    "https://prometheus.nss.jkzl.eu/*",
-    "https://alertmanager.nss.jkzl.eu/*"
-  ]
-
-  web_origins = ["*"]
+  valid_redirect_uris = ["https://oauth2.nss.jkzl.eu/oauth2/callback"]
+  web_origins         = ["https://oauth2.nss.jkzl.eu"]
 }
 
 resource "keycloak_openid_group_membership_protocol_mapper" "traefik_groups" {
