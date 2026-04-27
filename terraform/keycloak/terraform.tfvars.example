@@ -11,6 +11,9 @@ vault_root_token = "hvs.XXXXXXXXXXXXXXXXXXXXXXXX"
 google_client_id     = ""
 google_client_secret = ""
 
+# oauth2-proxy cookie secret — generate with: openssl rand -base64 32
+oauth2_proxy_cookie_secret = ""
+
 # Group members — Gmail addresses. Users are pre-created in Keycloak and their Google identity
 # is linked automatically on first login.
 admin_members       = ["admin@example.com"]   # realm admin — full infra + Keycloak access
@@ -19,5 +22,3 @@ rag_curator_members = []                       # source/pipeline/incident manage
 rag_analyst_members = []                       # experiments and queries
 rag_user_members    = []                       # query only
 
-# oauth2-proxy cookie secret — generate with: openssl rand -base64 32
-oauth2_proxy_cookie_secret = ""
