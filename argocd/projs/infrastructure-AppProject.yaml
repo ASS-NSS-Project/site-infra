@@ -16,6 +16,7 @@ spec:
     - https://helm.releases.hashicorp.com
     - https://charts.external-secrets.io
     - https://qdrant.github.io/qdrant-helm
+    - https://oauth2-proxy.github.io/manifests
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
