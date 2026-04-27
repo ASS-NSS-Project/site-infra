@@ -49,13 +49,20 @@ resource "keycloak_group" "unauthorized" {
 # If a user has already logged in before being added to tfvars, import them first:
 #   terraform import 'keycloak_user.admin["their@gmail.com"]' {realm-id}/users/{user-id}
 
+/*
+required_actions = [] 👈 Without this, Keycloak applies the realm's default UPDATE_PROFILE 
+                         action to every newly-created user, which triggers the name/surname
+                         prompt on first login. 
+*/
+
 resource "keycloak_user" "admin" {
-  for_each       = toset(var.admin_members)
-  realm_id       = keycloak_realm.main.id
-  username       = each.value
-  email          = each.value
-  email_verified = true
-  enabled        = true
+  for_each         = toset(var.admin_members)
+  realm_id         = keycloak_realm.main.id
+  username         = each.value
+  email            = each.value
+  email_verified   = true
+  enabled          = true
+  required_actions = []
 }
 
 resource "keycloak_group_memberships" "admin" {
@@ -65,12 +72,13 @@ resource "keycloak_group_memberships" "admin" {
 }
 
 resource "keycloak_user" "curator" {
-  for_each       = toset(var.curator_members)
-  realm_id       = keycloak_realm.main.id
-  username       = each.value
-  email          = each.value
-  email_verified = true
-  enabled        = true
+  for_each         = toset(var.curator_members)
+  realm_id         = keycloak_realm.main.id
+  username         = each.value
+  email            = each.value
+  email_verified   = true
+  enabled          = true
+  required_actions = []
 }
 
 resource "keycloak_group_memberships" "curator" {
@@ -80,12 +88,13 @@ resource "keycloak_group_memberships" "curator" {
 }
 
 resource "keycloak_user" "analytic" {
-  for_each       = toset(var.analytic_members)
-  realm_id       = keycloak_realm.main.id
-  username       = each.value
-  email          = each.value
-  email_verified = true
-  enabled        = true
+  for_each         = toset(var.analytic_members)
+  realm_id         = keycloak_realm.main.id
+  username         = each.value
+  email            = each.value
+  email_verified   = true
+  enabled          = true
+  required_actions = []
 }
 
 resource "keycloak_group_memberships" "analytic" {
@@ -95,12 +104,13 @@ resource "keycloak_group_memberships" "analytic" {
 }
 
 resource "keycloak_user" "user" {
-  for_each       = toset(var.user_members)
-  realm_id       = keycloak_realm.main.id
-  username       = each.value
-  email          = each.value
-  email_verified = true
-  enabled        = true
+  for_each         = toset(var.user_members)
+  realm_id         = keycloak_realm.main.id
+  username         = each.value
+  email            = each.value
+  email_verified   = true
+  enabled          = true
+  required_actions = []
 }
 
 resource "keycloak_group_memberships" "user" {
