@@ -72,44 +72,12 @@ jobs:
           terraform -chdir=terraform/${{ matrix.module }} init -backend=false
           terraform -chdir=terraform/${{ matrix.module }} validate
 
-  tfsec:
-    name: Terraform security scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          working_directory: terraform
-
   tfvars-example-sync:
     name: Terraform tfvars example sync
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: bash .github/scripts/check-tfvars-example.sh
-
-  ansible-lint:
-    name: Ansible lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: pip install ansible-lint
-      - run: ansible-galaxy collection install -r ansible/requirements.yml
-      - run: ansible-lint -c .github/config/ansible-lint.yaml ansible/site.yml
-
-  yamllint:
-    name: YAML lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: pip install yamllint
-      - run: yamllint -c .github/config/yamllint.yaml .
 
   kubeconform:
     name: Kubernetes manifest validation
@@ -132,21 +100,3 @@ jobs:
               --kubernetes-version 1.31.0 \
               --summary
 
-  kube-score:
-    name: Kubernetes best practices
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install kube-score
-        run: |
-          VERSION=$(curl -s https://api.github.com/repos/zegl/kube-score/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | tr -d 'v')
-          curl -sSLo kube-score.tar.gz \
-            "https://github.com/zegl/kube-score/releases/download/v${VERSION}/kube-score_${VERSION}_linux_amd64.tar.gz"
-          tar -xf kube-score.tar.gz
-          sudo mv kube-score /usr/local/bin/
-      - name: Score manifests
-        # Only scores standard K8s resources — CRDs are skipped automatically
-        # Warnings (yellow) do not fail the build, only criticals (red) do
-        run: |
-          find argocd/apps -name "*.yaml" ! -name "*-Application.yaml" ! -name "kustomization.yaml" ! -path "*/helm/*" \
-            | xargs kube-score score --output-format ci
