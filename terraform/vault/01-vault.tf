@@ -87,17 +87,6 @@ variable "rag_jwt_secret" {
   sensitive   = true
 }
 
-variable "rag_admin_username" {
-  description = "RAG system first admin username"
-  type        = string
-  sensitive   = true
-}
-
-variable "rag_admin_email" {
-  description = "RAG system first admin email"
-  type        = string
-  sensitive   = true
-}
 
 variable "rag_admin_password" {
   description = "RAG system first admin password"
@@ -173,8 +162,6 @@ resource "vault_kv_secret_v2" "rag" {
 
   data_json = jsonencode({
     jwt-secret        = var.rag_jwt_secret
-    admin-username    = var.rag_admin_username
-    admin-email       = var.rag_admin_email
     admin-password    = var.rag_admin_password
     s3-endpoint-url   = var.rag_s3_endpoint_url
     s3-access-key     = var.rag_s3_access_key
