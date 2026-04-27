@@ -28,7 +28,7 @@ Five groups are defined in `01-realm.tf`. Access per service is enforced at the 
 | `user` | Standard end user — submits queries, views answers |
 | `unauthorized` | Explicitly blocked; no access to any service |
 
-Users are pre-created by Gmail address via `keycloak_user` resources. On first Google login, Keycloak matches by email and links the Google identity automatically. Add Gmail addresses to the corresponding `*_members` variable in `terraform.tfvars` and re-apply. If a user already logged in before being added, import them first:
+Users are pre-created by Gmail address via `keycloak_user` resources. Each user has `required_actions = []` to prevent Keycloak from prompting for profile completion on first login. On first Google login, Keycloak matches by email and links the Google identity automatically. Add Gmail addresses to the corresponding `*_members` variable in `terraform.tfvars` and re-apply. If a user already logged in before being added, import them first:
 
 ```bash
 terraform import 'keycloak_user.admin["their@gmail.com"]' <realm-id>/users/<user-id>
