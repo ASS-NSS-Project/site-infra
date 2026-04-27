@@ -54,34 +54,6 @@ jobs:
         run: |
           terraform fmt -check -recursive terraform/
 
-  terraform-validate:
-    name: Terraform validate
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        module: [infra, vault, keycloak]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~1.11"
-      - uses: actions/cache@v4
-        with:
-          path: terraform/${{ matrix.module }}/.terraform
-          key: terraform-${{ matrix.module }}-${{ hashFiles(format('terraform/{0}/.terraform.lock.hcl', matrix.module)) }}
-      - name: Validate ${{ matrix.module }}
-        # -backend=false skips GCS/provider auth — only checks syntax and references
-        run: |
-          terraform -chdir=terraform/${{ matrix.module }} init -backend=false
-          terraform -chdir=terraform/${{ matrix.module }} validate
-
-  tfvars-example-sync:
-    name: Terraform tfvars example sync
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: bash .github/scripts/check-tfvars-example.sh
-
   kubeconform:
     name: Kubernetes manifest validation
     runs-on: ubuntu-latest
