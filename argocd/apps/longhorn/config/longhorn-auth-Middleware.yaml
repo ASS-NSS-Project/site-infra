@@ -1,7 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: longhorn-system
+spec:
+  type: ExternalName
+  externalName: oauth2-proxy.traefik.svc.cluster.local
+  ports:
+    - port: 4180
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: longhorn-auth
+  name: longhorn-forward-auth
   namespace: longhorn-system
 spec:
   forwardAuth:
@@ -13,3 +24,29 @@ spec:
       - Set-Cookie
     authRequestHeaders:
       - Cookie
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-oauth2-errors
+  namespace: longhorn-system
+spec:
+  errors:
+    status:
+      - "401"
+      - "403"
+    service:
+      name: oauth2-proxy
+      port: 4180
+    query: /oauth2/sign_in?rd={url}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-auth
+  namespace: longhorn-system
+spec:
+  chain:
+    middlewares:
+      - name: longhorn-forward-auth
+      - name: longhorn-oauth2-errors
