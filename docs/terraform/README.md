@@ -78,7 +78,7 @@ Longhorn, Prometheus, and Alertmanager do not have native OIDC support. They are
 
 ### How the credentials flow
 
-```
+```text
 terraform/keycloak/03-clients.tf
   → creates one "traefik" OIDC client in Keycloak
   → valid_redirect_uris covers all three services
@@ -115,16 +115,21 @@ argocd/apps/kube-prometheus-stack/config/alertmanager-HTTPRoute.yaml
 1. Confirm Keycloak pod is running and healthy (`kubectl get pods -n keycloak`)
 2. Confirm Vault is unsealed and ESO's `ClusterSecretStore` is ready
 3. Apply the Keycloak Terraform module:
+
    ```bash
    cd terraform/keycloak
    terraform apply
    ```
+
 4. Force ESO to re-sync immediately (instead of waiting up to 1 hour):
+
    ```bash
    kubectl annotate externalsecret traefik-keycloak-credentials \
      -n traefik force-sync="$(date +%s)" --overwrite
    ```
+
 5. Restart Traefik to pick up the new env vars:
+
    ```bash
    kubectl rollout restart deployment/traefik -n traefik
    ```
@@ -168,7 +173,7 @@ terraform force-unlock 1777160824954221
 
 On a fresh cluster boot or after cert expiry, the following circular dependency can form:
 
-```
+```text
 Vault TLS broken → ESO can't sync → Traefik secret missing → Traefik down
 → ACME challenges fail → certs can't issue → Vault TLS broken
 ```

@@ -175,7 +175,7 @@ The `/api` rule is placed before the catch-all frontend rule so Gateway API spec
 
 `apps/rag-system/config/worker-Deployment.yaml` is a **StatefulSet** (not a Deployment). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:
 
-```
+```text
 hf-cache-rag-worker-0   (5 Gi, Longhorn RWO)
 hf-cache-rag-worker-1   (5 Gi, Longhorn RWO)
 …

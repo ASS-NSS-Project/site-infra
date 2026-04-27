@@ -1,7 +1,8 @@
 # Copy to terraform.tfvars and fill in the values.
 # terraform.tfvars is gitignored — never commit it.
 
-vault_root_token  = "hvs.XXXXXXXXXXXXXXXXXXXXXXXX"
+vault_address    = "https://vault.nss.jkzl.eu"
+vault_root_token = "hvs.XXXXXXXXXXXXXXXXXXXXXXXX"
 
 grafana_username  = ""
 grafana_password  = ""

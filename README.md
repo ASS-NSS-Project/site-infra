@@ -323,13 +323,15 @@ Backups go to Metacentrum CESNET S3 (`https://s3.cl4.du.cesnet.cz`, bucket `long
 **Setup** (once per cluster build):
 
 1. Create the bucket:
-```bash
-cd terraform/metacentrum-s3 && terraform apply -auto-approve
-```
 
-2. Store credentials in Vault:
-```bash
-cd terraform/vault && terraform apply -auto-approve
-```
+   ```bash
+   cd terraform/metacentrum-s3 && terraform apply -auto-approve
+   ```
+
+1. Store credentials in Vault:
+
+   ```bash
+   cd terraform/vault && terraform apply -auto-approve
+   ```
 
 ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `BackupTarget` and `RecurringJob` CRs are managed by ArgoCD from `argocd/apps/longhorn/config/`.

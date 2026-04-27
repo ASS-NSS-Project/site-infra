@@ -71,8 +71,6 @@ resource "vault_kv_secret_v2" "keycloak" {
   })
 }
 
-
-
 resource "vault_kv_secret_v2" "longhorn_s3" {
   mount = vault_mount.secret.path
   name  = "longhorn/s3-backup"
@@ -174,19 +172,19 @@ resource "vault_kv_secret_v2" "rag" {
   name  = "rag"
 
   data_json = jsonencode({
-    jwt-secret         = var.rag_jwt_secret
-    admin-username     = var.rag_admin_username
-    admin-email        = var.rag_admin_email
-    admin-password     = var.rag_admin_password
-    s3-endpoint-url    = var.rag_s3_endpoint_url
-    s3-access-key      = var.rag_s3_access_key
-    s3-secret-key      = var.rag_s3_secret_key
-    llm-base-url       = var.rag_llm_base_url
-    llm-api-key        = var.rag_llm_api_key
-    llm-model          = var.rag_llm_model
-    vlm-model          = var.rag_vlm_model
-    openai-api-key     = var.rag_openai_api_key
-    gemini-api-key     = var.rag_gemini_api_key
+    jwt-secret        = var.rag_jwt_secret
+    admin-username    = var.rag_admin_username
+    admin-email       = var.rag_admin_email
+    admin-password    = var.rag_admin_password
+    s3-endpoint-url   = var.rag_s3_endpoint_url
+    s3-access-key     = var.rag_s3_access_key
+    s3-secret-key     = var.rag_s3_secret_key
+    llm-base-url      = var.rag_llm_base_url
+    llm-api-key       = var.rag_llm_api_key
+    llm-model         = var.rag_llm_model
+    vlm-model         = var.rag_vlm_model
+    openai-api-key    = var.rag_openai_api_key
+    gemini-api-key    = var.rag_gemini_api_key
     anthropic-api-key = var.rag_anthropic_api_key
   })
 }
@@ -200,10 +198,7 @@ variable "telegram_bot_token" {
 }
 
 resource "vault_kv_secret_v2" "alertmanager_telegram" {
-  mount = vault_mount.secret.path
-  name  = "alertmanager/telegram"
-
-  data_json = jsonencode({
-    bot_token = var.telegram_bot_token
-  })
+  mount     = vault_mount.secret.path
+  name      = "alertmanager/telegram"
+  data_json = jsonencode({ bot_token = var.telegram_bot_token })
 }
