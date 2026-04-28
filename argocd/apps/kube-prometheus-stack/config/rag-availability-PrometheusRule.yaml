@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rag-availability-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: rag.availability
+      rules:
+        - alert: RagApiDown
+          expr: kube_deployment_status_replicas_available{namespace="rag-system", deployment="rag-api"} == 0
+          for: 1m
+          labels:
+            rag_app: availability
+            severity: critical
+          annotations:
+            summary: "RAG API is down"
+            description: "No rag-api replicas are available. The RAG system is not operational."
+
+        - alert: RagFrontendDown
+          expr: kube_deployment_status_replicas_available{namespace="rag-system", deployment="rag-frontend"} == 0
+          for: 1m
+          labels:
+            rag_app: availability
+            severity: critical
+          annotations:
+            summary: "RAG Frontend is down"
+            description: "No rag-frontend replicas are available. The UI is unreachable."

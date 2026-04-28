@@ -16,19 +16,36 @@ data:
             for: 0m
             labels:
               severity: warning
+              # namespace required so AlertmanagerConfig sub-route matcher fires
+              namespace: monitoring
             annotations:
               summary: "Simulated alert triggered"
               description: "A log line containing SIMULATE_ALERT was detected."
 
       - name: rag-captcha
         rules:
-          - alert: CaptchaIncident
+          - alert: RagCaptchaBlock
             expr: |
-              sum(count_over_time({namespace="rag-system"} | json | event = "captcha_detected" [5m])) > 0
+              sum(count_over_time({namespace="rag-system"} | json | event = `captcha_detected` [5m])) > 0
             for: 0m
             labels:
               severity: warning
               rag_app: incident
+              namespace: monitoring
             annotations:
-              summary: "CAPTCHA incident detected in RAG ingest pipeline"
+              summary: "CAPTCHA block detected in RAG ingest pipeline"
               description: "One or more ingest jobs were blocked by a CAPTCHA in the last 5 minutes. Check the Incidents page."
+
+      - name: rag-ingest
+        rules:
+          - alert: RagIngestFailed
+            expr: |
+              sum(count_over_time({namespace="rag-system"} | json | event = `ingest_failed` [5m])) > 0
+            for: 0m
+            labels:
+              severity: warning
+              rag_app: incident
+              namespace: monitoring
+            annotations:
+              summary: "RAG ingest job failed"
+              description: "One or more ingest jobs failed in the last 5 minutes. Check the Jobs page."

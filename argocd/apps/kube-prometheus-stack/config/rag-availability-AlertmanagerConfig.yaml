@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: rag-availability-alerts
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: "true"
+spec:
+  route:
+    groupBy: ["alertname"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+    receiver: telegram-availability
+    matchers:
+      - name: rag_app
+        value: availability
+  receivers:
+    - name: telegram-availability
+      telegramConfigs:
+        - botToken:
+            name: alertmanager-telegram
+            key: bot-token
+          chatID: -5210398670
+          parseMode: HTML
+          message: |
+            <b>🔴 Service Down</b>
+            {{ range .Alerts }}<b>{{ .Annotations.summary }}</b>
+            {{ .Annotations.description }}{{ end }}
