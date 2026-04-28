@@ -13,23 +13,6 @@ extraArgs:
   set-xauthrequest: "true"
   reverse-proxy: "true"
 
-extraEnv:
-  - name: OAUTH2_PROXY_CLIENT_ID
-    valueFrom:
-      secretKeyRef:
-        name: traefik-keycloak-credentials
-        key: client-id
-  - name: OAUTH2_PROXY_CLIENT_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: traefik-keycloak-credentials
-        key: client-secret
-  - name: OAUTH2_PROXY_COOKIE_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: traefik-keycloak-credentials
-        key: cookie-secret
-
 service:
   type: ClusterIP
   portNumber: 4180

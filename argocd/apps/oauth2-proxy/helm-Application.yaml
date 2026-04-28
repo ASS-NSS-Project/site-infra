@@ -1,5 +1,5 @@
 # Wave 13 — oauth2-proxy (ForwardAuth gate for Longhorn, Prometheus, Alertmanager)
-# Depends on: ESO wave 9 (traefik-keycloak-credentials secret), Keycloak wave 12
+# Depends on: ESO wave 9 (oauth2-proxy secret), Keycloak wave 12
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
