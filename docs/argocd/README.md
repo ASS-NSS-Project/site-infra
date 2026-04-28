@@ -148,6 +148,19 @@ The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMo
 
 Dashboard ConfigMaps (`rag-grafana-metrics-dashboard-ConfigMap.yaml`, `rag-grafana-loki-dashboard-ConfigMap.yaml`) carry `grafana_dashboard: "1"` which the Grafana sidecar picks up automatically and loads as dashboards.
 
+## RKE2 Kubernetes component monitoring
+
+kube-prometheus-stack auto-enables scraping of Kubernetes internals but needs explicit endpoint configuration for RKE2 because the static-pod components do not register in the standard discovery paths:
+
+| Component | Port | Notes |
+|-----------|------|-------|
+| kube-scheduler | 10259 (HTTPS) | `insecureSkipVerify: true`, `serverName: localhost` |
+| kube-controller-manager | 10257 (HTTPS) | `insecureSkipVerify: true`, `serverName: localhost` |
+| kube-etcd | 2381 (HTTP) | Metrics-only endpoint, no TLS required |
+| kube-proxy | disabled | RKE2 uses Canal CNI, kube-proxy does not run |
+
+All three control-plane nodes (10.8.0.10–12) are listed as explicit `endpoints` in the values. kubelet, kube-state-metrics, node-exporter, and coreDNS are auto-discovered by the chart.
+
 ## CAPTCHA alerting — Telegram
 
 `apps/kube-prometheus-stack/config/rag-captcha-PrometheusRule.yaml` defines the `RagCaptchaIncident` alert: it fires immediately (`for: 0m`) whenever `increase(rag_captcha_incidents_total[5m]) > 0` — i.e. a new CAPTCHA block was recorded in the last 5 minutes. The alert carries `rag_app: incident` label.
