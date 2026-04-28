@@ -80,6 +80,18 @@ nodeExporter:
 prometheus:
   prometheusSpec:
     retention: 14d
+    serviceMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    serviceMonitorNamespaceSelector: {}
+    podMonitorSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    podMonitorNamespaceSelector: {}
+    ruleSelector:
+      matchLabels:
+        release: kube-prometheus-stack
+    ruleNamespaceSelector: {}
     resources:
       requests:
         cpu: 500m

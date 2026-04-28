@@ -144,9 +144,17 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 `apps/rag-system/config/rag-api-ServiceMonitor.yaml` tells kube-prometheus-stack to scrape the RAG API's `/metrics` endpoint every 30 s. The `rag-api` Service (`rag-api-Service.yaml`) exposes port `http` (8000) with a matching `app: rag-api` metadata label so the ServiceMonitor selector can find it.
 
-The ServiceMonitor carries `release: kube-prometheus-stack` which matches the default `serviceMonitorSelector` used by the Prometheus operator in this cluster.
+The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMonitorSelector: {matchLabels: {release: kube-prometheus-stack}}` and `serviceMonitorNamespaceSelector: {}` so Prometheus picks up ServiceMonitors with that label from all namespaces — this is required because the ServiceMonitor lives in `rag-system` while Prometheus runs in `monitoring`. The same explicit label selectors are applied for PodMonitors and PrometheusRules. All monitored resources must carry the `release: kube-prometheus-stack` label.
 
 Dashboard ConfigMaps (`rag-grafana-metrics-dashboard-ConfigMap.yaml`, `rag-grafana-loki-dashboard-ConfigMap.yaml`) carry `grafana_dashboard: "1"` which the Grafana sidecar picks up automatically and loads as dashboards.
+
+## CAPTCHA alerting — Telegram
+
+`apps/kube-prometheus-stack/config/rag-captcha-PrometheusRule.yaml` defines the `RagCaptchaIncident` alert: it fires immediately (`for: 0m`) whenever `increase(rag_captcha_incidents_total[5m]) > 0` — i.e. a new CAPTCHA block was recorded in the last 5 minutes. The alert carries `rag_app: incident` label.
+
+`apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` routes alerts with `rag_app: incident` to the `telegram-captcha` receiver, reading the bot token from the `alertmanager-telegram` secret (provisioned by ESO from Vault `secret/alertmanager/telegram`). The route uses `repeatInterval: 4h` so a single CAPTCHA wave produces one message, not a flood.
+
+Both the PrometheusRule and the AlertmanagerConfig are deployed to the `monitoring` namespace, which ensures the Prometheus Operator's automatic `namespace: monitoring` label injection aligns with the AlertmanagerConfig sub-route matcher.
 
 ---
 
