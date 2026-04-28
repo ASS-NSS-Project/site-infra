@@ -8,20 +8,6 @@ data:
   # Mounted at /var/loki/rules/fake/rules.yaml
   rules.yaml: |
     groups:
-      - name: simulate
-        rules:
-          - alert: SimulatedAlert
-            expr: |
-              sum(count_over_time({namespace=~".+"} |= "SIMULATE_ALERT" [1m])) > 0
-            for: 0m
-            labels:
-              severity: warning
-              # namespace required so AlertmanagerConfig sub-route matcher fires
-              namespace: monitoring
-            annotations:
-              summary: "Simulated alert triggered"
-              description: "A log line containing SIMULATE_ALERT was detected."
-
       - name: rag-captcha
         rules:
           - alert: RagCaptchaBlock
