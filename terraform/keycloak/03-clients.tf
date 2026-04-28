@@ -160,12 +160,6 @@ data "keycloak_role" "query_groups" {
   name      = "query-groups"
 }
 
-data "keycloak_role" "manage_groups" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "manage-groups"
-}
-
 data "keycloak_role" "view_realm" {
   realm_id  = keycloak_realm.main.id
   client_id = data.keycloak_openid_client.realm_management.id
@@ -180,7 +174,7 @@ resource "keycloak_group_roles" "rag_admin_realm_management" {
     data.keycloak_role.view_users.id,
     data.keycloak_role.query_users.id,
     data.keycloak_role.query_groups.id,
-    data.keycloak_role.manage_groups.id,
+    data.keycloak_role.manage_users.id,
     data.keycloak_role.view_realm.id,
   ]
 }
