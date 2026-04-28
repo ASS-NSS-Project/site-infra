@@ -124,17 +124,14 @@ nodeExporter:
 prometheus:
   prometheusSpec:
     retention: 14d
-    serviceMonitorSelector:
-      matchLabels:
-        release: kube-prometheus-stack
+    # nil selector = select all; NilUsesHelmValues: false prevents the chart
+    # from auto-generating a release-name-based matchLabels selector that would
+    # miss ServiceMonitors/rules not labelled with the ArgoCD helm release name
+    serviceMonitorSelectorNilUsesHelmValues: false
     serviceMonitorNamespaceSelector: {}
-    podMonitorSelector:
-      matchLabels:
-        release: kube-prometheus-stack
+    podMonitorSelectorNilUsesHelmValues: false
     podMonitorNamespaceSelector: {}
-    ruleSelector:
-      matchLabels:
-        release: kube-prometheus-stack
+    ruleSelectorNilUsesHelmValues: false
     ruleNamespaceSelector: {}
     resources:
       requests:
