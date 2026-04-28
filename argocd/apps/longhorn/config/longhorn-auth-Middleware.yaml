@@ -48,5 +48,5 @@ metadata:
 spec:
   chain:
     middlewares:
-      - name: longhorn-forward-auth
       - name: longhorn-oauth2-errors
+      - name: longhorn-forward-auth

@@ -48,5 +48,5 @@ metadata:
 spec:
   chain:
     middlewares:
-      - name: monitoring-forward-auth
       - name: monitoring-oauth2-errors
+      - name: monitoring-forward-auth
