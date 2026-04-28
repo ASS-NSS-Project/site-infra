@@ -94,18 +94,6 @@ resource "keycloak_openid_group_membership_protocol_mapper" "rag_system_groups" 
   full_path  = false
 }
 
-# RAG RBAC Service Account — client-credentials grant used by the API to sync
-# role changes made in the WebRAG UI back to Keycloak group membership.
-resource "keycloak_openid_client" "rag_rbac_sa" {
-  realm_id                 = keycloak_realm.main.id
-  client_id                = "rag-rbac-sa"
-  name                     = "RAG RBAC Service Account"
-  enabled                  = true
-  access_type              = "CONFIDENTIAL"
-  standard_flow_enabled    = false
-  service_accounts_enabled = true
-}
-
 data "keycloak_openid_client" "realm_management" {
   realm_id  = keycloak_realm.main.id
   client_id = "realm-management"
@@ -115,14 +103,6 @@ data "keycloak_role" "manage_users" {
   realm_id  = keycloak_realm.main.id
   client_id = data.keycloak_openid_client.realm_management.id
   name      = "manage-users"
-}
-
-# rag-rbac-sa service account: manage-users so the API can sync roles back to Keycloak
-resource "keycloak_openid_client_service_account_role" "rag_rbac_sa_manage_users" {
-  realm_id                = keycloak_realm.main.id
-  service_account_user_id = keycloak_openid_client.rag_rbac_sa.service_account_user_id
-  client_id               = data.keycloak_openid_client.realm_management.id
-  role                    = data.keycloak_role.manage_users.name
 }
 
 # --- admin group: full realm management ---

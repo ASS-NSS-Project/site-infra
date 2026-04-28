@@ -67,8 +67,8 @@ terraform/
     ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
     ├── 01-realm.tf              # realm definition
     ├── 02-identity-providers.tf # Google OIDC federation
-    ├── 03-clients.tf            # OIDC clients per service + rag-rbac-sa service account
-    ├── 04-vault-secrets.tf      # pushes client secrets to Vault (incl. rag-rbac-sa)
+    ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
+    ├── 04-vault-secrets.tf      # pushes client secrets to Vault
     └── 05-vault-oidc.tf         # Vault OIDC auth method
 ```
 

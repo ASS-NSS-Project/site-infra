@@ -53,16 +53,6 @@ resource "vault_kv_secret_v2" "oidc_rag_system" {
   })
 }
 
-resource "vault_kv_secret_v2" "oidc_rag_rbac_sa" {
-  mount = "secret"
-  name  = "oidc/rag-rbac-sa"
-
-  data_json = jsonencode({
-    client_id     = keycloak_openid_client.rag_rbac_sa.client_id
-    client_secret = keycloak_openid_client.rag_rbac_sa.client_secret
-  })
-}
-
 resource "vault_kv_secret_v2" "oidc_vault" {
   mount = "secret"
   name  = "oidc/vault"
