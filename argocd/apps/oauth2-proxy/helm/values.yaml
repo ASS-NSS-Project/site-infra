@@ -7,6 +7,8 @@ extraArgs:
   redirect-url: "https://oauth2.nss.jkzl.eu/oauth2/callback"
   email-domain: "*"
   allowed-group: admin
+  oidc-groups-claim: groups
+  scope: "openid email profile"
   upstream: "file:///dev/null"
   skip-provider-button: "true"
   cookie-domain: ".nss.jkzl.eu"
