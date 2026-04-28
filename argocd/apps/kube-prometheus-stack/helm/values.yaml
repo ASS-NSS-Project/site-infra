@@ -23,6 +23,10 @@ alertmanager:
               storage: 2Gi
 
 grafana:
+  # Default K8s/node dashboards disabled — General folder stays empty so Viewers
+  # (rag_admin, rag_analyst) only see the RAG System folder managed by Terraform.
+  # Admin org role bypasses all folder restrictions and retains full Grafana access.
+  defaultDashboardsEnabled: false
   sidecar:
     dashboards:
       enabled: true
@@ -30,6 +34,7 @@ grafana:
       labelValue: "1"
       searchNamespace: ALL
       folderAnnotation: grafana_folder
+      defaultFolderName: "Kubernetes"
       provider:
         foldersFromFilesStructure: false
   resources:
