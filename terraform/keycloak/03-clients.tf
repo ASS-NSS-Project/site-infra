@@ -99,12 +99,6 @@ data "keycloak_openid_client" "realm_management" {
   client_id = "realm-management"
 }
 
-data "keycloak_role" "manage_users" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "manage-users"
-}
-
 # --- admin group: full realm management ---
 
 data "keycloak_role" "realm_admin" {
@@ -150,11 +144,12 @@ resource "keycloak_group_roles" "rag_admin_realm_management" {
   realm_id   = keycloak_realm.main.id
   group_id   = keycloak_group.rag_admin.id
   exhaustive = false
+  # manage-users intentionally absent: rag_admin can view/query users and groups
+  # but cannot create, delete, or modify group memberships (including admin group).
   role_ids = [
     data.keycloak_role.view_users.id,
     data.keycloak_role.query_users.id,
     data.keycloak_role.query_groups.id,
-    data.keycloak_role.manage_users.id,
     data.keycloak_role.view_realm.id,
   ]
 }

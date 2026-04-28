@@ -58,14 +58,14 @@ alloy:
       }
 
       // Tag rag-system structured logs with a rag_app label for Loki queries:
-      //   rag_app=audit    → login / user-management events
+      //   rag_app=audit    → login / user-management / query / security events
       //   rag_app=incident → CAPTCHA detection events
-      //   rag_app=pipeline → ingest / embedding / search events
+      //   rag_app=pipeline → ingest / embedding / search / model events
       loki.process "rag_labels" {
         forward_to = [loki.write.default.receiver]
 
         stage.match {
-          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(login_success|login_failed|user_registered|keycloak_role_synced|keycloak_sync_failed)\""`
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(login_success|login_failed|user_registered|query_received|query_completed|query_failed|jwt_invalid|http_error)\""`
           stage.static_labels {
             values = { rag_app = "audit" }
           }
@@ -79,7 +79,7 @@ alloy:
         }
 
         stage.match {
-          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(ingest_started|ingest_completed|ingest_failed|embedding_completed|embedding_failed|search_start|search_complete|search_failed)\""`
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(ingest_started|ingest_completed|ingest_failed|embedding_completed|embedding_failed|search_start|search_complete|search_failed|model_load_start|model_load_complete|chunks_delete)\""`
           stage.static_labels {
             values = { rag_app = "pipeline" }
           }

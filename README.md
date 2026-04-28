@@ -218,6 +218,8 @@ All UIs are protected by Keycloak (Google SSO). Users log in via Google and are 
 
 To add a user, put their Gmail address in the corresponding `*_members` variable in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 
+`rag_admin` holds the `view-users`, `query-users`, `query-groups`, and `view-realm` realm-management roles — enough to read users and groups in the Keycloak console but **not** to create, delete, or modify group memberships. The `manage-users` role is intentionally withheld so `rag_admin` cannot touch the `admin` group or other privileged groups.
+
 ### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager)
 
 These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `admin` Keycloak group can access them.

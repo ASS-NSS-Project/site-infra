@@ -146,7 +146,16 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMonitorSelectorNilUsesHelmValues: false` (and the same for podMonitor and rule) so that the Prometheus CR gets a nil selector, which the Prometheus Operator interprets as "select everything". Without this flag, the kube-prometheus-stack chart auto-generates `{matchLabels: {release: <helm-release-name>}}` — but ArgoCD sets the release name to the Application name (`kube-prometheus-stack-helm`), so chart-generated ServiceMonitors and custom ones in other namespaces would not be discovered. `serviceMonitorNamespaceSelector: {}` (and matching pair for pod/rule) ensures Prometheus watches all namespaces.
 
-Dashboard ConfigMaps (`rag-grafana-metrics-dashboard-ConfigMap.yaml`, `rag-grafana-loki-dashboard-ConfigMap.yaml`) carry `grafana_dashboard: "1"` which the Grafana sidecar picks up automatically and loads as dashboards.
+Four dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashboard: "1"` which the Grafana sidecar picks up and loads into the **RAG System** folder (set via the `grafana_folder: "RAG System"` annotation):
+
+| ConfigMap | Dashboard | Contents |
+|-----------|-----------|----------|
+| `rag-grafana-metrics-dashboard-ConfigMap.yaml` | WebRAG — Metrics | Prometheus stats + timeseries: jobs, error rates, latency, embeddings |
+| `rag-grafana-pipeline-dashboard-ConfigMap.yaml` | WebRAG — Pipeline Logs | Loki log panels: ingest, embedding, search events |
+| `rag-grafana-incident-dashboard-ConfigMap.yaml` | WebRAG — Incident Logs | CAPTCHA detections (Prometheus timeseries + Loki log panel) |
+| `rag-grafana-audit-dashboard-ConfigMap.yaml` | WebRAG — Audit | Loki log panels: auth, query, and security events |
+
+Kubernetes/infrastructure dashboards from kube-prometheus-stack are placed in the **Kubernetes** folder via `defaultDashboardsFolder: "Kubernetes"` in the Helm values.
 
 ## RKE2 Kubernetes component monitoring
 
