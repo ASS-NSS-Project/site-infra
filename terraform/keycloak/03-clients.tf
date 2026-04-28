@@ -125,7 +125,23 @@ resource "keycloak_openid_client_service_account_role" "rag_rbac_sa_manage_users
   role                    = data.keycloak_role.manage_users.name
 }
 
-# realm-management roles needed for rag_admin to manage RAG group memberships in the admin console
+# --- admin group: full realm management ---
+
+data "keycloak_role" "realm_admin" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "realm-admin"
+}
+
+resource "keycloak_group_roles" "admin_realm_management" {
+  realm_id   = keycloak_realm.main.id
+  group_id   = keycloak_group.admin.id
+  exhaustive = false
+  role_ids   = [data.keycloak_role.realm_admin.id]
+}
+
+# --- rag_admin group: console access + group management ---
+
 data "keycloak_role" "view_users" {
   realm_id  = keycloak_realm.main.id
   client_id = data.keycloak_openid_client.realm_management.id
@@ -144,7 +160,18 @@ data "keycloak_role" "query_groups" {
   name      = "query-groups"
 }
 
-# Grant rag_admin group the ability to view users and manage RAG group memberships
+data "keycloak_role" "manage_groups" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "manage-groups"
+}
+
+data "keycloak_role" "view_realm" {
+  realm_id  = keycloak_realm.main.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "view-realm"
+}
+
 resource "keycloak_group_roles" "rag_admin_realm_management" {
   realm_id   = keycloak_realm.main.id
   group_id   = keycloak_group.rag_admin.id
@@ -153,6 +180,8 @@ resource "keycloak_group_roles" "rag_admin_realm_management" {
     data.keycloak_role.view_users.id,
     data.keycloak_role.query_users.id,
     data.keycloak_role.query_groups.id,
+    data.keycloak_role.manage_groups.id,
+    data.keycloak_role.view_realm.id,
   ]
 }
 
