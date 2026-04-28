@@ -15,6 +15,15 @@ configs:
     # TLS is terminated at the Traefik Gateway — ArgoCD runs insecure internally
     server.insecure: "true"
   cm:
+    # Exclude only events — keep Endpoints so kube-prometheus-stack can create
+    # static Endpoints for kube-scheduler/controller-manager/etcd scraping
+    resource.exclusions: |
+      - apiGroups:
+        - ""
+        kinds:
+        - "Event"
+        clusters:
+        - "*"
     oidc.config: |
       name: Keycloak
       issuer: https://keycloak.nss.jkzl.eu/realms/ass-nss-project
