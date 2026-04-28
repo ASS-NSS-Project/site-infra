@@ -161,13 +161,30 @@ kube-prometheus-stack auto-enables scraping of Kubernetes internals but needs ex
 
 All three control-plane nodes (10.8.0.10–12) are listed as explicit `endpoints` in the values. kubelet, kube-state-metrics, node-exporter, and coreDNS are auto-discovered by the chart.
 
-## CAPTCHA alerting — Telegram
+## RAG alerting — Telegram
 
-`apps/kube-prometheus-stack/config/rag-captcha-PrometheusRule.yaml` defines the `RagCaptchaIncident` alert: it fires immediately (`for: 0m`) whenever `increase(rag_captcha_incidents_total[5m]) > 0` — i.e. a new CAPTCHA block was recorded in the last 5 minutes. The alert carries `rag_app: incident` label.
+All RAG alerts are routed to a shared Telegram group via two `AlertmanagerConfig` resources in the `monitoring` namespace. The bot token is read from the `alertmanager-telegram` secret (ESO-provisioned from Vault `secret/alertmanager/telegram`).
 
-`apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` routes alerts with `rag_app: incident` to the `telegram-captcha` receiver, reading the bot token from the `alertmanager-telegram` secret (provisioned by ESO from Vault `secret/alertmanager/telegram`). The route uses `repeatInterval: 4h` so a single CAPTCHA wave produces one message, not a flood.
+### Alert inventory
 
-Both the PrometheusRule and the AlertmanagerConfig are deployed to the `monitoring` namespace, which ensures the Prometheus Operator's automatic `namespace: monitoring` label injection aligns with the AlertmanagerConfig sub-route matcher.
+| Alert | Source | File | Trigger |
+|-------|--------|------|---------|
+| `RagCaptchaIncident` | Prometheus | `rag-captcha-PrometheusRule.yaml` | `rag_captcha_incidents_total` counter increases |
+| `RagCaptchaBlock` | Loki | `loki-rules-ConfigMap.yaml` | `captcha_detected` log event in `rag-system` |
+| `RagIngestFailed` | Loki | `loki-rules-ConfigMap.yaml` | `ingest_failed` log event in `rag-system` |
+| `RagApiDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `rag-api` replicas available == 0 for 1 m |
+| `RagFrontendDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `rag-frontend` replicas available == 0 for 1 m |
+
+### Routing
+
+Alerts are split across two `AlertmanagerConfig` objects to avoid accidentally capturing unrelated system alerts:
+
+- `alertmanager-captcha-AlertmanagerConfig.yaml` — matches `rag_app: incident`, `repeatInterval: 4h`
+- `rag-availability-AlertmanagerConfig.yaml` — matches `rag_app: availability`, `repeatInterval: 1h`
+
+### Loki ruler — `namespace` label requirement
+
+Prometheus Operator wraps every `AlertmanagerConfig` sub-route with an implicit `namespace: <config-namespace>` matcher. Prometheus automatically injects `namespace` on PrometheusRule alerts, but Loki does not — it only sends labels explicitly defined in the rule. All Loki alert rules therefore carry `namespace: monitoring` explicitly so the sub-route matcher fires.
 
 ---
 
