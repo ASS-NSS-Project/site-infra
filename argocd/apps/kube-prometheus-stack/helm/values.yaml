@@ -23,6 +23,9 @@ alertmanager:
               storage: 2Gi
 
 grafana:
+  # Disable built-in dashboards — Viewers (rag_admin, rag_analyst) should only
+  # see the two custom RAG dashboards loaded from ConfigMaps by the sidecar
+  defaultDashboardsEnabled: false
   sidecar:
     dashboards:
       enabled: true
