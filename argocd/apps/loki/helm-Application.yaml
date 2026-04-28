@@ -1,4 +1,4 @@
-# Wave 17 — Loki log aggregation backend (after Alloy wave 16, before kube-prometheus-stack wave 18)
+# Wave 15 — Loki log aggregation backend (after Alloy wave 14, before kube-prometheus-stack wave 16)
 # No finalizer — Loki owns a Longhorn PVC for log chunks
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -21,9 +21,6 @@ spec:
     - repoURL: https://github.com/ASS-NSS-Project/site-infra
       targetRevision: kost
       ref: values
-    - repoURL: https://github.com/ASS-NSS-Project/site-infra
-      targetRevision: kost
-      path: argocd/apps/loki/config
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

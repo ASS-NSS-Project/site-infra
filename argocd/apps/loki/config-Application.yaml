@@ -1,0 +1,24 @@
+# Wave 16 — Loki ruler rules (after loki-helm wave 15)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "16"
+spec:
+  revisionHistoryLimit: 0
+  project: observability
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/loki/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

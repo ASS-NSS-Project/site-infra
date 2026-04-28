@@ -52,7 +52,7 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 13 | argocd-config, longhorn-config, oauth2-proxy-helm, oauth2-proxy-config | HTTPRoutes + ExternalSecrets now resolvable; oauth2-proxy ForwardAuth gate for Longhorn/Prometheus/Alertmanager |
 | 14 | alloy-helm | Log collector |
 | 15 | loki-helm | Log backend (needs Alloy wave 14, uses Longhorn PVC) |
-| 16 | kube-prometheus-stack-helm | Prometheus + Grafana + Alertmanager (needs Loki wave 15) |
+| 16 | loki-config, kube-prometheus-stack-helm | Loki ruler rules ConfigMap; Prometheus + Grafana + Alertmanager (needs Loki wave 15) |
 | 17 | kube-prometheus-stack-config, rabbitmq-operator | IngressRoutes + Grafana ExternalSecrets; RabbitMQ CRDs |
 | 18 | qdrant-helm, rabbitmq-config | Vector DB + RabbitMQ cluster CR |
 | 19 | rag-system-config | RAG application (needs all upstream waves) |
