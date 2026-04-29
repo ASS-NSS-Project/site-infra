@@ -1,21 +1,29 @@
-# Folders are created automatically by the Grafana sidecar (kube-prometheus-stack).
-# Terraform must NOT recreate them — a duplicate title causes a 409 and breaks the
-# grafana_folder resource, which in turn silently skips grafana_folder_permission.
-# Instead, look the folders up by title and apply permissions to the real UIDs.
+# Terraform creates the folders with stable UIDs so that the Grafana sidecar
+# (kube-prometheus-stack) finds them by title-lookup and reuses them instead
+# of auto-creating new ones with random UIDs.
 #
-# NOTE: apply this module only after kube-prometheus-stack has synced and both
-# folders exist (i.e. Grafana is accessible and the sidecar has loaded dashboards).
+# ORDERING: apply this module BEFORE or AFTER the sidecar has run:
+#   - Before sidecar: Terraform creates → sidecar finds → permissions hold. ✓
+#   - After sidecar already created folders: the grafana_folder resource will
+#     fail (duplicate title). Fix by importing the sidecar-created folder:
+#
+#       terraform import grafana_folder.kubernetes  <uid-from-grafana-api>
+#       terraform import grafana_folder.rag_system  <uid-from-grafana-api>
+#
+#     Get the UID with:
+#       curl -su admin:PASSWORD https://grafana.nss.jkzl.eu/api/folders | jq '.[] | {title,uid}'
 
 # ---------------------------------------------------------------------------
 # Kubernetes folder — receives all default kube-prometheus-stack dashboards.
 # Restricted to Editor+; Viewers (rag_admin, rag_analyst) cannot see it.
 # ---------------------------------------------------------------------------
-data "grafana_folder" "kubernetes" {
+resource "grafana_folder" "kubernetes" {
   title = "Kubernetes"
+  uid   = "kubernetes"
 }
 
 resource "grafana_folder_permission" "kubernetes" {
-  folder_uid = data.grafana_folder.kubernetes.uid
+  folder_uid = grafana_folder.kubernetes.uid
   permissions {
     role       = "Editor"
     permission = "Edit"
@@ -27,12 +35,13 @@ resource "grafana_folder_permission" "kubernetes" {
 # grafana_folder annotation on each ConfigMap.
 # Viewers (rag_admin, rag_analyst) get View access here and nowhere else.
 # ---------------------------------------------------------------------------
-data "grafana_folder" "rag_system" {
+resource "grafana_folder" "rag_system" {
   title = "RAG System"
+  uid   = "rag-system"
 }
 
 resource "grafana_folder_permission" "rag_system" {
-  folder_uid = data.grafana_folder.rag_system.uid
+  folder_uid = grafana_folder.rag_system.uid
   permissions {
     role       = "Editor"
     permission = "Edit"

@@ -16,7 +16,7 @@ Five independent root modules — each has its own GCS backend state and must be
 
 `keycloak/` runs after Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
 
-`grafana/` runs last — after kube-prometheus-stack has synced and the Grafana sidecar has created the "Kubernetes" and "RAG System" folders. It does **not** create folders (the sidecar owns them); it only looks them up by title and applies access-control permissions so that Viewers (rag_admin, rag_analyst) can only see the "RAG System" folder. If applied before the sidecar has run, the data sources will fail — wait for Grafana to be accessible and dashboards to be loaded.
+`grafana/` runs last — after Grafana is reachable (kube-prometheus-stack synced). It creates the "Kubernetes" and "RAG System" folders with stable UIDs and restricts access so Viewers (rag_admin, rag_analyst) can only see "RAG System". The Grafana sidecar always does a title-lookup before creating a folder, so it will find and reuse the Terraform-created folders with no conflict. If the sidecar ran first and already created the folders with random UIDs, `apply` will fail with a duplicate-title error — fix it by importing the existing folders (see Troubleshooting below).
 
 ### Keycloak groups
 
@@ -242,3 +242,21 @@ bash terraform/openstack/cleanup-network.sh
 ```
 
 The script removes the router, subnet, and network in the correct dependency order, then Terraform creates them fresh on the next `apply`.
+
+### Grafana folder already exists (duplicate title on apply)
+
+If the Grafana sidecar created "Kubernetes" or "RAG System" folders before `terraform/grafana` was applied, `apply` fails with a duplicate-title error. Import the existing folders into state so Terraform manages them instead of trying to create new ones:
+
+```bash
+# Find the UIDs of the sidecar-created folders
+curl -su admin:PASSWORD https://grafana.nss.jkzl.eu/api/folders \
+  | jq '.[] | {title, uid}'
+
+# Import each folder (substitute the actual UIDs)
+cd terraform/grafana
+terraform import grafana_folder.kubernetes  <uid-of-Kubernetes-folder>
+terraform import grafana_folder.rag_system  <uid-of-RAG-System-folder>
+
+# Now apply — only the permissions will be changed, no folder recreation
+terraform apply
+```
