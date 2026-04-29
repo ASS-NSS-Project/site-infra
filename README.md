@@ -208,13 +208,13 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 
 All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of five groups managed by `terraform/keycloak`:
 
-| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager | RAG System |
-|-------|--------|---------|-------|--------------------------------------|------------|
-| `admin` | full admin | Admin | full access | allowed | rag_admin |
-| `rag_admin` | — | Viewer | no access | blocked | admin |
-| `rag_curator` | — | — | no access | blocked | curator |
-| `rag_analyst` | — | Viewer | no access | blocked | analyst |
-| `rag_user` | — | — | no access | blocked | user |
+| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager | RAG System role |
+|-------|--------|---------|-------|--------------------------------------|-----------------|
+| `admin` | full admin | Admin | full access | allowed | `rag_admin` |
+| `rag_admin` | — | Viewer | no access | blocked | `rag_admin` |
+| `rag_curator` | — | — | no access | blocked | `rag_curator` |
+| `rag_analyst` | — | Viewer | no access | blocked | `rag_analyst` |
+| `rag_user` | — | — | no access | blocked | `rag_user` |
 
 To add a user, put their Gmail address in the corresponding `*_members` variable in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 

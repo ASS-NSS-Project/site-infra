@@ -20,20 +20,20 @@ Five independent root modules — each has its own GCS backend state and must be
 
 ### Keycloak groups
 
-Five groups are defined in `01-realm.tf`. Access per service is enforced at the application layer — Keycloak only issues the group claim:
+Six groups are defined in `01-realm.tf`. Access per service is enforced at the application layer — Keycloak only issues the group claim:
 
 | Group | Purpose |
 |-------|---------|
-| `admin` | Full access to all services and infrastructure |
-| `curator` | Data source management, collection rules, legal titles |
-| `analytic` | Experiments, model testing, index quality; Grafana Viewer |
-| `user` | Standard end user — submits queries, views answers |
-| `unauthorized` | Explicitly blocked; no access to any service |
+| `admin` | Full infrastructure access; maps to `rag_admin` role in the RAG system |
+| `rag_admin` | RAG app admin + Grafana RAG dashboards + Keycloak RAG group management |
+| `rag_curator` | Source / pipeline / incident management |
+| `rag_analyst` | Experiments, model testing, index quality evaluation; Grafana Viewer |
+| `rag_user` | Standard end user — submits queries, views answers |
 
 Users are pre-created by Gmail address via `keycloak_user` resources. Each user has `required_actions = []` to prevent Keycloak from prompting for profile completion on first login. On first Google login, Keycloak matches by email and links the Google identity automatically. Add Gmail addresses to the corresponding `*_members` variable in `terraform.tfvars` and re-apply. If a user already logged in before being added, import them first:
 
 ```bash
-terraform import 'keycloak_user.admin["their@gmail.com"]' <realm-id>/users/<user-id>
+terraform import 'keycloak_user.rag_admin["their@gmail.com"]' <realm-id>/users/<user-id>
 ```
 
 ## File conventions
