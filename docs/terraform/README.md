@@ -1,6 +1,6 @@
 # Terraform
 
-Four independent root modules — each has its own GCS backend state and must be applied in the order defined in the root README.
+Five independent root modules — each has its own GCS backend state and must be applied in the order defined in the root README.
 
 ## Modules and their dependencies
 
@@ -14,7 +14,9 @@ Four independent root modules — each has its own GCS backend state and must be
 
 `vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials, and sets up Kubernetes auth for ESO.
 
-`keycloak/` runs last, after Keycloak is deployed and Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
+`keycloak/` runs after Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
+
+`grafana/` runs last — after kube-prometheus-stack has synced and the Grafana sidecar has created the "Kubernetes" and "RAG System" folders. It does **not** create folders (the sidecar owns them); it only looks them up by title and applies access-control permissions so that Viewers (rag_admin, rag_analyst) can only see the "RAG System" folder. If applied before the sidecar has run, the data sources will fail — wait for Grafana to be accessible and dashboards to be loaded.
 
 ### Keycloak groups
 
@@ -63,13 +65,16 @@ terraform/
 │   ├── 01-vault.tf              # KV v2 engine and service credentials
 │   ├── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
 │   └── bootstrap.sh             # Emergency script: port-forwards Vault pod, runs apply, forces ESO re-sync
-└── keycloak/
-    ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
-    ├── 01-realm.tf              # realm definition
-    ├── 02-identity-providers.tf # Google OIDC federation
-    ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
-    ├── 04-vault-secrets.tf      # pushes client secrets to Vault
-    └── 05-vault-oidc.tf         # Vault OIDC auth method
+├── keycloak/
+│   ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
+│   ├── 01-realm.tf              # realm definition
+│   ├── 02-identity-providers.tf # Google OIDC federation
+│   ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
+│   ├── 04-vault-secrets.tf      # pushes client secrets to Vault
+│   └── 05-vault-oidc.tf         # Vault OIDC auth method
+└── grafana/
+    ├── terraform.tf             # GCS backend + Grafana provider (grafana_username/password variables)
+    └── 01-folders.tf            # folder permission ACLs: Viewer restricted to RAG System only
 ```
 
 ## Keycloak OIDC for internal services (Longhorn, Prometheus, Alertmanager)
