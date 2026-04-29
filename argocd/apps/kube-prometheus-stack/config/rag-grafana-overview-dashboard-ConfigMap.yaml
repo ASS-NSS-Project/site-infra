@@ -19,28 +19,28 @@ data:
         {
           "id": 1, "type": "stat", "title": "Indexed Sources",
           "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-          "targets": [{ "expr": "rag_active_sources", "datasource": { "type": "prometheus" } }],
+          "targets": [{ "expr": "max(rag_active_sources)", "datasource": { "type": "prometheus" } }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
         },
         {
           "id": 2, "type": "stat", "title": "Documents (Qdrant vectors)",
           "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
-          "targets": [{ "expr": "rag_qdrant_collection_size", "datasource": { "type": "prometheus" } }],
+          "targets": [{ "expr": "max(rag_qdrant_collection_size)", "datasource": { "type": "prometheus" } }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
         },
         {
           "id": 3, "type": "stat", "title": "CAPTCHA Incidents (open)",
           "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
-          "targets": [{ "expr": "rag_open_incidents", "datasource": { "type": "prometheus" } }],
+          "targets": [{ "expr": "max(rag_open_incidents)", "datasource": { "type": "prometheus" } }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
         },
         {
           "id": 4, "type": "stat", "title": "Total Ingest Jobs",
           "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-          "targets": [{ "expr": "sum(rag_ingest_jobs_total)", "datasource": { "type": "prometheus" } }],
+          "targets": [{ "expr": "sum(rag_ingest_jobs_total) or vector(0)", "datasource": { "type": "prometheus" } }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] } } }
         },
@@ -48,9 +48,9 @@ data:
           "id": 5, "type": "timeseries", "title": "Ingest Activity — 24 Hours",
           "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
           "targets": [
-            { "expr": "sum(increase(rag_ingest_jobs_total{status=\"done\"}[1h]))", "legendFormat": "done", "datasource": { "type": "prometheus" } },
-            { "expr": "sum(increase(rag_ingest_jobs_total{status=\"failed\"}[1h]))", "legendFormat": "failed", "datasource": { "type": "prometheus" } },
-            { "expr": "sum(increase(rag_ingest_jobs_total{status=\"captcha_blocked\"}[1h]))", "legendFormat": "captcha_blocked", "datasource": { "type": "prometheus" } }
+            { "expr": "sum(rate(rag_ingest_jobs_total{status=\"done\"}[30m])) * 1800 or vector(0)", "legendFormat": "done", "datasource": { "type": "prometheus" } },
+            { "expr": "sum(rate(rag_ingest_jobs_total{status=\"failed\"}[30m])) * 1800 or vector(0)", "legendFormat": "failed", "datasource": { "type": "prometheus" } },
+            { "expr": "sum(rate(rag_ingest_jobs_total{status=\"captcha_blocked\"}[30m])) * 1800 or vector(0)", "legendFormat": "captcha_blocked", "datasource": { "type": "prometheus" } }
           ],
           "fieldConfig": {
             "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 15, "drawStyle": "bars", "barAlignment": -1 } },
@@ -65,7 +65,7 @@ data:
           "id": 6, "type": "bargauge", "title": "Strategy Distribution",
           "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
           "targets": [
-            { "expr": "sum by (strategy) (rag_ingest_jobs_total{status=\"done\"})", "legendFormat": "{{strategy}}", "datasource": { "type": "prometheus" } }
+            { "expr": "sum by (strategy) (rag_ingest_jobs_total{status=\"done\"}) or vector(0)", "legendFormat": "{{strategy}}", "datasource": { "type": "prometheus" } }
           ],
           "options": {
             "reduceOptions": { "calcs": ["lastNotNull"] },
