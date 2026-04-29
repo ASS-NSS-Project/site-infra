@@ -21,7 +21,7 @@ data:
           "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"audit\"} |= `\"login_success\"` [24h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
@@ -31,7 +31,7 @@ data:
           "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"audit\"} |= `\"login_failed\"` [24h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
@@ -41,7 +41,7 @@ data:
           "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"audit\"} |= `\"query_completed\"` [24h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
@@ -51,7 +51,7 @@ data:
           "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"audit\"} |= `\"jwt_invalid\"` [24h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 }] } } }
@@ -61,7 +61,7 @@ data:
           "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
           "targets": [{
             "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `login_success|login_failed|user_registered` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         },
@@ -70,7 +70,7 @@ data:
           "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
           "targets": [{
             "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `query_received|query_completed|query_failed` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         },
@@ -79,7 +79,7 @@ data:
           "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
           "targets": [{
             "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `jwt_invalid|http_error` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         }

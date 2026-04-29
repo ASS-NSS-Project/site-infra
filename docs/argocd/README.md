@@ -146,7 +146,7 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMonitorSelectorNilUsesHelmValues: false` (and the same for podMonitor and rule) so that the Prometheus CR gets a nil selector, which the Prometheus Operator interprets as "select everything". Without this flag, the kube-prometheus-stack chart auto-generates `{matchLabels: {release: <helm-release-name>}}` — but ArgoCD sets the release name to the Application name (`kube-prometheus-stack-helm`), so chart-generated ServiceMonitors and custom ones in other namespaces would not be discovered. `serviceMonitorNamespaceSelector: {}` (and matching pair for pod/rule) ensures Prometheus watches all namespaces.
 
-Five dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashboard: "1"` which the Grafana sidecar picks up and loads into the **RAG System** folder (set via the `grafana_folder: "RAG System"` annotation). All Loki panels reference the Loki datasource by `uid: loki` — this UID is pinned explicitly in `helm/values.yaml` under `additionalDataSources` so it never drifts.
+Five dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashboard: "1"` which the Grafana sidecar picks up and loads into the **RAG System** folder (set via the `grafana_folder: "RAG System"` annotation). All Loki panels reference the datasource by name (`"datasource": "Loki"`) so they resolve correctly regardless of the auto-generated uid assigned by Grafana at startup.
 
 | ConfigMap | Dashboard (UID) | Contents |
 |-----------|-----------------|----------|

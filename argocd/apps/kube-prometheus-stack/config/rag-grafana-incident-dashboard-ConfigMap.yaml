@@ -28,7 +28,7 @@ data:
           "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} [24h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
@@ -38,7 +38,7 @@ data:
           "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
           "targets": [{
             "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} [1h]))",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 3 }] } } }
@@ -58,7 +58,7 @@ data:
           "gridPos": { "x": 0, "y": 12, "w": 24, "h": 12 },
           "targets": [{
             "expr": "{namespace=\"rag-system\", rag_app=\"incident\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — url={{.url}} strategy={{.strategy}} — {{.message}}\"",
-            "datasource": { "type": "loki", "uid": "loki" }
+            "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         }
