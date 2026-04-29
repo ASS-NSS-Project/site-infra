@@ -26,8 +26,7 @@ grafana:
   # Default K8s dashboards enabled and routed to the "Kubernetes" folder (Editor-only).
   # Viewers (rag_admin, rag_analyst) cannot see the Kubernetes folder per 01-folders.tf.
   # Admin org role bypasses all folder restrictions and retains full Grafana access.
-  defaultDashboardsEnabled: true
-  defaultDashboardsFolder: "Kubernetes"
+  defaultDashboardsEnabled: false
   sidecar:
     dashboards:
       enabled: true
@@ -35,7 +34,7 @@ grafana:
       labelValue: "1"
       searchNamespace: ALL
       folderAnnotation: grafana_folder
-      defaultFolderName: "Kubernetes"
+      defaultFolderName: "RAG System"
       provider:
         foldersFromFilesStructure: false
   resources:
