@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-system-audit-grafana-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  rag-audit.json: |
+    {
+      "title": "RAG System Audit Logs",
+      "uid": "rag-audit",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1, "type": "stat", "title": "Logins Successful in Last Hour",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+          "targets": [{
+            "expr": "count_over_time({namespace="rag-system", service_name="rag-api"} |= `"login_success"` [1h])",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 2, "type": "stat", "title": "Logins Failed in Last Hour",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+          "targets": [{
+            "expr": "count_over_time({namespace="rag-system", service_name="rag-api"} |= `"login_failed"` [1h])",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
+        },
+        {
+          "id": 6, "type": "logs", "title": "Logins (API logs)",
+          "gridPos": { "x": 0, "y": 6, "w": 24, "h": 10 },
+          "targets": [{
+            "expr": "{namespace="rag-system", service_name="rag-api"} | json | event =~ `.*login.*`",
+            "datasource": "Loki"
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 3, "type": "stat", "title": "Queries Completed in Last Hour",
+          "gridPos": { "x": 0, "y": 16, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-api"} | json | event = "query_completed" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 4, "type": "stat", "title": "Queries Failed in Last Hour",
+          "gridPos": { "x": 8, "y": 16, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-api"} | json | event = "query_failed" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "red", "value": 1 }] } } }
+        },
+        {
+          "id": 5, "type": "stat", "title": "Queries Received in Last Hour",
+          "gridPos": { "x": 16, "y": 16, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-api"} | json | event = "query_received" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
+        },
+        {
+          "id": 7, "type": "logs", "title": "Queries (API Logs)",
+          "gridPos": { "x": 0, "y": 24, "w": 24, "h": 10 },
+          "targets": [{
+            "expr": "{namespace="rag-system", service_name="rag-api"} | json | event =~ `.*query.*`",
+            "datasource": "Loki"
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 8, "type": "stat", "title": "Ingests Completed in Last Hour",
+          "gridPos": { "x": 0, "y": 34, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-api"} | json | event = "ingest_completed" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 9, "type": "stat", "title": "Ingests Failed in Last Hour",
+          "gridPos": { "x": 8, "y": 34, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-api"} | json | event = "ingest_failed" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "red", "value": 1 }] } } }
+        },
+        {
+          "id": 10, "type": "stat", "title": "Ingests Started in Last Hour",
+          "gridPos": { "x": 16, "y": 34, "w": 8, "h": 6 },
+          "targets": [{
+          "expr": "sum(count_over_time({namespace="rag-system", service_name="rag-worker"} | json | event = "ingest_started" [1h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
+        },
+        {
+          "id": 11, "type": "logs", "title": "Ingests (API + Worker Logs)",
+          "gridPos": { "x": 0, "y": 40, "w": 24, "h": 10 },
+          "targets": [{
+            "expr": "{namespace="rag-system"} | json | event =~ `.*ingest.*`",
+            "datasource": "Loki"
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 12, "type": "logs", "title": "All Logs from RAG System Namespace",
+          "gridPos": { "x": 0, "y": 50, "w": 24, "h": 15 },
+          "targets": [{
+            "expr": "{namespace="rag-system"} | json ",
+            "datasource": "Loki"
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        }
+      ]
+    }

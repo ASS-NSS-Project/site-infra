@@ -1,18 +1,18 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: rag-grafana-overview-dashboard
+  name: rag-system-overview-grafana-dashboard
   namespace: monitoring
   labels:
     grafana_dashboard: "1"
 data:
   rag-overview.json: |
     {
-      "title": "WebRAG — Overview",
+      "title": "RAG System Overview",
       "uid": "rag-overview",
       "schemaVersion": 38,
       "refresh": "30s",
-      "time": { "from": "now-24h", "to": "now" },
+      "time": { "from": "now-1h", "to": "now" },
       "panels": [
         {
           "id": 1, "type": "stat", "title": "Indexed Sources",
