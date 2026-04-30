@@ -84,15 +84,6 @@ data:
               { "matcher": { "id": "byName", "options": "screenshot" }, "properties": [{ "id": "color", "value": { "fixedColor": "purple", "mode": "fixed" } }] }
             ]
           }
-        },
-        {
-          "id": 7, "type": "logs", "title": "Recent Pipeline Activity",
-          "gridPos": { "x": 0, "y": 12, "w": 24, "h": 10 },
-          "targets": [{
-            "expr": "{namespace=\"rag-system\", rag_app=\"pipeline\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
-            "datasource": "Loki"
-          }],
-          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         }
       ]
     }

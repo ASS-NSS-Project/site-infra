@@ -57,17 +57,26 @@ data:
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 }] } } }
         },
         {
-          "id": 5, "type": "logs", "title": "Auth Events (login, registration)",
+          "id": 5, "type": "logs", "title": "Auth & User Events",
           "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
           "targets": [{
-            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `login_success|login_failed|user_registered` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `login_success|login_failed|user_registered|user_updated|admin_created|keycloak_unauthorized` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "datasource": "Loki"
+          }],
+          "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
+        },
+        {
+          "id": 8, "type": "logs", "title": "Admin Actions (sources, jobs)",
+          "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+          "targets": [{
+            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `source_created|source_updated|source_deleted|ingest_triggered|job_cancelled|job_deleted` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
             "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         },
         {
           "id": 6, "type": "logs", "title": "Query Events",
-          "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+          "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
           "targets": [{
             "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `query_received|query_completed|query_failed` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
             "datasource": "Loki"
@@ -75,10 +84,10 @@ data:
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         },
         {
-          "id": 7, "type": "logs", "title": "Security Events (JWT invalid, HTTP errors)",
-          "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+          "id": 7, "type": "logs", "title": "Security Events",
+          "gridPos": { "x": 0, "y": 28, "w": 24, "h": 8 },
           "targets": [{
-            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `jwt_invalid|http_error` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
+            "expr": "{namespace=\"rag-system\", rag_app=\"audit\"} |= `\"event\"` | json | event =~ `jwt_invalid|http_error|keycloak_connect_error|presigned_url_failed` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — {{.message}}\"",
             "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }

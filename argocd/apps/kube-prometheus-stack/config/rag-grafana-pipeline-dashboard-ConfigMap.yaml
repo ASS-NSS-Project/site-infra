@@ -60,7 +60,7 @@ data:
           "id": 5, "type": "logs", "title": "Ingest Log (ingest_started / ingest_completed / ingest_failed)",
           "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
           "targets": [{
-            "expr": "{namespace=\"rag-system\", rag_app=\"pipeline\"} | json | event =~ `ingest_started|ingest_completed|ingest_failed` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — strategy={{.strategy}} quality={{.quality_score}} — {{.message}}\"",
+            "expr": "{namespace=\"rag-system\", rag_app=\"pipeline\"} | json | event =~ `source_seeded|ingest_started|ingest_completed|ingest_failed` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — strategy={{.strategy}} quality={{.quality_score}} — {{.message}}\"",
             "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }

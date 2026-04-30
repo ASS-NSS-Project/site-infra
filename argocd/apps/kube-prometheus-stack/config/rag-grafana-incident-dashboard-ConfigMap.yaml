@@ -18,26 +18,36 @@ data:
       "panels": [
         {
           "id": 1, "type": "stat", "title": "Open Incidents",
-          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+          "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
           "targets": [{ "expr": "rag_open_incidents", "datasource": { "type": "prometheus" } }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
         },
         {
           "id": 2, "type": "stat", "title": "CAPTCHA Detections (24h)",
-          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+          "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
           "targets": [{
-            "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} [24h]))",
+            "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} |= `\"captcha_detected\"` [24h]))",
             "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
         },
         {
-          "id": 3, "type": "stat", "title": "CAPTCHA Detections (1h)",
-          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+          "id": 6, "type": "stat", "title": "Incidents Resolved (24h)",
+          "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
           "targets": [{
-            "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} [1h]))",
+            "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} |= `\"incident_resolved\"` [24h]))",
+            "datasource": "Loki"
+          }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+        },
+        {
+          "id": 3, "type": "stat", "title": "CAPTCHA Detections (1h)",
+          "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "sum(count_over_time({namespace=\"rag-system\", rag_app=\"incident\"} |= `\"captcha_detected\"` [1h]))",
             "datasource": "Loki"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -54,10 +64,10 @@ data:
           "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2 }, "color": { "fixedColor": "orange", "mode": "fixed" } } }
         },
         {
-          "id": 5, "type": "logs", "title": "Incident Log (CAPTCHA detections)",
+          "id": 5, "type": "logs", "title": "Incident Log (captcha_detected / incident_simulated / incident_resolved)",
           "gridPos": { "x": 0, "y": 12, "w": 24, "h": 12 },
           "targets": [{
-            "expr": "{namespace=\"rag-system\", rag_app=\"incident\"} | json | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — url={{.url}} strategy={{.strategy}} — {{.message}}\"",
+            "expr": "{namespace=\"rag-system\", rag_app=\"incident\"} | json | event =~ `captcha_detected|incident_simulated|incident_resolved` | line_format \"{{.timestamp}} [{{.level}}] {{.event}} — url={{.url}} strategy={{.strategy}} — {{.message}}\"",
             "datasource": "Loki"
           }],
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
