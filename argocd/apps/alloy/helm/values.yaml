@@ -58,28 +58,31 @@ alloy:
       }
 
       // Tag rag-system structured logs with a rag_app label for Loki queries:
-      //   rag_app=audit    → login / user-management / query / security events
-      //   rag_app=incident → CAPTCHA detection events
-      //   rag_app=pipeline → ingest / embedding / search / model events
+      //   rag_app=audit      → login / user / query / admin-action / security events
+      //   rag_app=incident   → CAPTCHA detection and resolution events
+      //   rag_app=pipeline   → ingest / embedding / search / model events
       loki.process "rag_labels" {
         forward_to = [loki.write.default.receiver]
 
+        // Security, user-lifecycle, query, and admin-action events
         stage.match {
-          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(login_success|login_failed|user_registered|query_received|query_completed|query_failed|jwt_invalid|http_error)\""`
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(login_success|login_failed|user_registered|user_updated|query_received|query_completed|query_failed|jwt_invalid|http_error|http_request_start|keycloak_unauthorized|keycloak_connect_error|source_created|source_updated|source_deleted|ingest_triggered|job_cancelled|job_deleted|admin_created|presigned_url_failed)\""`
           stage.static_labels {
             values = { rag_app = "audit" }
           }
         }
 
+        // CAPTCHA detection and manual incident lifecycle
         stage.match {
-          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"captcha_detected\""`
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(captcha_detected|incident_simulated|incident_resolved)\""`
           stage.static_labels {
             values = { rag_app = "incident" }
           }
         }
 
+        // Ingest pipeline, embedding, vector search, and model events
         stage.match {
-          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(ingest_started|ingest_completed|ingest_failed|embedding_completed|embedding_failed|search_start|search_complete|search_failed|model_load_start|model_load_complete|chunks_delete)\""`
+          selector = `{namespace="rag-system"} |~ "\"event\":\\s*\"(ingest_started|ingest_completed|ingest_failed|embedding_completed|embedding_failed|search_start|search_complete|search_failed|model_load_start|model_load_complete|chunks_delete|source_seeded)\""`
           stage.static_labels {
             values = { rag_app = "pipeline" }
           }
