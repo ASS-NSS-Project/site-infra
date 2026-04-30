@@ -45,7 +45,7 @@ data:
           "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
         },
         {
-          "id": 6, "type": "logs", "title": "Logins (API logs)",
+          "id": 3, "type": "logs", "title": "Logins (API logs)",
           "gridPos": { "x": 0, "y": 6, "w": 24, "h": 10 },
           "targets": [{
             "expr": "{namespace=`rag-system`, app=`rag-api`} | json | event =~ `.*login.*`",
@@ -54,7 +54,7 @@ data:
           "options": { "showTime": true, "showLabels": false, "sortOrder": "Descending", "dedupStrategy": "none" }
         },
         {
-          "id": 3, "type": "stat", "title": "Queries Completed in Last Hour",
+          "id": 4, "type": "stat", "title": "Queries Completed in Last Hour",
           "gridPos": { "x": 0, "y": 16, "w": 8, "h": 6 },
           "targets": [{
           "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_completed` [1h]))",
@@ -64,7 +64,7 @@ data:
           "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
         },
         {
-          "id": 4, "type": "stat", "title": "Queries Failed in Last Hour",
+          "id": 5, "type": "stat", "title": "Queries Failed in Last Hour",
           "gridPos": { "x": 8, "y": 16, "w": 8, "h": 6 },
           "targets": [{
           "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_failed` [1h]))",
@@ -74,7 +74,7 @@ data:
           "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "red", "value": 1 }] } } }
         },
         {
-          "id": 5, "type": "stat", "title": "Queries Received in Last Hour",
+          "id": 6, "type": "stat", "title": "Queries Received in Last Hour",
           "gridPos": { "x": 16, "y": 16, "w": 8, "h": 6 },
           "targets": [{
           "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_received` [1h]))",
