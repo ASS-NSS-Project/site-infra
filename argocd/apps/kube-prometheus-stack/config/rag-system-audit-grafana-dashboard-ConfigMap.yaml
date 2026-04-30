@@ -28,7 +28,7 @@ data:
           "id": 1, "type": "stat", "title": "Logins Successful in Last Hour",
           "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
           "targets": [{
-            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_success` [1h]) or vector(0)",
+            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_success` [1h])",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -38,7 +38,7 @@ data:
           "id": 2, "type": "stat", "title": "Logins Failed in Last Hour",
           "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
           "targets": [{
-            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_failed` [1h]) or vector(0)",
+            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_failed` [1h])",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -57,7 +57,7 @@ data:
           "id": 4, "type": "stat", "title": "Queries Completed in Last Hour",
           "gridPos": { "x": 0, "y": 16, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_completed` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_completed` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -67,7 +67,7 @@ data:
           "id": 5, "type": "stat", "title": "Queries Failed in Last Hour",
           "gridPos": { "x": 8, "y": 16, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_failed` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_failed` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -77,7 +77,7 @@ data:
           "id": 6, "type": "stat", "title": "Queries Received in Last Hour",
           "gridPos": { "x": 16, "y": 16, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_received` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `query_received` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -96,7 +96,7 @@ data:
           "id": 8, "type": "stat", "title": "Ingests Completed in Last Hour",
           "gridPos": { "x": 0, "y": 34, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `ingest_completed` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `ingest_completed` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -106,7 +106,7 @@ data:
           "id": 9, "type": "stat", "title": "Ingests Failed in Last Hour",
           "gridPos": { "x": 8, "y": 34, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `ingest_failed` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} | json | event = `ingest_failed` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -116,7 +116,7 @@ data:
           "id": 10, "type": "stat", "title": "Ingests Started in Last Hour",
           "gridPos": { "x": 16, "y": 34, "w": 8, "h": 6 },
           "targets": [{
-          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-worker`} | json | event = `ingest_started` [1h])) or vector(0)",
+          "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-worker`} | json | event = `ingest_started` [1h]))",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
