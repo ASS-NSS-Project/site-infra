@@ -43,14 +43,8 @@ variable "vault_root_token" {
 # Gmail addresses of users to pre-create in Keycloak and assign to each group.
 # Users are created before their first login — Keycloak links their Google identity on first sign-in.
 
-variable "admin_members" {
-  description = "Gmail addresses to pre-create and add to the realm admin group (full infrastructure access)"
-  type        = list(string)
-  default     = []
-}
-
 variable "rag_admin_members" {
-  description = "Gmail addresses for rag_admin — RAG app admin + Grafana RAG dashboards + Keycloak RAG group management"
+  description = "Gmail addresses for rag_admin — full Keycloak realm admin, Grafana Admin, Vault admin, RabbitMQ admin, RAG app admin"
   type        = list(string)
   default     = []
 }

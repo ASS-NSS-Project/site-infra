@@ -99,7 +99,7 @@ data "keycloak_openid_client" "realm_management" {
   client_id = "realm-management"
 }
 
-# --- admin group: full realm management ---
+# --- rag_admin group: full realm management ---
 
 data "keycloak_role" "realm_admin" {
   realm_id  = keycloak_realm.main.id
@@ -107,51 +107,16 @@ data "keycloak_role" "realm_admin" {
   name      = "realm-admin"
 }
 
-resource "keycloak_group_roles" "admin_realm_management" {
-  realm_id   = keycloak_realm.main.id
-  group_id   = keycloak_group.admin.id
-  exhaustive = false
-  role_ids   = [data.keycloak_role.realm_admin.id]
-}
-
-# --- rag_admin group: console access + group management ---
-
-data "keycloak_role" "view_users" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "view-users"
-}
-
-data "keycloak_role" "query_users" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "query-users"
-}
-
-data "keycloak_role" "query_groups" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "query-groups"
-}
-
-data "keycloak_role" "view_realm" {
-  realm_id  = keycloak_realm.main.id
-  client_id = data.keycloak_openid_client.realm_management.id
-  name      = "view-realm"
-}
-
 resource "keycloak_group_roles" "rag_admin_realm_management" {
   realm_id   = keycloak_realm.main.id
   group_id   = keycloak_group.rag_admin.id
   exhaustive = false
-  # manage-users intentionally absent: rag_admin can view/query users and groups
-  # but cannot create, delete, or modify group memberships (including admin group).
-  role_ids = [
-    data.keycloak_role.view_users.id,
-    data.keycloak_role.query_users.id,
-    data.keycloak_role.query_groups.id,
-    data.keycloak_role.view_realm.id,
-  ]
+  role_ids   = [data.keycloak_role.realm_admin.id]
+}
+
+moved {
+  from = keycloak_group_roles.admin_realm_management
+  to   = keycloak_group_roles.rag_admin_realm_management
 }
 
 # RabbitMQ
@@ -185,16 +150,21 @@ resource "keycloak_role" "rabbitmq_administrator" {
   name      = "administrator"
 }
 
-# Assign the administrator role to the admin group only
-resource "keycloak_group_roles" "admin_rabbitmq" {
+# Assign the administrator role to the rag_admin group
+resource "keycloak_group_roles" "rag_admin_rabbitmq" {
   realm_id   = keycloak_realm.main.id
-  group_id   = keycloak_group.admin.id
+  group_id   = keycloak_group.rag_admin.id
   role_ids   = [keycloak_role.rabbitmq_administrator.id]
   exhaustive = false
 }
 
+moved {
+  from = keycloak_group_roles.admin_rabbitmq
+  to   = keycloak_group_roles.rag_admin_rabbitmq
+}
+
 # Map client roles → rabbitmq_scopes claim with "rabbitmq.tag:" prefix.
-# For the admin group this produces: rabbitmq_scopes = ["rabbitmq.tag:administrator"]
+# For the rag_admin group this produces: rabbitmq_scopes = ["rabbitmq.tag:administrator"]
 # For everyone else the claim is absent → no management tag → access denied.
 resource "keycloak_generic_protocol_mapper" "rabbitmq_roles_scope_mapper" {
   realm_id        = keycloak_realm.main.id

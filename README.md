@@ -206,23 +206,22 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 
 ## SSO
 
-All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of five groups managed by `terraform/keycloak`:
+All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of four groups managed by `terraform/keycloak`:
 
 | Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager | RAG System role |
 |-------|--------|---------|-------|--------------------------------------|-----------------|
-| `admin` | full admin | Admin | full access | allowed | `rag_admin` |
-| `rag_admin` | — | Viewer | no access | blocked | `rag_admin` |
+| `rag_admin` | full admin | Admin | full access | allowed | `rag_admin` |
 | `rag_curator` | — | — | no access | blocked | `rag_curator` |
 | `rag_analyst` | — | Viewer | no access | blocked | `rag_analyst` |
 | `rag_user` | — | — | no access | blocked | `rag_user` |
 
 To add a user, put their Gmail address in the corresponding `*_members` variable in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 
-`rag_admin` holds the `view-users`, `query-users`, `query-groups`, and `view-realm` realm-management roles — enough to read users and groups in the Keycloak console but **not** to create, delete, or modify group memberships. The `manage-users` role is intentionally withheld so `rag_admin` cannot touch the `admin` group or other privileged groups.
+`rag_admin` holds the `realm-admin` Keycloak role — full console access across the entire realm.
 
 ### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager)
 
-These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `admin` Keycloak group can access them.
+These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `rag_admin` Keycloak group can access them.
 
 ```text
 Browser → longhorn.nss.jkzl.eu
@@ -232,7 +231,7 @@ Browser → longhorn.nss.jkzl.eu
   → Browser follows 302 to Keycloak (client_id=traefik, redirect_uri=oauth2.nss.jkzl.eu/oauth2/callback)
   → User authenticates via Google identity broker
   → Keycloak → oauth2.nss.jkzl.eu/oauth2/callback
-  → oauth2-proxy checks groups claim → user in admin → sets .nss.jkzl.eu cookie → 302 back to original URL
+  → oauth2-proxy checks groups claim → user in rag_admin → sets .nss.jkzl.eu cookie → 302 back to original URL
   → forwardAuth: GET /oauth2/auth with cookie → 200
   → Traefik forwards to Longhorn backend
 ```

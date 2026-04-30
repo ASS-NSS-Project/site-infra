@@ -80,7 +80,7 @@ grafana:
       auth_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/auth
       token_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/token
       api_url: https://keycloak.nss.jkzl.eu/realms/ass-nss-project/protocol/openid-connect/userinfo
-      role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'rag_admin') && 'Viewer' || contains(groups[*], 'rag_analyst') && 'Viewer'
+      role_attribute_path: contains(groups[*], 'rag_admin') && 'Admin' || contains(groups[*], 'rag_analyst') && 'Viewer'
       role_attribute_strict: true
       skip_org_role_sync: false
 

@@ -12,15 +12,9 @@ resource "keycloak_realm" "main" {
   ssl_required = "external"
 }
 
-# --- Realm admin group (infrastructure / full Keycloak access) ---
-resource "keycloak_group" "admin" {
-  realm_id = keycloak_realm.main.id
-  name     = "admin"
-}
-
 # --- RAG application groups ---
 
-# rag_admin — app admin, Grafana RAG dashboards, Keycloak RAG group management
+# rag_admin — full access to inside the main realm (ASS-NSS-Project)
 resource "keycloak_group" "rag_admin" {
   realm_id = keycloak_realm.main.id
   name     = "rag_admin"
@@ -56,22 +50,6 @@ required_actions = [] 👈 Without this, Keycloak applies the realm's default UP
                          action to every newly-created user, which triggers the name/surname
                          prompt on first login.
 */
-
-resource "keycloak_user" "admin" {
-  for_each         = toset(var.admin_members)
-  realm_id         = keycloak_realm.main.id
-  username         = each.value
-  email            = each.value
-  email_verified   = true
-  enabled          = true
-  required_actions = []
-}
-
-resource "keycloak_group_memberships" "admin" {
-  realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.admin.id
-  members  = [for u in keycloak_user.admin : u.username]
-}
 
 resource "keycloak_user" "rag_admin" {
   for_each         = toset(var.rag_admin_members)

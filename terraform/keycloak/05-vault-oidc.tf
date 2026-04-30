@@ -1,6 +1,6 @@
 # --- Vault OIDC auth backend via Keycloak ---
 # Configures Vault to accept logins via Keycloak OIDC.
-# The "admin" Keycloak group maps to the vault-admin policy (full access).
+# The "rag_admin" Keycloak group maps to the vault-admin policy (full access).
 # Any other authenticated user gets the default policy (no access beyond their own token).
 
 locals {
@@ -51,7 +51,7 @@ resource "vault_jwt_auth_backend_role" "default" {
 
 # --- Admin policy ---
 
-resource "vault_policy" "admin" {
+resource "vault_policy" "rag_admin" {
   name = "vault-admin"
 
   policy = <<-EOT
@@ -61,19 +61,34 @@ resource "vault_policy" "admin" {
   EOT
 }
 
-# --- Group mapping: Keycloak "admin" → vault-admin policy ---
-# vault_identity_group creates a Vault external group.
-# vault_identity_group_alias links the Keycloak group name to the OIDC backend accessor,
-# so when a user logs in with the "admin" group claim, Vault assigns the admin policy.
-
-resource "vault_identity_group" "admin" {
-  name     = "admin"
-  type     = "external"
-  policies = [vault_policy.admin.name]
+moved {
+  from = vault_policy.admin
+  to   = vault_policy.rag_admin
 }
 
-resource "vault_identity_group_alias" "admin" {
-  name           = "admin"
+# --- Group mapping: Keycloak "rag_admin" → vault-admin policy ---
+# vault_identity_group creates a Vault external group.
+# vault_identity_group_alias links the Keycloak group name to the OIDC backend accessor,
+# so when a user logs in with the "rag_admin" group claim, Vault assigns the admin policy.
+
+resource "vault_identity_group" "rag_admin" {
+  name     = "rag_admin"
+  type     = "external"
+  policies = [vault_policy.rag_admin.name]
+}
+
+moved {
+  from = vault_identity_group.admin
+  to   = vault_identity_group.rag_admin
+}
+
+resource "vault_identity_group_alias" "rag_admin" {
+  name           = "rag_admin"
   mount_accessor = vault_jwt_auth_backend.oidc.accessor
-  canonical_id   = vault_identity_group.admin.id
+  canonical_id   = vault_identity_group.rag_admin.id
+}
+
+moved {
+  from = vault_identity_group_alias.admin
+  to   = vault_identity_group_alias.rag_admin
 }
