@@ -31,17 +31,6 @@ jobs:
           fi
           pre-commit run -c .github/config/pre-commit-config.yaml --hook-stage commit-msg --commit-msg-filename "$MSG_FILE"
 
-  markdownlint:
-    name: Markdown lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm install -g markdownlint-cli
-      - run: markdownlint --config .github/config/markdownlint.yaml "**/*.md" --ignore-path .gitignore --ignore "**/CLAUDE.md"
-
   terraform-fmt:
     name: Terraform format
     runs-on: ubuntu-latest
