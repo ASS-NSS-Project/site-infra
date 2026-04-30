@@ -146,14 +146,12 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 
 The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMonitorSelectorNilUsesHelmValues: false` (and the same for podMonitor and rule) so that the Prometheus CR gets a nil selector, which the Prometheus Operator interprets as "select everything". Without this flag, the kube-prometheus-stack chart auto-generates `{matchLabels: {release: <helm-release-name>}}` — but ArgoCD sets the release name to the Application name (`kube-prometheus-stack-helm`), so chart-generated ServiceMonitors and custom ones in other namespaces would not be discovered. `serviceMonitorNamespaceSelector: {}` (and matching pair for pod/rule) ensures Prometheus watches all namespaces.
 
-Five dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashboard: "1"` which the Grafana sidecar picks up and loads into the **RAG System** folder (set via the `grafana_folder: "RAG System"` annotation). All Loki panels reference the datasource by name (`"datasource": "Loki"`) so they resolve correctly regardless of the auto-generated uid assigned by Grafana at startup.
+Three dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashboard: "1"` which the Grafana sidecar picks up and loads into the **RAG System** folder (the sidecar's `defaultFolderName` — no per-ConfigMap annotation needed). All Loki panels reference the datasource by name (`"datasource": "Loki"`) so they resolve correctly regardless of the auto-generated uid assigned by Grafana at startup.
 
 | ConfigMap | Dashboard (UID) | Contents |
 |-----------|-----------------|----------|
 | `rag-grafana-overview-dashboard-ConfigMap.yaml` | WebRAG — Overview (`rag-overview`) | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution; recent pipeline logs |
 | `rag-grafana-metrics-dashboard-ConfigMap.yaml` | WebRAG — Metrics (`rag-metrics`) | Prometheus stats + timeseries: jobs, error rates, latency, embeddings |
-| `rag-grafana-pipeline-dashboard-ConfigMap.yaml` | WebRAG — Pipeline Logs (`rag-pipeline-logs`) | Loki log panels: ingest, embedding, search events |
-| `rag-grafana-incident-dashboard-ConfigMap.yaml` | WebRAG — Incident Logs (`rag-incidents`) | CAPTCHA detections (Prometheus timeseries + Loki log panel) |
 | `rag-grafana-audit-dashboard-ConfigMap.yaml` | WebRAG — Audit (`rag-audit`) | Loki log panels: auth, query, and security events |
 
 The app sidebar links "Dashboard ↗" → `https://grafana.nss.jkzl.eu/d/rag-overview` and "Audit Logs ↗" → `https://grafana.nss.jkzl.eu/d/rag-audit`. The in-app DashboardView has been removed.

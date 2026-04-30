@@ -273,14 +273,15 @@ Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-ke
 
 ## Grafana dashboards
 
-Two dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces):
+Three dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces and places them in the **RAG System** folder via `defaultFolderName`):
 
 | Dashboard | UID | ConfigMap | Panels |
 |-----------|-----|-----------|--------|
-| WebRAG — Metrics | `rag-metrics` | `rag-grafana-metrics-dashboard` | Active sources, open incidents, ingest rate/duration, query latency/rate, CAPTCHA rate, embedding duration, Qdrant size |
-| WebRAG — Log Streams | `rag-logs` | `rag-grafana-loki-dashboard` | Audit / incident / pipeline log panels with pre-built Loki queries using the `rag_app` label |
+| WebRAG — Overview | `rag-overview` | `rag-grafana-overview-dashboard` | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution; recent pipeline logs |
+| WebRAG — Metrics | `rag-metrics` | `rag-grafana-metrics-dashboard` | Prometheus stats + timeseries: jobs, error rates, latency, embeddings, CAPTCHA rate |
+| WebRAG — Audit | `rag-audit` | `rag-grafana-audit-dashboard` | Loki log panels: auth, query, and security events |
 
-Both ConfigMaps live in `argocd/apps/kube-prometheus-stack/config/` and are applied by ArgoCD automatically.
+All ConfigMaps live in `argocd/apps/kube-prometheus-stack/config/` and are applied by ArgoCD automatically.
 
 ## ArgoCD
 

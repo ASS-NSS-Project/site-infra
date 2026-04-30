@@ -16,16 +16,15 @@ Five independent root modules — each has its own GCS backend state and must be
 
 `keycloak/` runs after Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
 
-`grafana/` runs last — after Grafana is reachable (kube-prometheus-stack synced). It creates the "Kubernetes" and "RAG System" folders with stable UIDs and restricts access so Viewers (rag_admin, rag_analyst) can only see "RAG System". The Grafana sidecar always does a title-lookup before creating a folder, so it will find and reuse the Terraform-created folders with no conflict. If the sidecar ran first and already created the folders with random UIDs, `apply` will fail with a duplicate-title error — fix it by importing the existing folders (see Troubleshooting below).
+`keycloak/` runs after Vault is provisioned — it is the last module in the apply chain.
 
 ### Keycloak groups
 
-Six groups are defined in `01-realm.tf`. Access per service is enforced at the application layer — Keycloak only issues the group claim:
+Four groups are defined in `01-realm.tf`. Access per service is enforced at the application layer — Keycloak only issues the group claim:
 
 | Group | Purpose |
 |-------|---------|
-| `admin` | Full infrastructure access; maps to `rag_admin` role in the RAG system |
-| `rag_admin` | RAG app admin + Grafana RAG dashboards + Keycloak RAG group management |
+| `rag_admin` | Full infrastructure access: Keycloak realm-admin, Grafana Admin, Vault admin, RabbitMQ admin, RAG app admin |
 | `rag_curator` | Source / pipeline / incident management |
 | `rag_analyst` | Experiments, model testing, index quality evaluation; Grafana Viewer |
 | `rag_user` | Standard end user — submits queries, views answers |
@@ -65,16 +64,13 @@ terraform/
 │   ├── 01-vault.tf              # KV v2 engine and service credentials
 │   ├── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
 │   └── bootstrap.sh             # Emergency script: port-forwards Vault pod, runs apply, forces ESO re-sync
-├── keycloak/
-│   ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
-│   ├── 01-realm.tf              # realm definition
-│   ├── 02-identity-providers.tf # Google OIDC federation
-│   ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
-│   ├── 04-vault-secrets.tf      # pushes client secrets to Vault
-│   └── 05-vault-oidc.tf         # Vault OIDC auth method
-└── grafana/
-    ├── terraform.tf             # GCS backend + Grafana provider (grafana_username/password variables)
-    └── 01-folders.tf            # folder permission ACLs: Viewer restricted to RAG System only
+└── keycloak/
+    ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
+    ├── 01-realm.tf              # realm definition + groups + user pre-provisioning
+    ├── 02-identity-providers.tf # Google OIDC federation
+    ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
+    ├── 04-vault-secrets.tf      # pushes client secrets to Vault
+    └── 05-vault-oidc.tf         # Vault OIDC auth method
 ```
 
 ## Keycloak OIDC for internal services (Longhorn, Prometheus, Alertmanager)
@@ -243,20 +239,3 @@ bash terraform/openstack/cleanup-network.sh
 
 The script removes the router, subnet, and network in the correct dependency order, then Terraform creates them fresh on the next `apply`.
 
-### Grafana folder already exists (duplicate title on apply)
-
-If the Grafana sidecar created "Kubernetes" or "RAG System" folders before `terraform/grafana` was applied, `apply` fails with a duplicate-title error. Import the existing folders into state so Terraform manages them instead of trying to create new ones:
-
-```bash
-# Find the UIDs of the sidecar-created folders
-curl -su admin:PASSWORD https://grafana.nss.jkzl.eu/api/folders \
-  | jq '.[] | {title, uid}'
-
-# Import each folder (substitute the actual UIDs)
-cd terraform/grafana
-terraform import grafana_folder.kubernetes  <uid-of-Kubernetes-folder>
-terraform import grafana_folder.rag_system  <uid-of-RAG-System-folder>
-
-# Now apply — only the permissions will be changed, no folder recreation
-terraform apply
-```
