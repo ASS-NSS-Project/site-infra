@@ -32,7 +32,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
         },
         {
           "id": 2, "type": "stat", "title": "Logins Failed in Last Hour",
@@ -42,7 +42,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
         },
         {
           "id": 6, "type": "logs", "title": "Logins (API logs)",
@@ -61,7 +61,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
         },
         {
           "id": 4, "type": "stat", "title": "Queries Failed in Last Hour",
@@ -71,7 +71,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "red", "value": 1 }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "red", "value": 1 }] } } }
         },
         {
           "id": 5, "type": "stat", "title": "Queries Received in Last Hour",
@@ -81,7 +81,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
         },
         {
           "id": 7, "type": "logs", "title": "Queries (API Logs)",
@@ -100,7 +100,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } } }
         },
         {
           "id": 9, "type": "stat", "title": "Ingests Failed in Last Hour",
@@ -110,7 +110,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "yellow", "value": null }, { "color": "red", "value": 1 }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }, { "color": "red", "value": 1 }] } } }
         },
         {
           "id": 10, "type": "stat", "title": "Ingests Started in Last Hour",
@@ -120,7 +120,7 @@ data:
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
-          "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
+          "fieldConfig": { "defaults": { "noDataValue": "0", "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } } }
         },
         {
           "id": 11, "type": "logs", "title": "Ingests (API + Worker Logs)",
