@@ -230,6 +230,8 @@ hf-cache-rag-worker-1   (5 Gi, Longhorn RWO)
 …
 ```
 
+Worker resource envelope is set in `worker-StatefulSet.yaml` to `requests: 250m / 512Mi` and `limits: 4 CPU / 8Gi` to reduce OOM risk during embedding spikes.
+
 `apps/rag-system/config/rag-worker-PersistentVolumeClaim.yaml` holds the **headless Service** (`clusterIP: None`) required by the StatefulSet — not a PVC (the StatefulSet owns its own PVCs). The old standalone `rag-worker` PVC was replaced by the `volumeClaimTemplates` entry.
 
 **Scaling workers:** set `replicas` in `worker-Deployment.yaml` to any odd number (1, 3, 5, 7, 9, …). Each replica independently pulls jobs from the shared RabbitMQ `ingest` queue (`prefetch_count=1`) — N replicas process N jobs in parallel with no coordination needed.
