@@ -63,7 +63,7 @@ data:
           "id": 6, "type": "bargauge", "title": "Strategy Distribution",
           "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
           "targets": [
-            { "expr": "sum by (strategy) (rag_ingest_jobs_total{status=\"done\"}) or vector(0)", "legendFormat": "{{strategy}}", "datasource": { "type": "prometheus" } }
+            { "expr": "sum by (strategy) (rag_ingest_jobs_total{status=\"done\"})", "legendFormat": "{{strategy}}", "datasource": { "type": "prometheus" } }
           ],
           "options": {
             "reduceOptions": { "calcs": ["lastNotNull"] },
