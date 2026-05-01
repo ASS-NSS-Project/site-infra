@@ -201,7 +201,7 @@ Prometheus Operator wraps every `AlertmanagerConfig` sub-route with an implicit 
 
 ## rag-system API HTTPRoute — `/api` prefix
 
-`apps/rag-system/config/rag-system-HTTPRoute.yaml` includes a rule that routes `https://rag.nss.jkzl.eu/api/*` to the backend API, stripping the `/api` prefix before forwarding (Gateway API `URLRewrite` filter with `ReplacePrefixMatch: /`). This lets `cURL` users and external scripts call a stable public endpoint without knowing which path the frontend nginx proxies:
+`apps/rag-system/config/rag-system-HTTPRoute.yaml` exposes an allowlist of API prefixes under `/api` (`/api/auth`, `/api/sources`, `/api/query`, `/api/incidents`, `/api/documents`, `/api/experiments`, `/api/health`) and strips `/api` before forwarding (`URLRewrite` + `ReplacePrefixMatch: /`). This keeps script-friendly public API paths while preventing accidental exposure of internal-only paths such as `/metrics`.
 
 ```bash
 # Login
@@ -216,7 +216,7 @@ curl -s -X POST https://rag.nss.jkzl.eu/api/query/ \
   -d '{"question": "What are the latest findings?", "top_k": 5}'
 ```
 
-The `/api` rule is placed before the catch-all frontend rule so Gateway API specificity routing does not interfere.
+The `/api/*` allowlist rules are placed before the catch-all frontend rule so Gateway API specificity routing does not interfere.
 
 ---
 
