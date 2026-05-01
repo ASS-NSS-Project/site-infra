@@ -28,7 +28,7 @@ data:
           "id": 1, "type": "stat", "title": "Logins Successful in Last Hour",
           "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
           "targets": [{
-            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_success` [1h]) or vector(0)",
+            "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_success` [1h])) or vector(0)",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
@@ -38,7 +38,7 @@ data:
           "id": 2, "type": "stat", "title": "Logins Failed in Last Hour",
           "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
           "targets": [{
-            "expr": "count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_failed` [1h]) or vector(0)",
+            "expr": "sum(count_over_time({namespace=`rag-system`, app=`rag-api`} |= `login_failed` [1h])) or vector(0)",
             "datasource": "${datasource}"
           }],
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
