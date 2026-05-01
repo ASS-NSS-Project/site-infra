@@ -153,6 +153,8 @@ Two dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashb
 | `rag-system-overview-grafana-dashboard-ConfigMap.yaml` | RAG System Overview (`rag-overview`) | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution |
 | `rag-system-audit-grafana-dashboard-ConfigMap.yaml` | RAG System Audit Logs (`rag-audit`) | Login/query/ingest stats and Loki log panels for auth, query, ingest, and all namespace events |
 
+In the audit dashboard, stat panels use `... or vector(0)` so empty Loki query windows render `0` instead of `N/A`. Ingest counters are sourced from `app="rag-worker"` log events (`ingest_started`, `ingest_completed`, `ingest_failed`) because ingest execution happens in the worker process.
+
 The app sidebar links "Dashboard ↗" → `https://grafana.nss.jkzl.eu/d/rag-overview` and "Audit Logs ↗" → `https://grafana.nss.jkzl.eu/d/rag-audit`. The in-app DashboardView has been removed.
 
 ## RKE2 Kubernetes component monitoring
