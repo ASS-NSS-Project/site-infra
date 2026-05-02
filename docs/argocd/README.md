@@ -138,6 +138,10 @@ Any secret that is sourced from `terraform/keycloak` but consumed by an app befo
 |-----|--------|------------|
 | traefik (wave 4) | `traefik-keycloak-credentials` | `secret/oidc/traefik` |
 
+## oauth2-proxy ForwardAuth redirect behavior
+
+Longhorn, Prometheus, Alertmanager, and Qdrant use a Traefik `errors` middleware in front of oauth2-proxy (`/oauth2/sign_in?rd={url}`). Keep `statusRewrites` for `401` and `403` set to `302` on these middleware resources; without it, some browsers render a plain `Found` page instead of automatically following the redirect to Keycloak and back to the originally requested app URL.
+
 ---
 
 ## rag-system — Prometheus scraping
