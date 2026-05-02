@@ -11,6 +11,12 @@ spec:
   hostnames:
     - qdrant.nss.jkzl.eu
   rules:
-    - backendRefs:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: qdrant-auth
+      backendRefs:
         - name: qdrant
           port: 6333

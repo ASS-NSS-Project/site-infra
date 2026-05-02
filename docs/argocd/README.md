@@ -49,12 +49,12 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 10 | cnpg-helm | CloudNativePG operator — Keycloak's database provider |
 | 11 | keycloak-operator | Keycloak CRDs + controller (after cnpg wave 10) |
 | 12 | keycloak-config | Keycloak CR + CNPG Cluster + ExternalSecret (needs waves 9-11) |
-| 13 | argocd-config, longhorn-config, oauth2-proxy-helm, oauth2-proxy-config | HTTPRoutes + ExternalSecrets now resolvable; oauth2-proxy ForwardAuth gate for Longhorn/Prometheus/Alertmanager |
+| 13 | argocd-config, longhorn-config, oauth2-proxy-helm, oauth2-proxy-config | HTTPRoutes + ExternalSecrets now resolvable; oauth2-proxy ForwardAuth gate for Longhorn/Prometheus/Alertmanager/Qdrant |
 | 14 | alloy-helm | Log collector |
 | 15 | loki-helm | Log backend (needs Alloy wave 14, uses Longhorn PVC) |
 | 16 | loki-config, kube-prometheus-stack-helm | Loki ruler rules ConfigMap; Prometheus + Grafana + Alertmanager (needs Loki wave 15) |
 | 17 | kube-prometheus-stack-config, rabbitmq-operator | IngressRoutes + Grafana ExternalSecrets; RabbitMQ CRDs |
-| 18 | qdrant-helm, qdrant-config, rabbitmq-config | Vector DB + Qdrant public HTTPRoute + RabbitMQ cluster CR |
+| 18 | qdrant-helm, qdrant-config, rabbitmq-config | Vector DB + Qdrant HTTPRoute with oauth2-proxy ForwardAuth + RabbitMQ cluster CR |
 | 19 | rag-system-config | RAG application (needs all upstream waves) |
 
 Set the wave via annotation: `argocd.argoproj.io/sync-wave: "1"`

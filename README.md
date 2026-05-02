@@ -209,8 +209,8 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 
 All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of four groups managed by `terraform/keycloak`:
 
-| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager | RAG System role |
-|-------|--------|---------|-------|--------------------------------------|-----------------|
+| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager / Qdrant | RAG System role |
+|-------|--------|---------|-------|-----------------------------------------------|-----------------|
 | `rag_admin` | full admin | Admin | full access | allowed | `rag_admin` |
 | `rag_curator` | — | — | no access | blocked | `rag_curator` |
 | `rag_analyst` | — | Viewer | no access | blocked | `rag_analyst` |
@@ -220,7 +220,7 @@ To add a user, put their Gmail address in the corresponding `*_members` variable
 
 `rag_admin` holds the `realm-admin` Keycloak role — full console access across the entire realm.
 
-### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager)
+### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager, Qdrant)
 
 These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `rag_admin` Keycloak group can access them.
 
