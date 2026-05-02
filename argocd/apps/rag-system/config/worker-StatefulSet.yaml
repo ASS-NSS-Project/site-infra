@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/ass-nss-project/rag-api:kost-b551c85
+          image: ghcr.io/ass-nss-project/rag-api:kost-53ebc7f
           command: ["python", "worker.py"]
           ports:
             - name: metrics
