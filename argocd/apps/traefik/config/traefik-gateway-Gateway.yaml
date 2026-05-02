@@ -158,6 +158,19 @@ spec:
           - name: nss-rabbitmq-tls
             namespace: traefik
 
+    - name: websecure-qdrant
+      port: 443
+      protocol: HTTPS
+      hostname: qdrant.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nss-qdrant-tls
+            namespace: traefik
+
     - name: websecure-oauth2
       port: 443
       protocol: HTTPS

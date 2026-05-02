@@ -20,6 +20,7 @@ locals {
     "longhorn",
     "oauth2",
     "prometheus",
+    "qdrant",
     "rabbitmq",
     "rag",
     "vault"

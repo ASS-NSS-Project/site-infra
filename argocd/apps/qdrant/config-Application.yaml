@@ -1,0 +1,32 @@
+# Wave 20 — Qdrant config: public HTTPRoute (depends on qdrant-helm wave 18)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qdrant-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "18"
+spec:
+  revisionHistoryLimit: 0
+  project: infrastructure
+  source:
+    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    targetRevision: kost
+    path: argocd/apps/qdrant/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qdrant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

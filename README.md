@@ -202,6 +202,7 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 | `grafana.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `oauth2.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `prometheus.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `qdrant.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `alertmanager.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 
 ## SSO

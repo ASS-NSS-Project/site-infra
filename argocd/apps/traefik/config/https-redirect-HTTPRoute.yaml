@@ -21,6 +21,7 @@ spec:
     - prometheus.nss.jkzl.eu
     - alertmanager.nss.jkzl.eu
     - rabbitmq.nss.jkzl.eu
+    - qdrant.nss.jkzl.eu
     - rag.nss.jkzl.eu
   rules:
     - filters:

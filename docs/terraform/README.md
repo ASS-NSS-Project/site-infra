@@ -10,7 +10,7 @@ Five independent root modules — each has its own GCS backend state and must be
 
 `openstack/` provisions all OpenStack resources and writes two files that Ansible needs: `ansible/inventory/host_vars/cp-0.yml` and `ansible/inventory/group_vars/all/terraform.yml`. If those files are missing, re-run `terraform apply` in `openstack/`.
 
-`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains.
+`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`).
 
 `vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials, and sets up Kubernetes auth for ESO.
 
@@ -238,4 +238,3 @@ bash terraform/openstack/cleanup-network.sh
 ```
 
 The script removes the router, subnet, and network in the correct dependency order, then Terraform creates them fresh on the next `apply`.
-
