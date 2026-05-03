@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: worker-ingest
-          image: ghcr.io/ass-nss-project/webrag-backend:kost-2750ab3
+          image: ghcr.io/ass-nss-project/webrag-backend:kost-9d0b9d2
           command: ["python", "worker_ingest.py"]
           ports:
             - name: metrics
