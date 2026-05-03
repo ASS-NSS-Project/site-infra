@@ -12,7 +12,7 @@ spec:
   revisionHistoryLimit: 0
   project: infrastructure
   source:
-    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
     targetRevision: kost
     path: argocd/apps/vault/config
   destination:

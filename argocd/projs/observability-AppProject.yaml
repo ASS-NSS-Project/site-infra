@@ -8,7 +8,7 @@ metadata:
 spec:
   description: Metrics, logs, and dashboards
   sourceRepos:
-    - https://github.com/ASS-NSS-Project/site-infra
+    - https://github.com/ASS-NSS-Project/enc-ass-nss-project
     - https://prometheus-community.github.io/helm-charts
     - https://grafana.github.io/helm-charts
   destinations:

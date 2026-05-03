@@ -18,7 +18,7 @@ spec:
       helm:
         valueFiles:
           - $values/argocd/apps/kube-prometheus-stack/helm/values.yaml
-    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+    - repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
       targetRevision: kost
       ref: values
   destination:

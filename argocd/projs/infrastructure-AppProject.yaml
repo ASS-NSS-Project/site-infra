@@ -8,7 +8,7 @@ metadata:
 spec:
   description: Core cluster infrastructure
   sourceRepos:
-    - https://github.com/ASS-NSS-Project/site-infra
+    - https://github.com/ASS-NSS-Project/enc-ass-nss-project
     - https://traefik.github.io/charts
     - https://charts.jetstack.io
     - https://charts.longhorn.io

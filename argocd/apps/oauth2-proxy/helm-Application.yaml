@@ -20,7 +20,7 @@ spec:
         releaseName: oauth2-proxy
         valueFiles:
           - $values/argocd/apps/oauth2-proxy/helm/values.yaml
-    - repoURL: https://github.com/ASS-NSS-Project/site-infra
+    - repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
       targetRevision: kost
       ref: values
   destination:
@@ -47,7 +47,7 @@ spec:
   revisionHistoryLimit: 0
   project: infrastructure
   source:
-    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
     targetRevision: kost
     path: argocd/apps/oauth2-proxy/config
   destination:

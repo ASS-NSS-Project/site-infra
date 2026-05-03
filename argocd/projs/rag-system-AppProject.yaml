@@ -8,7 +8,7 @@ metadata:
 spec:
   description: RAG system — API, worker, frontend, and backing services
   sourceRepos:
-    - https://github.com/ASS-NSS-Project/site-infra
+    - https://github.com/ASS-NSS-Project/enc-ass-nss-project
     - https://github.com/ASS-NSS-Project/repo
   destinations:
     - server: https://kubernetes.default.svc

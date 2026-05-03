@@ -75,7 +75,7 @@ spec:
   revisionHistoryLimit: 0
   project: infrastructure    # or observability
   source:
-    repoURL: https://github.com/ASS-NSS-Project/site-infra
+    repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
     targetRevision: kost
     path: argocd/apps/<app>/config
   destination:
