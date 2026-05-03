@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "site-infra"
+    bucket = "enc-ass-nss-project"
     prefix = "terraform/gcp/state"
   }
 

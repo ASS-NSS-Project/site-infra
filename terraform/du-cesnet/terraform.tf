@@ -1,7 +1,7 @@
 terraform {
   backend "gcs" {
-    bucket = "site-infra"
-    prefix = "terraform/metacentrum-s3/state"
+    bucket = "enc-ass-nss-project"
+    prefix = "terraform/du-cesnet/state"
   }
 
   required_providers {
