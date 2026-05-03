@@ -71,7 +71,7 @@ Each step gates the next — do not skip ahead.
 Create the GCS bucket for Terraform state (one-time, before any `terraform init`):
 
 ```bash
-gcloud storage buckets create gs://site-infra \
+gcloud storage buckets create gs://enc-ass-nss-project \
     --default-storage-class=STANDARD \
     --location=US \
     --uniform-bucket-level-access \
@@ -172,7 +172,7 @@ cd terraform/gcp && terraform destroy
 Delete the GCS state bucket last (this is irreversible):
 
 ```bash
-gcloud storage rm -r gs://site-infra
+gcloud storage rm -r gs://enc-ass-nss-project
 ```
 
 ## Secrets management
@@ -416,13 +416,12 @@ Healing Jobs (background, 5-30 min)
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **Metadata** | CNPG Postgres | Documents, chunks with status tracking |
-| **Content** | CESNET S3 (3 buckets) | Evidence, markdown, chunks.json, optional embeddings |
+| **Content** | CESNET S3 (2 RAG buckets + Longhorn backup bucket) | Evidence, markdown, chunks.json |
 | **Vectors** | Qdrant | Rebuilable hot cache for fast retrieval |
 
 **S3 Buckets:**
 - `rag-evidence-prod` — Screenshots, HTML dumps (evidence)
 - `rag-documents-prod` — Processed markdown, chunks.json
-- `rag-embeddings-prod` — Optional backup of BGE-M3 vectors (currently disabled)
 
 ### Resilience Features
 
