@@ -44,7 +44,7 @@ resource "vault_kv_secret_v2" "oidc_traefik" {
 
 resource "vault_kv_secret_v2" "oidc_rag_system" {
   mount = "secret"
-  name  = "oidc/rag-system"
+  name  = "oidc/webrag"
 
   data_json = jsonencode({
     client_id     = keycloak_openid_client.rag_system.client_id

@@ -41,7 +41,7 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: qdrant
     - server: https://kubernetes.default.svc
-      namespace: rag-system
+      namespace: webrag
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

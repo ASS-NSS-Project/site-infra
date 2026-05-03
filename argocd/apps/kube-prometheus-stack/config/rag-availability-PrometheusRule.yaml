@@ -10,21 +10,21 @@ spec:
     - name: rag.availability
       rules:
         - alert: RagApiDown
-          expr: kube_deployment_status_replicas_available{namespace="rag-system", deployment="rag-api"} == 0
+          expr: kube_deployment_status_replicas_available{namespace="webrag", deployment="webrag-api"} == 0
           for: 1m
           labels:
             rag_app: availability
             severity: critical
           annotations:
             summary: "RAG API is down"
-            description: "No rag-api replicas are available. The RAG system is not operational."
+            description: "No webrag-api replicas are available. The RAG system is not operational."
 
         - alert: RagFrontendDown
-          expr: kube_deployment_status_replicas_available{namespace="rag-system", deployment="rag-frontend"} == 0
+          expr: kube_deployment_status_replicas_available{namespace="webrag", deployment="webrag-frontend"} == 0
           for: 1m
           labels:
             rag_app: availability
             severity: critical
           annotations:
             summary: "RAG Frontend is down"
-            description: "No rag-frontend replicas are available. The UI is unreachable."
+            description: "No webrag-frontend replicas are available. The UI is unreachable."

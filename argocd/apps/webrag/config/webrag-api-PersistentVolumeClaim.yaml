@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: hf-cache-rag-api
-  namespace: rag-system
+  name: webrag-api
+  namespace: webrag
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: longhorn

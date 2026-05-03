@@ -1,8 +1,8 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: rag-pg
-  namespace: rag-system
+  name: webrag-pg
+  namespace: webrag
 spec:
   instances: 1
   resources:

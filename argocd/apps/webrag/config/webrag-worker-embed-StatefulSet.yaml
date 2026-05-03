@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rag-worker-embed
-  namespace: rag-system
+  name: webrag-worker-embed
+  namespace: webrag
 spec:
   # Scale to 1-3 for parallel embedding throughput.
   # Each replica gets its own hf-cache PVC (ReadWriteOnce).
   replicas: 3
-  serviceName: rag-worker-embed-headless
+  serviceName: webrag-worker-embed-headless
   selector:
     matchLabels:
-      app: rag-worker-embed
+      app: webrag-worker-embed
   template:
     metadata:
       labels:
-        app: rag-worker-embed
+        app: webrag-worker-embed
     spec:
       containers:
         - name: worker-embed
@@ -39,51 +39,51 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: password
             - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: host
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: dbname
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@webrag-rabbitmq.webrag.svc:5672/"
             - name: QDRANT_URL
               value: "http://qdrant.qdrant.svc.cluster.local:6333"
             - name: S3_ENDPOINT_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-endpoint-url
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-access-key
             - name: S3_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-secret-key
             - name: S3_REGION
               value: us-east-1

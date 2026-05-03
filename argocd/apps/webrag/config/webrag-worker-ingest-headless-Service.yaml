@@ -1,0 +1,12 @@
+# Headless Service required by the webrag-worker-ingest StatefulSet.
+# StatefulSet creates one hf-cache PVC per replica automatically via volumeClaimTemplates
+# (hf-cache-webrag-worker-ingest-0, hf-cache-webrag-worker-ingest-1, …) — no standalone PVC needed.
+apiVersion: v1
+kind: Service
+metadata:
+  name: webrag-worker-ingest-headless
+  namespace: webrag
+spec:
+  clusterIP: None
+  selector:
+    app: webrag-worker-ingest

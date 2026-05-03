@@ -186,9 +186,9 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 | `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` | ESO |
 | `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | ESO |
 | `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` | ESO |
-| `secret/oidc/webrag` | `rag-secrets` (`keycloak-client-id/secret`) | `webrag` | ESO |
-| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `webrag` | ESO |
-| `secret/webrag/*` | `rag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `webrag` | ESO |
+| `secret/oidc/webrag` | `webrag-secrets` (`keycloak-client-id/secret`) | `webrag` | ESO |
+| `secret/oidc/rag-rbac-sa` | `webrag-secrets` (`keycloak-admin-client-id/secret`) | `webrag` | ESO |
+| `secret/rag` | `webrag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `webrag` | ESO |
 | `secret/longhorn-s3` | `longhorn-s3-backup` | `longhorn-system` | ESO |
 | `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` | ESO |
 
@@ -376,7 +376,7 @@ The RAG application runs in the `webrag` namespace (ArgoCD wave 19-21) with resi
 | Resource | Type | Purpose | Replicas |
 |----------|------|---------|----------|
 | `webrag-api` | Deployment | FastAPI API + scheduler (healing jobs) | 2 |
-| `webrag-worker` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
+| `webrag-worker-ingest` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
 | `webrag-worker-embed` | StatefulSet | Embedding worker (BGE-M3, 1-5min) | 1 |
 | `webrag-frontend` | Deployment | Vue 3 SPA + nginx | 2 |
 | `webrag-pg` | CNPG Cluster | PostgreSQL 16 with metadata + chunks | 3 (HA) |
@@ -456,7 +456,7 @@ UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE
 
 **Prometheus metrics:**
 - `webrag-api` on port 8000 (scraped by webrag-api-ServiceMonitor)
-- `webrag-worker` on port 9090 (scraped by webrag-worker-ServiceMonitor)
+- `webrag-worker-ingest` on port 9090 (scraped by webrag-worker-ingest-ServiceMonitor)
 - `webrag-worker-embed` on port 9091 (scraped by webrag-worker-embed-ServiceMonitor)
 
 **Grafana dashboards:**
@@ -474,7 +474,7 @@ UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE
 
 **Ingest throughput:**
 ```bash
-kubectl scale statefulset -n webrag webrag-worker --replicas=5
+kubectl scale statefulset -n webrag webrag-worker-ingest --replicas=5
 ```
 
 **Embedding throughput:**

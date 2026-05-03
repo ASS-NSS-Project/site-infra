@@ -1,14 +1,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: rag-worker-embed
-  namespace: rag-system
+  name: webrag-worker-embed
+  namespace: webrag
   labels:
     release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
-      app: rag-worker-embed
+      app: webrag-worker-embed
   endpoints:
     - port: metrics
       interval: 30s

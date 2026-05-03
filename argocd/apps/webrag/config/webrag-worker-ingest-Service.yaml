@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rag-worker
-  namespace: rag-system
+  name: webrag-worker-ingest
+  namespace: webrag
   labels:
-    app: rag-worker
+    app: webrag-worker-ingest
 spec:
   selector:
-    app: rag-worker
+    app: webrag-worker-ingest
   ports:
     - name: metrics
       port: 9090

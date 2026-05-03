@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rag-frontend
-  namespace: rag-system
+  name: webrag-frontend
+  namespace: webrag
 spec:
   selector:
-    app: rag-frontend
+    app: webrag-frontend
   ports:
     - port: 80
       targetPort: 80

@@ -14,20 +14,21 @@ longhorn_s3_access_key = ""
 longhorn_s3_secret_key = ""
 
 # RAG system
-rag_jwt_secret      = ""
-rag_admin_password  = ""
-rag_s3_endpoint_url = ""
-rag_s3_access_key   = ""
-rag_s3_secret_key   = ""
-rag_llm_base_url    = ""
-rag_llm_api_key     = ""
-rag_llm_model       = ""
-rag_vlm_model       = ""
+webrag_jwt_secret      = ""
+webrag_admin_password  = ""
+webrag_s3_endpoint_url = ""
+webrag_s3_access_key   = ""
+webrag_s3_secret_key   = ""
 
-# Optional external LLM providers — leave as "" to disable; set to enable in the query UI
-rag_openai_api_key    = ""   # enables GPT-4o, GPT-4o Mini
-rag_gemini_api_key    = ""   # enables Gemini 2.5 Pro, Gemini 2.5 Flash
-rag_anthropic_api_key = ""   # enables Claude Opus 4.7, Sonnet 4.6
+# LLM — text generation (any OpenAI-compatible endpoint)
+webrag_query_base_url = ""
+webrag_query_api_key  = ""
+webrag_query_model    = ""
+
+# VLM — vision extraction (can differ from LLM endpoint)
+webrag_vlm_base_url = ""
+webrag_vlm_api_key  = ""
+webrag_vlm_model    = ""
 
 # Alertmanager
 telegram_bot_token = ""

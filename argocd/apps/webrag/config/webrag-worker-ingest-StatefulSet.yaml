@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rag-worker
-  namespace: rag-system
+  name: webrag-worker-ingest
+  namespace: webrag
 spec:
   # Scale to 3, 5, 7, 9, … for parallel ingest throughput.
-  # Each replica gets its own hf-cache PVC (hf-cache-rag-worker-0, hf-cache-rag-worker-1, …)
+  # Each replica gets its own hf-cache PVC (hf-cache-webrag-worker-ingest-0, hf-cache-webrag-worker-ingest-1, …)
   # so the BGE-M3 model is downloaded once per pod and never shared across RWO volumes.
   replicas: 3
-  serviceName: rag-worker-headless
+  serviceName: webrag-worker-ingest-headless
   selector:
     matchLabels:
-      app: rag-worker
+      app: webrag-worker-ingest
   template:
     metadata:
       labels:
-        app: rag-worker
+        app: webrag-worker-ingest
     spec:
       containers:
-        - name: worker
+        - name: worker-ingest
           image: ghcr.io/ass-nss-project/webrag-backend:kost-f1aa2ca
-          command: ["python", "worker.py"]
+          command: ["python", "worker_ingest.py"]
           ports:
             - name: metrics
               containerPort: 9090
@@ -40,51 +40,51 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: password
             - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: host
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: dbname
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@webrag-rabbitmq.webrag.svc:5672/"
             - name: QDRANT_URL
               value: "http://qdrant.qdrant.svc.cluster.local:6333"
             - name: S3_ENDPOINT_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-endpoint-url
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-access-key
             - name: S3_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-secret-key
             - name: S3_REGION
               value: us-east-1
@@ -96,33 +96,43 @@ spec:
               value: rag-documents-prod
             - name: S3_BUCKET_EMBEDDINGS
               value: rag-embeddings-prod
-            - name: AIAAS_BASE_URL
+            - name: QUERY_BASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-base-url
-            - name: AIAAS_API_KEY
+                  name: webrag-secrets
+                  key: query-base-url
+            - name: QUERY_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-api-key
-            - name: AIAAS_LLM_MODEL
+                  name: webrag-secrets
+                  key: query-api-key
+            - name: QUERY_MODEL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-model
-            - name: AIAAS_VLM_MODEL
+                  name: webrag-secrets
+                  key: query-model
+            - name: VLM_BASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
+                  key: vlm-base-url
+            - name: VLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webrag-secrets
+                  key: vlm-api-key
+            - name: VLM_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: webrag-secrets
                   key: vlm-model
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: jwt-secret
             - name: SERVICE_NAME
-              value: worker
+              value: worker_ingest
   volumeClaimTemplates:
     - metadata:
         name: hf-cache

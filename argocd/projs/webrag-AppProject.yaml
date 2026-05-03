@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: rag-system
+  name: webrag
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
@@ -12,7 +12,7 @@ spec:
     - https://github.com/ASS-NSS-Project/repo
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: rag-system
+      namespace: webrag
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

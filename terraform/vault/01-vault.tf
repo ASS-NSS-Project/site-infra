@@ -81,79 +81,69 @@ resource "vault_kv_secret_v2" "longhorn_s3" {
   })
 }
 
-variable "rag_jwt_secret" {
+variable "webrag_jwt_secret" {
   description = "RAG system JWT signing secret"
   type        = string
   sensitive   = true
 }
 
 
-variable "rag_admin_password" {
+variable "webrag_admin_password" {
   description = "RAG system first admin password"
   type        = string
   sensitive   = true
 }
 
-variable "rag_s3_endpoint_url" {
+variable "webrag_s3_endpoint_url" {
   description = "S3-compatible endpoint URL for RAG evidence/document storage"
   type        = string
   sensitive   = true
 }
 
-variable "rag_s3_access_key" {
+variable "webrag_s3_access_key" {
   description = "S3 access key for RAG storage"
   type        = string
   sensitive   = true
 }
 
-variable "rag_s3_secret_key" {
+variable "webrag_s3_secret_key" {
   description = "S3 secret key for RAG storage"
   type        = string
   sensitive   = true
 }
 
-variable "rag_llm_base_url" {
-  description = "LLM API base URL (Ollama or upstream)"
+variable "webrag_query_base_url" {
+  description = "LLM API base URL for query (any OpenAI-compatible endpoint)"
   type        = string
   sensitive   = true
 }
 
-variable "rag_llm_api_key" {
-  description = "LLM API key (empty string for local Ollama)"
+variable "webrag_query_api_key" {
+  description = "LLM API key for query"
   type        = string
   sensitive   = true
 }
 
-variable "rag_llm_model" {
-  description = "LLM model name (text generation)"
+variable "webrag_query_model" {
+  description = "LLM model name for text generation"
   type        = string
 }
 
-variable "rag_vlm_model" {
-  description = "VLM model name (vision extraction)"
-  type        = string
-}
-
-# Optional external LLM provider keys — leave empty to disable the provider in the UI
-variable "rag_openai_api_key" {
-  description = "OpenAI API key (enables GPT-4o / GPT-4o Mini in query UI)"
+variable "webrag_vlm_base_url" {
+  description = "VLM API base URL for vision extraction (any OpenAI-compatible endpoint)"
   type        = string
   sensitive   = true
-  default     = ""
 }
 
-variable "rag_gemini_api_key" {
-  description = "Google Gemini API key (enables Gemini 2.5 Pro / Flash in query UI)"
+variable "webrag_vlm_api_key" {
+  description = "VLM API key for vision extraction"
   type        = string
   sensitive   = true
-  default     = ""
 }
 
-variable "rag_anthropic_api_key" {
-  description = "Anthropic API key (enables Claude Opus 4.7 / Sonnet 4.6 directly)"
+variable "webrag_vlm_model" {
+  description = "VLM model name for vision extraction"
   type        = string
-  sensitive   = true
-  default     = ""
 }
 
 resource "vault_kv_secret_v2" "rag" {
@@ -161,18 +151,17 @@ resource "vault_kv_secret_v2" "rag" {
   name  = "rag"
 
   data_json = jsonencode({
-    jwt-secret        = var.rag_jwt_secret
-    admin-password    = var.rag_admin_password
-    s3-endpoint-url   = var.rag_s3_endpoint_url
-    s3-access-key     = var.rag_s3_access_key
-    s3-secret-key     = var.rag_s3_secret_key
-    llm-base-url      = var.rag_llm_base_url
-    llm-api-key       = var.rag_llm_api_key
-    llm-model         = var.rag_llm_model
-    vlm-model         = var.rag_vlm_model
-    openai-api-key    = var.rag_openai_api_key
-    gemini-api-key    = var.rag_gemini_api_key
-    anthropic-api-key = var.rag_anthropic_api_key
+    jwt-secret      = var.webrag_jwt_secret
+    admin-password  = var.webrag_admin_password
+    s3-endpoint-url = var.webrag_s3_endpoint_url
+    s3-access-key   = var.webrag_s3_access_key
+    s3-secret-key   = var.webrag_s3_secret_key
+    query-base-url  = var.webrag_query_base_url
+    query-api-key   = var.webrag_query_api_key
+    query-model     = var.webrag_query_model
+    vlm-base-url    = var.webrag_vlm_base_url
+    vlm-api-key     = var.webrag_vlm_api_key
+    vlm-model       = var.webrag_vlm_model
   })
 }
 

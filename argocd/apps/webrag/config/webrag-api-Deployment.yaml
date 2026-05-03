@@ -50,36 +50,36 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: password
             - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: host
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: rag-pg-app
+                  name: webrag-pg-app
                   key: dbname
             # RabbitMQ — from RabbitMQ Cluster Operator secret
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: username
             - name: RABBITMQ_PASS
               valueFrom:
                 secretKeyRef:
-                  name: rag-rabbitmq-default-user
+                  name: webrag-rabbitmq-default-user
                   key: password
             - name: RABBITMQ_URL
-              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rag-rabbitmq.rag-system.svc:5672/"
+              value: "amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@webrag-rabbitmq.webrag.svc:5672/"
             # Qdrant
             - name: QDRANT_URL
               value: "http://qdrant.qdrant.svc.cluster.local:6333"
@@ -87,17 +87,17 @@ spec:
             - name: S3_ENDPOINT_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-endpoint-url
             - name: S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-access-key
             - name: S3_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: s3-secret-key
             - name: S3_REGION
               value: us-east-1
@@ -128,39 +128,50 @@ spec:
               value: "10.0"
             - name: AUTO_RESYNC_ON_DRIFT
               value: "true"
-            # AIaaS (shared base URL + key for LLM and VLM)
-            - name: AIAAS_BASE_URL
+            # LLM (text generation)
+            - name: QUERY_BASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-base-url
-            - name: AIAAS_API_KEY
+                  name: webrag-secrets
+                  key: query-base-url
+            - name: QUERY_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-api-key
-            - name: AIAAS_LLM_MODEL
+                  name: webrag-secrets
+                  key: query-api-key
+            - name: QUERY_MODEL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
-                  key: llm-model
-            - name: AIAAS_VLM_MODEL
+                  name: webrag-secrets
+                  key: query-model
+            # VLM (vision extraction)
+            - name: VLM_BASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
+                  key: vlm-base-url
+            - name: VLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webrag-secrets
+                  key: vlm-api-key
+            - name: VLM_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: webrag-secrets
                   key: vlm-model
             # Auth
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: jwt-secret
             - name: FIRST_ADMIN_EMAIL
               value: "admin@example.com"
             - name: FIRST_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: admin-password
             # Keycloak OIDC — URL/realm/redirect are non-secret config
             - name: KEYCLOAK_URL
@@ -172,37 +183,18 @@ spec:
             - name: KEYCLOAK_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: keycloak-client-id
             - name: KEYCLOAK_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: rag-secrets
+                  name: webrag-secrets
                   key: keycloak-client-secret
             - name: FRONTEND_URL
               value: "https://rag.nss.jkzl.eu"
-            # Optional external LLM providers — empty string disables the provider
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: openai-api-key
-                  optional: true
-            - name: GEMINI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: gemini-api-key
-                  optional: true
-            - name: ANTHROPIC_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: anthropic-api-key
-                  optional: true
             - name: SERVICE_NAME
               value: api
       volumes:
         - name: hf-cache
           persistentVolumeClaim:
-            claimName: hf-cache-rag-api
+            claimName: webrag-api

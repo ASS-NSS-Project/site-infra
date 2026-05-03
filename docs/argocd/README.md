@@ -55,7 +55,7 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 16 | loki-config, kube-prometheus-stack-helm | Loki ruler ConfigMap + Prometheus/Grafana/Alertmanager Helm |
 | 17 | kube-prometheus-stack-config, rabbitmq-helm | Grafana dashboards/OIDC ExternalSecrets + RabbitMQ Cluster Operator |
 | 18 | qdrant-helm, rabbitmq-config | Qdrant Helm + RabbitMQ cluster CR |
-| 19 | rag-system-config | RAG application (Deployments, Services, HTTPRoute, CNPG Cluster, ServiceMonitors, ConfigMaps) |
+| 19 | webrag-config | RAG application (Deployments, Services, HTTPRoute, CNPG Cluster, ServiceMonitors, ConfigMaps) |
 
 Set the wave via annotation: `argocd.argoproj.io/sync-wave: "1"`
 
@@ -144,11 +144,11 @@ Longhorn, Prometheus, Alertmanager, and Qdrant use a Traefik `errors` middleware
 
 ---
 
-## rag-system — Prometheus scraping
+## webrag — Prometheus scraping
 
-`apps/rag-system/config/rag-api-ServiceMonitor.yaml` tells kube-prometheus-stack to scrape the RAG API's `/metrics` endpoint every 30 s. The `rag-api` Service (`rag-api-Service.yaml`) exposes port `http` (8000) with a matching `app: rag-api` metadata label so the ServiceMonitor selector can find it.
+`apps/webrag/config/webrag-api-ServiceMonitor.yaml` tells kube-prometheus-stack to scrape the RAG API's `/metrics` endpoint every 30 s. The `webrag-api` Service (`webrag-api-Service.yaml`) exposes port `http` (8000) with a matching `app: webrag-api` metadata label so the ServiceMonitor selector can find it.
 
-Worker ingest metrics are scraped separately via `apps/rag-system/config/rag-worker-ServiceMonitor.yaml`. The worker process exposes Prometheus metrics with `start_http_server(9090)` (not via uvicorn), so `rag-worker-Service.yaml` exposes port `metrics` on `9090` and the ServiceMonitor targets that port.
+Worker ingest metrics are scraped separately via `apps/webrag/config/webrag-worker-ingest-ServiceMonitor.yaml`. The worker process exposes Prometheus metrics with `start_http_server(9090)` (not via uvicorn), so `webrag-worker-ingest-Service.yaml` exposes port `metrics` on `9090` and the ServiceMonitor targets that port.
 
 The `prometheusSpec` in `kube-prometheus-stack/helm/values.yaml` sets `serviceMonitorSelectorNilUsesHelmValues: false` (and the same for podMonitor and rule) so that the Prometheus CR gets a nil selector, which the Prometheus Operator interprets as "select everything". Without this flag, the kube-prometheus-stack chart auto-generates `{matchLabels: {release: <helm-release-name>}}` — but ArgoCD sets the release name to the Application name (`kube-prometheus-stack-helm`), so chart-generated ServiceMonitors and custom ones in other namespaces would not be discovered. `serviceMonitorNamespaceSelector: {}` (and matching pair for pod/rule) ensures Prometheus watches all namespaces.
 
@@ -159,7 +159,7 @@ Two dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashb
 | `rag-system-overview-grafana-dashboard-ConfigMap.yaml` | RAG System Overview (`rag-overview`) | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution |
 | `rag-system-audit-grafana-dashboard-ConfigMap.yaml` | RAG System Audit Logs (`rag-audit`) | Login/query/ingest stats and Loki log panels for auth, query, ingest, and all namespace events |
 
-In the audit dashboard, stat panels use `... or vector(0)` so empty Loki query windows render `0` instead of `N/A`. Ingest counters are sourced from `app="rag-worker"` log events (`ingest_started`, `ingest_completed`, `ingest_failed`) because ingest execution happens in the worker process.
+In the audit dashboard, stat panels use `... or vector(0)` so empty Loki query windows render `0` instead of `N/A`. Ingest counters are sourced from `app="webrag-worker-ingest"` log events (`ingest_started`, `ingest_completed`, `ingest_failed`) because ingest execution happens in the worker process.
 
 The app sidebar links "Dashboard ↗" → `https://grafana.nss.jkzl.eu/d/rag-overview` and "Audit Logs ↗" → `https://grafana.nss.jkzl.eu/d/rag-audit`. The in-app DashboardView has been removed.
 
@@ -185,10 +185,10 @@ All RAG alerts are routed to a shared Telegram group via two `AlertmanagerConfig
 | Alert | Source | File | Trigger |
 |-------|--------|------|---------|
 | `RagCaptchaIncident` | Prometheus | `rag-captcha-PrometheusRule.yaml` | `rag_captcha_incidents_total` counter increases |
-| `RagCaptchaBlock` | Loki | `loki-rules-ConfigMap.yaml` | `captcha_detected` log event in `rag-system` |
-| `RagIngestFailed` | Loki | `loki-rules-ConfigMap.yaml` | `ingest_failed` log event in `rag-system` |
-| `RagApiDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `rag-api` replicas available == 0 for 1 m |
-| `RagFrontendDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `rag-frontend` replicas available == 0 for 1 m |
+| `RagCaptchaBlock` | Loki | `loki-rules-ConfigMap.yaml` | `captcha_detected` log event in `webrag` |
+| `RagIngestFailed` | Loki | `loki-rules-ConfigMap.yaml` | `ingest_failed` log event in `webrag` |
+| `RagApiDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `webrag-api` replicas available == 0 for 1 m |
+| `RagFrontendDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `webrag-frontend` replicas available == 0 for 1 m |
 
 ### Routing
 
@@ -203,9 +203,9 @@ Prometheus Operator wraps every `AlertmanagerConfig` sub-route with an implicit 
 
 ---
 
-## rag-system API HTTPRoute — `/api` prefix
+## webrag HTTPRoute — `/api` prefix
 
-`apps/rag-system/config/rag-system-HTTPRoute.yaml` exposes an allowlist of API prefixes under `/api` (`/api/auth`, `/api/sources`, `/api/query`, `/api/incidents`, `/api/documents`, `/api/experiments`, `/api/health`) and strips `/api` before forwarding (`URLRewrite` + `ReplacePrefixMatch: /`). This keeps script-friendly public API paths while preventing accidental exposure of internal-only paths such as `/metrics`.
+`apps/webrag/config/webrag-system-HTTPRoute.yaml` exposes an allowlist of API prefixes under `/api` (`/api/auth`, `/api/sources`, `/api/query`, `/api/incidents`, `/api/documents`, `/api/experiments`, `/api/health`) and strips `/api` before forwarding (`URLRewrite` + `ReplacePrefixMatch: /`). This keeps script-friendly public API paths while preventing accidental exposure of internal-only paths such as `/metrics`.
 
 ```bash
 # Login
@@ -224,19 +224,19 @@ The `/api/*` allowlist rules are placed before the catch-all frontend rule so Ga
 
 ---
 
-## rag-system worker — StatefulSet
+## webrag workers — StatefulSets
 
-`apps/rag-system/config/worker-Deployment.yaml` is a **StatefulSet** (not a Deployment). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:
+`apps/webrag/config/webrag-worker-ingest-StatefulSet.yaml` and `webrag-worker-embed-StatefulSet.yaml` are **StatefulSets** (not Deployments). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:
 
 ```text
-hf-cache-rag-worker-0   (5 Gi, Longhorn RWO)
-hf-cache-rag-worker-1   (5 Gi, Longhorn RWO)
+hf-cache-webrag-worker-ingest-0   (5 Gi, Longhorn RWO)
+hf-cache-webrag-worker-ingest-1   (5 Gi, Longhorn RWO)
 …
 ```
 
 Worker resource envelope is set in `worker-StatefulSet.yaml` to `requests: 250m / 512Mi` and `limits: 4 CPU / 8Gi` to reduce OOM risk during embedding spikes.
 
-`apps/rag-system/config/rag-worker-PersistentVolumeClaim.yaml` holds the **headless Service** (`clusterIP: None`) required by the StatefulSet — not a PVC (the StatefulSet owns its own PVCs). The old standalone `rag-worker` PVC was replaced by the `volumeClaimTemplates` entry.
+`apps/webrag/config/webrag-worker-ingest-headless-Service.yaml` holds the **headless Service** (`clusterIP: None`) required by the StatefulSet — not a PVC (the StatefulSet owns its own PVCs). The old standalone `webrag-worker-ingest` PVC was replaced by the `volumeClaimTemplates` entry.
 
 **Scaling workers:** set `replicas` in `worker-Deployment.yaml` to any odd number (1, 3, 5, 7, 9, …). Each replica independently pulls jobs from the shared RabbitMQ `ingest` queue (`prefetch_count=1`) — N replicas process N jobs in parallel with no coordination needed.
 

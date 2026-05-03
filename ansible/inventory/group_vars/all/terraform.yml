@@ -2,4 +2,4 @@
 # These variables are derived from live OpenStack resources.
 
 # API LB public floating IP — used in kubeconfig and RKE2 TLS SANs
-openstack_lb_ip: "195.113.167.163"
+openstack_lb_ip: "195.113.167.147"

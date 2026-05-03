@@ -1,8 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: rag-system
-  namespace: rag-system
+  name: webrag-system
+  namespace: webrag
 spec:
   parentRefs:
     - name: traefik-gateway
@@ -16,49 +16,49 @@ spec:
             type: PathPrefix
             value: /auth
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /sources
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /query
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /incidents
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /documents
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /experiments
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
             type: PathPrefix
             value: /health
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -71,7 +71,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -84,7 +84,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -97,7 +97,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -110,7 +110,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -123,7 +123,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -136,7 +136,7 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - matches:
         - path:
@@ -149,8 +149,8 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: rag-api
+        - name: webrag-api
           port: 8000
     - backendRefs:
-        - name: rag-frontend
+        - name: webrag-frontend
           port: 80

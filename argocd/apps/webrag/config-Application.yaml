@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: rag-system-config
+  name: webrag-config
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,14 +10,14 @@ metadata:
     argocd.argoproj.io/sync-wave: "19"
 spec:
   revisionHistoryLimit: 0
-  project: rag-system
+  project: webrag
   source:
     repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
     targetRevision: kost
-    path: argocd/apps/rag-system/config
+    path: argocd/apps/webrag/config
   destination:
     server: https://kubernetes.default.svc
-    namespace: rag-system
+    namespace: webrag
   syncPolicy:
     automated:
       prune: true

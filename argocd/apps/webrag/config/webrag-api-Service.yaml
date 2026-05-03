@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rag-api
-  namespace: rag-system
+  name: webrag-api
+  namespace: webrag
   labels:
-    app: rag-api
+    app: webrag-api
 spec:
   selector:
-    app: rag-api
+    app: webrag-api
   ports:
     - name: http
       port: 8000
