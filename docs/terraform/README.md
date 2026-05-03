@@ -12,7 +12,7 @@ Six independent root modules — each has its own GCS backend state and must be 
 
 `cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`, `oauth2.nss.jkzl.eu`, `rag.nss.jkzl.eu`, `rabbitmq.nss.jkzl.eu`).
 
-`metacentrum-s3/` provisions the Longhorn S3 backup bucket on CESNET Metacentrum object storage. Independent — run anytime before the Longhorn backup configuration is applied by ArgoCD.
+`du-cesnet/` provisions CESNET S3 buckets used in production (`longhorn-backups`, `rag-evidence-prod`, `rag-documents-prod`). Independent — run anytime before the Longhorn backup configuration is applied by ArgoCD and before RAG production secrets are validated.
 
 `vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials (including RAG system LLM/VLM/S3 credentials, Longhorn S3 backup credentials, Keycloak OIDC secrets), and sets up Kubernetes auth for ESO.
 
@@ -49,9 +49,10 @@ terraform/
 ├── gcp/
 │   ├── 00-providers.tf  # GCS backend + GCP provider
 │   └── 01-kms.tf        # KMS key ring, crypto key, service account for Vault auto-unseal
-├── metacentrum-s3/
+├── du-cesnet/
 │   ├── terraform.tf     # GCS backend + S3 provider (CESNET Metacentrum)
-│   └── 01-buckets.tf    # Longhorn backup bucket
+│   ├── 01-buckets.tf    # Longhorn + RAG production buckets
+│   └── 02-bucket-policies.tf # Bucket policies (deny anonymous)
 ├── openstack/
 │   ├── 00-providers.tf       # GCS backend + OpenStack provider
 │   ├── 01-network.tf         # router, subnet, network
@@ -147,7 +148,7 @@ After the rollout completes, `https://longhorn.nss.jkzl.eu`, `https://prometheus
 
 `terraform.tfvars` is gitignored — never commit it. `terraform.tfvars.example` is committed with placeholder values — keep it in sync with actual variables when adding new ones. CI enforces this automatically for `vault/` and `keycloak/` via `.github/scripts/check-tfvars-example.sh`.
 
-All four modules use the GCS backend (`site-infra` bucket) — authenticate with `gcloud auth application-default login`. The `openstack/` module also needs `clouds.yaml` for OpenStack credentials (gitignored).
+All four modules use the GCS backend (`enc-ass-nss-project` bucket) — authenticate with `gcloud auth application-default login`. The `openstack/` module also needs `clouds.yaml` for OpenStack credentials (gitignored).
 
 ## Lock files
 
@@ -202,7 +203,7 @@ The root cause of Traefik being stuck is that the `traefik-keycloak-credentials`
 `terraform init` may succeed (the bucket is reachable) but `terraform apply` then fails with a misleading 404 on the lock file:
 
 ```text
-Error loading state: writing "gs://site-infra/terraform/gcp/state/default.tflock" failed:
+Error loading state: writing "gs://enc-ass-nss-project/terraform/gcp/state/default.tflock" failed:
 googleapi: Error 404: The specified bucket does not exist., notFound
 ```
 
@@ -216,7 +217,7 @@ gcloud auth application-default print-access-token
 gcloud auth application-default login
 
 # Or grant write access explicitly
-gsutil iam ch user:YOUR_EMAIL:objectAdmin gs://site-infra
+gsutil iam ch user:YOUR_EMAIL:objectAdmin gs://enc-ass-nss-project
 ```
 
 ### GCP KMS resources already exist (409 on first apply)
