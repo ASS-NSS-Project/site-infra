@@ -156,7 +156,7 @@ cp terraform.tfvars.example terraform.tfvars  # fill in keycloak + vault + googl
 terraform init && terraform apply
 ```
 
-This also creates the `rag-rbac-sa` service account (`03-clients.tf`) and pushes its credentials to Vault (`secret/oidc/rag-rbac-sa`). ESO syncs them into the `rag-system` deployment as `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`, enabling role changes made in the WebRAG UI to be synced back to Keycloak group membership.
+This also creates the `rag-rbac-sa` service account (`03-clients.tf`) and pushes its credentials to Vault (`secret/oidc/rag-rbac-sa`). ESO syncs them into the `webrag` deployment as `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`, enabling role changes made in the WebRAG UI to be synced back to Keycloak group membership.
 
 ## Teardown
 
@@ -186,9 +186,9 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 | `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` | ESO |
 | `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | ESO |
 | `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` | ESO |
-| `secret/oidc/rag-system` | `rag-secrets` (`keycloak-client-id/secret`) | `rag-system` | ESO |
-| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `rag-system` | ESO |
-| `secret/rag-system/*` | `rag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `rag-system` | ESO |
+| `secret/oidc/webrag` | `rag-secrets` (`keycloak-client-id/secret`) | `webrag` | ESO |
+| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `webrag` | ESO |
+| `secret/webrag/*` | `rag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `webrag` | ESO |
 | `secret/longhorn-s3` | `longhorn-s3-backup` | `longhorn-system` | ESO |
 | `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` | ESO |
 
@@ -309,17 +309,17 @@ Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into 
 
 ### rag_app Loki labels
 
-Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `rag-system` namespace with a `rag_app` label for easy querying:
+Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `webrag` namespace with a `rag_app` label for easy querying:
 
 | `rag_app` value | Events captured | Example LogQL |
 |-----------------|-----------------|---------------|
-| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="rag-system", rag_app="audit"}` |
-| `incident` | `captcha_detected` | `{namespace="rag-system", rag_app="incident"}` |
-| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="rag-system", rag_app="pipeline"}` |
+| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="webrag", rag_app="audit"}` |
+| `incident` | `captcha_detected` | `{namespace="webrag", rag_app="incident"}` |
+| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="webrag", rag_app="pipeline"}` |
 
 ### CAPTCHA alerting (Telegram)
 
-Firing condition: any `captcha_detected` log event in the `rag-system` namespace within the past 5 minutes. Defined in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml` (`rag-captcha` group). Alertmanager routes it via `argocd/apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` to a Telegram bot.
+Firing condition: any `captcha_detected` log event in the `webrag` namespace within the past 5 minutes. Defined in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml` (`rag-captcha` group). Alertmanager routes it via `argocd/apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` to a Telegram bot.
 
 **Provisioning**: credentials are pushed to Vault via Terraform (`terraform/vault/01-vault.tf`, resource `vault_kv_secret_v2.alertmanager_telegram`). Add `telegram_bot_token` and `telegram_chat_id` to `terraform.tfvars` and run `terraform apply`.
 
@@ -369,17 +369,17 @@ ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `Backup
 
 ## RAG System Deployment
 
-The RAG application runs in the `rag-system` namespace (ArgoCD wave 19-21) with resilient async architecture.
+The RAG application runs in the `webrag` namespace (ArgoCD wave 19-21) with resilient async architecture.
 
 ### Components
 
 | Resource | Type | Purpose | Replicas |
 |----------|------|---------|----------|
-| `rag-api` | Deployment | FastAPI API + scheduler (healing jobs) | 2 |
-| `rag-worker` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
-| `rag-worker-embed` | StatefulSet | Embedding worker (BGE-M3, 1-5min) | 1 |
-| `rag-frontend` | Deployment | Vue 3 SPA + nginx | 2 |
-| `rag-pg` | CNPG Cluster | PostgreSQL 16 with metadata + chunks | 3 (HA) |
+| `webrag-api` | Deployment | FastAPI API + scheduler (healing jobs) | 2 |
+| `webrag-worker` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
+| `webrag-worker-embed` | StatefulSet | Embedding worker (BGE-M3, 1-5min) | 1 |
+| `webrag-frontend` | Deployment | Vue 3 SPA + nginx | 2 |
+| `webrag-pg` | CNPG Cluster | PostgreSQL 16 with metadata + chunks | 3 (HA) |
 
 ### Architecture
 
@@ -435,7 +435,7 @@ Healing Jobs (background, 5-30 min)
 After first deployment, run the SQL migration to enable full-text search:
 
 ```bash
-kubectl exec -n rag-system rag-pg-1 -c postgres -- psql -U app -d rag -c "
+kubectl exec -n webrag webrag-pg-1 -c postgres -- psql -U app -d rag -c "
 CREATE OR REPLACE FUNCTION chunks_text_vector_update() RETURNS trigger AS \$\$
 BEGIN
   NEW.text_vector := to_tsvector('english', COALESCE(NEW.text, ''));
@@ -455,9 +455,9 @@ UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE
 ### Monitoring
 
 **Prometheus metrics:**
-- `rag-api` on port 8000 (scraped by rag-api-ServiceMonitor)
-- `rag-worker` on port 9090 (scraped by rag-worker-ServiceMonitor)
-- `rag-worker-embed` on port 9091 (scraped by rag-worker-embed-ServiceMonitor)
+- `webrag-api` on port 8000 (scraped by webrag-api-ServiceMonitor)
+- `webrag-worker` on port 9090 (scraped by webrag-worker-ServiceMonitor)
+- `webrag-worker-embed` on port 9091 (scraped by webrag-worker-embed-ServiceMonitor)
 
 **Grafana dashboards:**
 - **WebRAG — Overview** — Active sources, Qdrant size, open incidents, ingest activity
@@ -474,12 +474,12 @@ UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE
 
 **Ingest throughput:**
 ```bash
-kubectl scale statefulset -n rag-system rag-worker --replicas=5
+kubectl scale statefulset -n webrag webrag-worker --replicas=5
 ```
 
 **Embedding throughput:**
 ```bash
-kubectl scale statefulset -n rag-system rag-worker-embed --replicas=2
+kubectl scale statefulset -n webrag webrag-worker-embed --replicas=2
 ```
 
 Each worker replica gets its own `hf-cache` PVC (ReadWriteOnce) for BGE-M3 weights.
