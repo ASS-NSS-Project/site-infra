@@ -12,7 +12,7 @@ spec:
   revisionHistoryLimit: 0
   project: infrastructure
   source:
-    repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
+    repoURL: https://github.com/ASS-NSS-Project/infra
     targetRevision: kost
     path: argocd/apps/longhorn/config
   destination:

@@ -19,7 +19,7 @@ spec:
         releaseName: alloy
         valueFiles:
           - $values/argocd/apps/alloy/helm/values.yaml
-    - repoURL: https://github.com/ASS-NSS-Project/enc-ass-nss-project
+    - repoURL: https://github.com/ASS-NSS-Project/infra
       targetRevision: kost
       ref: values
   destination:
