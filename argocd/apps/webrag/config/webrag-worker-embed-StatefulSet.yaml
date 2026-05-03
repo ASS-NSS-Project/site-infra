@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: worker-embed
-          image: ghcr.io/ass-nss-project/webrag-backend:kost-e16c652
+          image: ghcr.io/ass-nss-project/webrag-backend:kost-2750ab3
           command: ["python", "worker_embed.py"]
           ports:
             - name: metrics
