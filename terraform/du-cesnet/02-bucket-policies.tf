@@ -69,3 +69,27 @@ resource "aws_s3_bucket_policy" "rag_documents_prod" {
     ]
   })
 }
+
+resource "aws_s3_bucket_policy" "rag_embeddings_prod" {
+  bucket = aws_s3_bucket.rag_embeddings_prod.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "DenyAnonymous"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::rag-embeddings-prod",
+          "arn:aws:s3:::rag-embeddings-prod/*",
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:PrincipalType" = "Anonymous"
+          }
+        }
+      }
+    ]
+  })
+}
