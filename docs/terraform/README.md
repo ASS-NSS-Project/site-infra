@@ -1,6 +1,6 @@
 # Terraform
 
-Five independent root modules — each has its own GCS backend state and must be applied in the order defined in the root README.
+Six independent root modules — each has its own GCS backend state and must be applied in the order defined in the root README.
 
 ## Modules and their dependencies
 
@@ -10,13 +10,13 @@ Five independent root modules — each has its own GCS backend state and must be
 
 `openstack/` provisions all OpenStack resources and writes two files that Ansible needs: `ansible/inventory/host_vars/cp-0.yml` and `ansible/inventory/group_vars/all/terraform.yml`. If those files are missing, re-run `terraform apply` in `openstack/`.
 
-`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`).
+`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`, `oauth2.nss.jkzl.eu`, `rag.nss.jkzl.eu`, `rabbitmq.nss.jkzl.eu`).
 
-`vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials, and sets up Kubernetes auth for ESO.
+`metacentrum-s3/` provisions the Longhorn S3 backup bucket on CESNET Metacentrum object storage. Independent — run anytime before the Longhorn backup configuration is applied by ArgoCD.
 
-`keycloak/` runs after Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients, pushes client secrets to Vault, and manages groups and user pre-provisioning.
+`vault/` runs after Vault has been initialized (`vault operator init`). It configures the KV v2 engine, stores service credentials (including RAG system LLM/VLM/S3 credentials, Longhorn S3 backup credentials, Keycloak OIDC secrets), and sets up Kubernetes auth for ESO.
 
-`keycloak/` runs after Vault is provisioned — it is the last module in the apply chain.
+`keycloak/` runs after Vault is provisioned. It creates the realm, Google OIDC identity provider, OIDC clients (including the `traefik` client for oauth2-proxy and the `rag-rbac-sa` service account for role sync), pushes client secrets to Vault, and manages groups and user pre-provisioning. This is the last module in the apply chain.
 
 ### Keycloak groups
 
@@ -49,6 +49,9 @@ terraform/
 ├── gcp/
 │   ├── 00-providers.tf  # GCS backend + GCP provider
 │   └── 01-kms.tf        # KMS key ring, crypto key, service account for Vault auto-unseal
+├── metacentrum-s3/
+│   ├── terraform.tf     # GCS backend + S3 provider (CESNET Metacentrum)
+│   └── 01-buckets.tf    # Longhorn backup bucket
 ├── openstack/
 │   ├── 00-providers.tf       # GCS backend + OpenStack provider
 │   ├── 01-network.tf         # router, subnet, network
@@ -58,24 +61,25 @@ terraform/
 │   ├── 05-volumes.tf         # Cinder volumes for RKE2 and Longhorn
 │   ├── 06-loadbalancers.tf   # Octavia LB for API and ingress
 │   ├── 07-floating-ips.tf    # FIPs for cp-0 and ingress LB
-│   └── 08-ansible-inventory.tf  # writes host_vars and group_vars for Ansible
+│   ├── 08-ansible-inventory.tf  # writes host_vars and group_vars for Ansible
+│   └── templates/            # Jinja2 templates for Ansible inventory generation
 ├── vault/
 │   ├── terraform.tf             # GCS backend + Vault provider (vault_address variable for port-forward bootstrap)
-│   ├── 01-vault.tf              # KV v2 engine and service credentials
+│   ├── 01-vault.tf              # KV v2 engine and service credentials (RAG, Longhorn, Keycloak, Grafana, Alertmanager)
 │   ├── 02-vault-k8s-auth.tf     # Kubernetes auth backend for ESO
 │   └── bootstrap.sh             # Emergency script: port-forwards Vault pod, runs apply, forces ESO re-sync
 └── keycloak/
     ├── 00-providers.tf          # GCS backend + Keycloak + Vault providers
     ├── 01-realm.tf              # realm definition + groups + user pre-provisioning
     ├── 02-identity-providers.tf # Google OIDC federation
-    ├── 03-clients.tf            # OIDC clients per service + Keycloak group role assignments
+    ├── 03-clients.tf            # OIDC clients: argocd, grafana, traefik (oauth2-proxy), rag-system, rag-rbac-sa (role sync)
     ├── 04-vault-secrets.tf      # pushes client secrets to Vault
     └── 05-vault-oidc.tf         # Vault OIDC auth method
 ```
 
-## Keycloak OIDC for internal services (Longhorn, Prometheus, Alertmanager)
+## SSO for internal services (Longhorn, Prometheus, Alertmanager, Qdrant)
 
-Longhorn, Prometheus, and Alertmanager do not have native OIDC support. They are protected by the **Traefik keycloakopenid plugin** — Traefik intercepts every request and redirects unauthenticated users to Keycloak before forwarding to the backend.
+Longhorn, Prometheus, Alertmanager, and Qdrant do not have native OIDC support. They are protected by **oauth2-proxy** acting as a Traefik ForwardAuth middleware. Unauthenticated requests are redirected to Keycloak (via the `traefik` OIDC client created in `03-clients.tf`). Only users in the `rag_admin` Keycloak group can access these UIs.
 
 ### How the credentials flow
 

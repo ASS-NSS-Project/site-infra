@@ -9,17 +9,19 @@ Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terrafor
 | Infrastructure | OpenStack (Metacentrum MetaVO, Brno) |
 | Provisioning | Terraform |
 | Configuration | Ansible |
-| Kubernetes | RKE2 (3-node HA control plane) |
+| Kubernetes | RKE2 (3-node HA control plane + 4 workers) |
 | GitOps | ArgoCD |
 | Ingress | Traefik v3 (Gateway API, DaemonSet on CPs) |
 | TLS | cert-manager + Let's Encrypt HTTP-01 |
 | Storage | Longhorn (LVM over Cinder volumes) |
-| Secrets | HashiCorp Vault + External Secrets Operator |
-| Database | CloudNativePG |
+| Secrets | HashiCorp Vault + External Secrets Operator (ESO) |
+| Database | CloudNativePG (CNPG) |
 | Identity | Keycloak (Keycloak Operator) |
 | SSO | oauth2-proxy + Traefik ForwardAuth (Keycloak OIDC) |
-| Monitoring | kube-prometheus-stack |
+| Monitoring | kube-prometheus-stack (Prometheus + Grafana + Alertmanager) |
 | Logging | Loki + Grafana Alloy |
+| Queue | RabbitMQ (RabbitMQ Cluster Operator) |
+| Vector DB | Qdrant (Helm) |
 
 ## Cluster layout
 
@@ -177,16 +179,18 @@ gcloud storage rm -r gs://site-infra
 
 Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes by ESO — no static secrets in git.
 
-| Vault path | Kubernetes Secret | Namespace |
-|------------|-------------------|-----------|
-| `secret/grafana` | `grafana-credentials` | `monitoring` |
-| `secret/keycloak` | `keycloak-credentials` | `keycloak` |
-| `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` |
-| `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` |
-| `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` |
-| `secret/oidc/rag-system` | `rag-secrets` (`keycloak-client-id/secret`) | `rag-system` |
-| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `rag-system` |
-| `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` |
+| Vault path | Kubernetes Secret | Namespace | Synced by |
+|------------|-------------------|-----------|-----------|
+| `secret/grafana` | `grafana-credentials` | `monitoring` | ESO |
+| `secret/keycloak` | `keycloak-credentials` | `keycloak` | ESO |
+| `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` | ESO |
+| `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | ESO |
+| `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` | ESO |
+| `secret/oidc/rag-system` | `rag-secrets` (`keycloak-client-id/secret`) | `rag-system` | ESO |
+| `secret/oidc/rag-rbac-sa` | `rag-secrets` (`keycloak-admin-client-id/secret`) | `rag-system` | ESO |
+| `secret/rag-system/*` | `rag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `rag-system` | ESO |
+| `secret/longhorn-s3` | `longhorn-s3-backup` | `longhorn-system` | ESO |
+| `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` | ESO |
 
 ## DNS records
 
@@ -195,6 +199,8 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 | Hostname | Type | Target |
 |----------|------|--------|
 | `nss.jkzl.eu` | A | Ingress LB floating IP |
+| `rag.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `rabbitmq.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `argocd.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `longhorn.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `vault.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |

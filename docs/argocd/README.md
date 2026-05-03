@@ -47,15 +47,15 @@ Each app follows a strict helm → config pairing in dependency order. Stateful 
 | 8 | eso-helm | External Secrets Operator CRDs + controller |
 | 9 | eso-config | ClusterSecretStore → Vault (needs ESO wave 8 + Vault wave 6-7) |
 | 10 | cnpg-helm | CloudNativePG operator — Keycloak's database provider |
-| 11 | keycloak-operator | Keycloak CRDs + controller (after cnpg wave 10) |
+| 11 | keycloak-helm | Keycloak Operator (Helm chart, includes CRDs) |
 | 12 | keycloak-config | Keycloak CR + CNPG Cluster + ExternalSecret (needs waves 9-11) |
-| 13 | argocd-config, longhorn-config, oauth2-proxy-helm, oauth2-proxy-config | HTTPRoutes + ExternalSecrets now resolvable; oauth2-proxy ForwardAuth gate for Longhorn/Prometheus/Alertmanager/Qdrant |
-| 14 | alloy-helm | Log collector |
-| 15 | loki-helm | Log backend (needs Alloy wave 14, uses Longhorn PVC) |
-| 16 | loki-config, kube-prometheus-stack-helm | Loki ruler rules ConfigMap; Prometheus + Grafana + Alertmanager (needs Loki wave 15) |
-| 17 | kube-prometheus-stack-config, rabbitmq-operator | IngressRoutes + Grafana ExternalSecrets; RabbitMQ CRDs |
-| 18 | qdrant-helm, qdrant-config, rabbitmq-config | Vector DB + Qdrant HTTPRoute with oauth2-proxy ForwardAuth + RabbitMQ cluster CR |
-| 19 | rag-system-config | RAG application (needs all upstream waves) |
+| 13 | argocd-config, longhorn-config, oauth2-proxy-helm | ArgoCD/Longhorn HTTPRoutes + oauth2-proxy Deployment (ForwardAuth gate for infra UIs) |
+| 14 | alloy-helm | Grafana Alloy log collector (needs ESO wave 9 for config) |
+| 15 | loki-helm | Loki log backend (Longhorn PVC) |
+| 16 | loki-config, kube-prometheus-stack-helm | Loki ruler ConfigMap + Prometheus/Grafana/Alertmanager Helm |
+| 17 | kube-prometheus-stack-config, rabbitmq-helm | Grafana dashboards/OIDC ExternalSecrets + RabbitMQ Cluster Operator |
+| 18 | qdrant-helm, rabbitmq-config | Qdrant Helm + RabbitMQ cluster CR |
+| 19 | rag-system-config | RAG application (Deployments, Services, HTTPRoute, CNPG Cluster, ServiceMonitors, ConfigMaps) |
 
 Set the wave via annotation: `argocd.argoproj.io/sync-wave: "1"`
 
