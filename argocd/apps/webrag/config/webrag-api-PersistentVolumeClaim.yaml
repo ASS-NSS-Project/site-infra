@@ -1,0 +1,12 @@
+# BGE-M3 model cache (~570MB) — persists across pod restarts so the model is not re-downloaded
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hf-cache-rag-api
+  namespace: rag-system
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi

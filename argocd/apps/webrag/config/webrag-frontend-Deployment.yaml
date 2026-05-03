@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webrag-frontend
+  namespace: webrag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webrag-frontend
+  template:
+    metadata:
+      labels:
+        app: webrag-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/ass-nss-project/webrag-frontend:kost-f1aa2ca   
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: webrag-frontend-nginx
