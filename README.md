@@ -483,3 +483,96 @@ kubectl scale statefulset -n rag-system rag-worker-embed --replicas=2
 ```
 
 Each worker replica gets its own `hf-cache` PVC (ReadWriteOnce) for BGE-M3 weights.
+
+---
+
+## LLM Inference Architecture
+
+### Why CERIT-SC AIaaS Instead of Local Models?
+
+The RAG system uses **CERIT-SC AIaaS** (e-INFRA GPU cluster) for LLM and VLM inference rather than running models locally on the Kubernetes cluster. This architectural decision is driven by three factors: **hardware constraints**, **performance requirements**, and **operational complexity**.
+
+#### Cluster Hardware Limitations
+
+**Available resources:**
+- Workers: 4 nodes × (8 vCPU, 30 GB RAM) = 32 vCPU, 120 GB RAM total
+- GPU: **None** (CPU-only VMs)
+- Storage: Longhorn persistent volumes (no NVMe for model weights)
+
+**Local deployment feasibility:**
+
+| Model Size | Quant | RAM | CPU Tokens/sec | Response Time (200 tokens) | Quality | Verdict |
+|------------|-------|-----|----------------|---------------------------|---------|---------|
+| Qwen2.5 7B | Q4_K_M | 4.5 GB | 8-12 tok/s | 16-25 seconds | Good | ⚠️ Slow UX |
+| Llama 3.3 8B | Q4_K_M | 5 GB | 6-10 tok/s | 20-33 seconds | Good | ⚠️ Slow UX |
+| Qwen2.5 14B | Q4_K_M | 9 GB | 2-5 tok/s | 40-100 seconds | Very good | ❌ Unusable |
+| Qwen3.5 122B | — | >70 GB | <1 tok/s | 200+ seconds | Excellent | ❌ Not viable |
+
+**Reality:** CPU inference on 7B-8B models delivers **8-12 tokens/second**, resulting in **20-30 second latencies** for typical responses. This is acceptable for batch processing or offline experiments, but creates a poor user experience for interactive queries where users expect sub-5-second responses.
+
+**Comparison:**
+- **AIaaS (GPU):** 1-3 seconds for 200-token response (Qwen3.5 122B on A100/H100)
+- **Local CPU:** 20-30 seconds for 200-token response (Qwen2.5 7B on Xeon)
+- **Speedup:** 10-15× faster with AIaaS
+
+#### Why Not Metacentrum Grid?
+
+Metacentrum Grid provides **batch job scheduling** on HPC clusters with GPU access. While Grid nodes have powerful GPUs (NVIDIA A100, A40), the architecture is fundamentally incompatible with real-time RAG queries:
+
+**Batch scheduling model:**
+1. Submit job to PBS/Slurm queue
+2. Wait for resource allocation (queue time: minutes to hours)
+3. Job runs on allocated node
+4. Results returned after completion
+
+**RAG system requirements:**
+- **Interactive queries:** User submits question, expects answer in <5 seconds
+- **Always-on service:** API must respond 24/7 without queue delays
+- **Unpredictable load:** Query patterns are bursty and user-driven
+
+**Incompatibility:**
+- ❌ **Queue wait time:** Users cannot wait minutes for resource allocation before their query starts
+- ❌ **No persistent services:** Grid is for batch jobs, not long-running HTTP servers
+- ❌ **Cold start:** Each query would need to load the model from scratch (30-60s overhead)
+- ❌ **Resource waste:** GPU allocation charged per job, not per token (expensive for short queries)
+
+Grid is designed for **computational workloads** (training, large-scale inference batches), not **latency-sensitive web services**.
+
+#### AIaaS Advantages
+
+**CERIT-SC AIaaS** is purpose-built for real-time inference:
+
+| Feature | Benefit |
+|---------|---------|
+| **GPU-accelerated** | 80-150 tok/s (vs 8-12 tok/s on CPU) |
+| **Always-on API** | No queue wait, instant responses |
+| **Hot models** | Pre-loaded in VRAM, no cold start |
+| **OpenAI-compatible** | Drop-in replacement, no custom integration |
+| **Multiple models** | Qwen3.5 122B, DeepSeek V3.2, GPT-OSS 120B available |
+| **e-INFRA credits** | Free for academic/student projects |
+| **No maintenance** | Managed service, auto-scaling, monitoring included |
+
+**Performance:**
+- Qwen3.5 122B: 80-150 tok/s on A100/H100 GPUs
+- Response time: 1-3 seconds for 200 tokens
+- Quality: State-of-art (122B >> 7B)
+
+#### Custom Endpoint Flexibility
+
+The RAG UI includes a **custom endpoint feature** that lets users bring their own LLM providers:
+- OpenAI (GPT-4.1, GPT-4o, o4-mini)
+- Anthropic (Claude Opus 4.7, Sonnet 4.6)
+- Google Gemini (2.5 Pro/Flash, 3.1 Pro)
+- Any OpenAI-compatible API (Groq, DeepSeek, local Ollama)
+
+Users can choose their own speed/quality/cost trade-off without changing the deployment. The custom endpoint UI persists the base URL and model name (not the API key) in browser localStorage for convenience.
+
+#### When to Consider Local Models
+
+Local CPU inference becomes viable only when:
+1. **AIaaS quota exhausted** and cannot obtain more credits
+2. **Offline deployment** required (air-gapped environment)
+3. **Batch workloads** where 20-30s latency is acceptable (experiments, bulk processing)
+4. **GPU access** via dedicated Metacentrum allocation (not Grid) — vLLM on A100 can run 70B models at 30-50 tok/s
+
+For interactive RAG queries, **AIaaS remains the optimal choice** given current hardware constraints.
