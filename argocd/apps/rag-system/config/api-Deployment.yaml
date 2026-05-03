@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/ass-nss-project/rag-api:kost-53ebc7f  
+          image: ghcr.io/ass-nss-project/rag-api:kost-e16c652  
           command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
           ports:
             - containerPort: 8000
@@ -107,6 +107,27 @@ spec:
               value: rag-evidence-prod
             - name: S3_BUCKET_DOCS
               value: rag-documents-prod
+            - name: S3_BUCKET_EMBEDDINGS
+              value: rag-embeddings-prod
+            # Embedding settings
+            - name: EMBEDDING_TIMEOUT_MINUTES
+              value: "5"
+            - name: ENABLE_EMBEDDING_BACKUP_S3
+              value: "false"
+            # Fallback search settings
+            - name: ENABLE_KEYWORD_FALLBACK
+              value: "true"
+            - name: FALLBACK_SEARCH_ENGINE
+              value: "postgres_tsvector"
+            - name: QDRANT_HEALTH_CHECK_TIMEOUT
+              value: "2.0"
+            # Healing settings
+            - name: HEAL_INTERVAL_MINUTES
+              value: "15"
+            - name: DRIFT_ALERT_THRESHOLD_PCT
+              value: "10.0"
+            - name: AUTO_RESYNC_ON_DRIFT
+              value: "true"
             # AIaaS (shared base URL + key for LLM and VLM)
             - name: AIAAS_BASE_URL
               valueFrom:

@@ -1,33 +1,32 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: rag-worker
+  name: rag-worker-embed
   namespace: rag-system
 spec:
-  # Scale to 3, 5, 7, 9, … for parallel ingest throughput.
-  # Each replica gets its own hf-cache PVC (hf-cache-rag-worker-0, hf-cache-rag-worker-1, …)
-  # so the BGE-M3 model is downloaded once per pod and never shared across RWO volumes.
-  replicas: 3
-  serviceName: rag-worker-headless
+  # Scale to 1-3 for parallel embedding throughput.
+  # Each replica gets its own hf-cache PVC (ReadWriteOnce).
+  replicas: 1
+  serviceName: rag-worker-embed-headless
   selector:
     matchLabels:
-      app: rag-worker
+      app: rag-worker-embed
   template:
     metadata:
       labels:
-        app: rag-worker
+        app: rag-worker-embed
     spec:
       containers:
-        - name: worker
+        - name: worker-embed
           image: ghcr.io/ass-nss-project/rag-api:kost-e16c652
-          command: ["python", "worker.py"]
+          command: ["python", "worker_embed.py"]
           ports:
             - name: metrics
-              containerPort: 9090
+              containerPort: 9091
           resources:
             requests:
-              cpu: 250m
-              memory: 512Mi
+              cpu: 500m
+              memory: 1Gi
             limits:
               cpu: "4"
               memory: 8Gi
@@ -90,39 +89,16 @@ spec:
               value: us-east-1
             - name: S3_USE_PATH_STYLE
               value: "false"
-            - name: S3_BUCKET_EVIDENCE
-              value: rag-evidence-prod
             - name: S3_BUCKET_DOCS
               value: rag-documents-prod
             - name: S3_BUCKET_EMBEDDINGS
               value: rag-embeddings-prod
-            - name: AIAAS_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: llm-base-url
-            - name: AIAAS_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: llm-api-key
-            - name: AIAAS_LLM_MODEL
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: llm-model
-            - name: AIAAS_VLM_MODEL
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: vlm-model
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: rag-secrets
-                  key: jwt-secret
+            - name: ENABLE_EMBEDDING_BACKUP_S3
+              value: "false"
+            - name: EMBEDDING_WORKER_METRICS_PORT
+              value: "9091"
             - name: SERVICE_NAME
-              value: worker
+              value: worker_embed
   volumeClaimTemplates:
     - metadata:
         name: hf-cache
