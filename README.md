@@ -364,3 +364,123 @@ Backups go to Metacentrum CESNET S3 (`https://s3.cl4.du.cesnet.cz`, bucket `long
    ```
 
 ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `BackupTarget` and `RecurringJob` CRs are managed by ArgoCD from `argocd/apps/longhorn/config/`.
+
+---
+
+## RAG System Deployment
+
+The RAG application runs in the `rag-system` namespace (ArgoCD wave 19-21) with resilient async architecture.
+
+### Components
+
+| Resource | Type | Purpose | Replicas |
+|----------|------|---------|----------|
+| `rag-api` | Deployment | FastAPI API + scheduler (healing jobs) | 2 |
+| `rag-worker` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
+| `rag-worker-embed` | StatefulSet | Embedding worker (BGE-M3, 1-5min) | 1 |
+| `rag-frontend` | Deployment | Vue 3 SPA + nginx | 2 |
+| `rag-pg` | CNPG Cluster | PostgreSQL 16 with metadata + chunks | 3 (HA) |
+
+### Architecture
+
+```
+User → rag.nss.jkzl.eu
+  → Traefik Gateway
+  → Frontend (Vue 3 SPA)
+  → API (/api/* rewritten to /*)
+      ├─ Queries → Qdrant (vector search) OR Postgres (keyword fallback)
+      ├─ Sources → Postgres
+      └─ Scheduler → Healing jobs (5-30 min)
+
+API creates IngestJob
+  → RabbitMQ "ingest" queue
+  → Ingest Worker (30s)
+      ├─ Scrapes web page
+      ├─ Stores to S3 (document.md + chunks.json)
+      └─ Publishes to "embeddings" queue
+
+Embedding Worker (1-5 min, background)
+  → Loads chunks from Postgres
+  → Embeds with BGE-M3
+  → Upserts to Qdrant
+  → Updates chunk status
+
+Healing Jobs (background, 5-30 min)
+  → Detects stuck/failed embeddings
+  → Detects Qdrant drift
+  → Auto-requeues for re-embedding
+```
+
+### Storage
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Metadata** | CNPG Postgres | Documents, chunks with status tracking |
+| **Content** | CESNET S3 (3 buckets) | Evidence, markdown, chunks.json, optional embeddings |
+| **Vectors** | Qdrant | Rebuilable hot cache for fast retrieval |
+
+**S3 Buckets:**
+- `rag-evidence-prod` — Screenshots, HTML dumps (evidence)
+- `rag-documents-prod` — Processed markdown, chunks.json
+- `rag-embeddings-prod` — Optional backup of BGE-M3 vectors (currently disabled)
+
+### Resilience Features
+
+- **5-minute SLA:** New sources queryable in 30s (keyword search), vectors in 5 min
+- **Keyword fallback:** Postgres `tsvector` search if Qdrant down (no 502 errors)
+- **Auto-healing:** 4 background jobs detect and fix drift every 5-30 minutes
+- **S3 as source of truth:** Qdrant completely rebuilable from S3/Postgres
+
+### Initial Setup (One-Time)
+
+After first deployment, run the SQL migration to enable full-text search:
+
+```bash
+kubectl exec -n rag-system rag-pg-1 -c postgres -- psql -U app -d rag -c "
+CREATE OR REPLACE FUNCTION chunks_text_vector_update() RETURNS trigger AS \$\$
+BEGIN
+  NEW.text_vector := to_tsvector('english', COALESCE(NEW.text, ''));
+  RETURN NEW;
+END;
+\$\$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS chunks_text_vector_trigger ON chunks;
+CREATE TRIGGER chunks_text_vector_trigger
+  BEFORE INSERT OR UPDATE OF text ON chunks
+  FOR EACH ROW EXECUTE FUNCTION chunks_text_vector_update();
+
+UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE text_vector IS NULL;
+"
+```
+
+### Monitoring
+
+**Prometheus metrics:**
+- `rag-api` on port 8000 (scraped by rag-api-ServiceMonitor)
+- `rag-worker` on port 9090 (scraped by rag-worker-ServiceMonitor)
+- `rag-worker-embed` on port 9091 (scraped by rag-worker-embed-ServiceMonitor)
+
+**Grafana dashboards:**
+- **WebRAG — Overview** — Active sources, Qdrant size, open incidents, ingest activity
+- **WebRAG — Metrics** — Jobs, error rates, latency, embeddings, CAPTCHA rate
+- **WebRAG — Audit** — Auth, query, and security events
+
+**Key metrics for resilient RAG:**
+- `rag_ingest_duration_seconds` — Should be <30s after changes
+- `rag_embedding_duration_seconds` — BGE-M3 embedding time
+- `rag_chunks_embedded_total` — Counter of embedded chunks
+- `rag_qdrant_collection_size` — Gauge (should match Postgres count within 10%)
+
+### Scaling
+
+**Ingest throughput:**
+```bash
+kubectl scale statefulset -n rag-system rag-worker --replicas=5
+```
+
+**Embedding throughput:**
+```bash
+kubectl scale statefulset -n rag-system rag-worker-embed --replicas=2
+```
+
+Each worker replica gets its own `hf-cache` PVC (ReadWriteOnce) for BGE-M3 weights.
