@@ -22,8 +22,8 @@ locals {
     "prometheus",
     "qdrant",
     "rabbitmq",
-    "rag",
-    "vault"
+    "vault",
+    "webrag"
   ]
 }
 
