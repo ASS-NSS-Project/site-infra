@@ -183,7 +183,7 @@ spec:
             - name: KEYCLOAK_REALM
               value: "ass-nss-project"
             - name: KEYCLOAK_REDIRECT_URI
-              value: "https://rag.nss.jkzl.eu/auth/keycloak/callback"
+              value: "https://webrag.nss.jkzl.eu/auth/keycloak/callback"
             - name: KEYCLOAK_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -195,7 +195,7 @@ spec:
                   name: webrag-secrets
                   key: keycloak-client-secret
             - name: FRONTEND_URL
-              value: "https://rag.nss.jkzl.eu"
+              value: "https://webrag.nss.jkzl.eu"
             - name: SERVICE_NAME
               value: api
       volumes:

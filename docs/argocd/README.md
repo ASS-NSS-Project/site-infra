@@ -209,12 +209,12 @@ Prometheus Operator wraps every `AlertmanagerConfig` sub-route with an implicit 
 
 ```bash
 # Login
-curl -s -X POST https://rag.nss.jkzl.eu/api/auth/login \
+curl -s -X POST https://webrag.nss.jkzl.eu/api/auth/login \
   -d "username=user@example.com&password=secret" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])"
 
 # Query (replace TOKEN)
-curl -s -X POST https://rag.nss.jkzl.eu/api/query/ \
+curl -s -X POST https://webrag.nss.jkzl.eu/api/query/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"question": "What are the latest findings?", "top_k": 5}'

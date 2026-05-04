@@ -10,7 +10,7 @@ Six independent root modules — each has its own GCS backend state and must be 
 
 `openstack/` provisions all OpenStack resources and writes two files that Ansible needs: `ansible/inventory/host_vars/cp-0.yml` and `ansible/inventory/group_vars/all/terraform.yml`. If those files are missing, re-run `terraform apply` in `openstack/`.
 
-`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`, `oauth2.nss.jkzl.eu`, `rag.nss.jkzl.eu`, `rabbitmq.nss.jkzl.eu`).
+`cloudflare/` creates one A record for `nss.jkzl.eu` pointing to the cluster ingress LB IP (taken from `terraform output ingress_lb_public_ip` in `openstack/`) and CNAME records for all service subdomains (including `qdrant.nss.jkzl.eu`, `oauth2.nss.jkzl.eu`, `webrag.nss.jkzl.eu`, `rabbitmq.nss.jkzl.eu`).
 
 `du-cesnet/` provisions CESNET S3 buckets used in production (`longhorn-backups`, `rag-evidence-prod`, `rag-documents-prod`). Independent — run anytime before the Longhorn backup configuration is applied by ArgoCD and before RAG production secrets are validated.
 

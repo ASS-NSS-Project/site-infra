@@ -22,7 +22,7 @@ spec:
     - alertmanager.nss.jkzl.eu
     - rabbitmq.nss.jkzl.eu
     - qdrant.nss.jkzl.eu
-    - rag.nss.jkzl.eu
+    - webrag.nss.jkzl.eu
   rules:
     - filters:
         - type: RequestRedirect

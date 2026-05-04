@@ -77,11 +77,11 @@ resource "keycloak_openid_client" "rag_system" {
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
   valid_redirect_uris = [
-    "https://rag.nss.jkzl.eu/auth/keycloak/callback",
+    "https://webrag.nss.jkzl.eu/auth/keycloak/callback",
     "http://localhost:8080/auth/keycloak/callback",
   ]
   web_origins = [
-    "https://rag.nss.jkzl.eu",
+    "https://webrag.nss.jkzl.eu",
     "http://localhost:8080",
   ]
 }

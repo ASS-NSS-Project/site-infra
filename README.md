@@ -199,7 +199,7 @@ Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are 
 | Hostname | Type | Target |
 |----------|------|--------|
 | `nss.jkzl.eu` | A | Ingress LB floating IP |
-| `rag.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
+| `webrag.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `rabbitmq.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `argocd.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
 | `longhorn.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
@@ -384,7 +384,7 @@ The RAG application runs in the `webrag` namespace (ArgoCD wave 19-21) with resi
 ### Architecture
 
 ```
-User → rag.nss.jkzl.eu
+User → webrag.nss.jkzl.eu
   → Traefik Gateway
   → Frontend (Vue 3 SPA)
   → API (/api/* rewritten to /*)
