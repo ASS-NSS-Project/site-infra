@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
-  name: rag-captcha-alerts
+  name: webrag-captcha-alerts
   namespace: monitoring
   labels:
     # picked up by alertmanagerConfigSelector: {}
@@ -14,7 +14,7 @@ spec:
     repeatInterval: 4h
     receiver: telegram-captcha
     matchers:
-      - name: rag_app
+      - name: webrag
         value: incident
   receivers:
     - name: telegram-captcha

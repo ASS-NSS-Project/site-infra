@@ -156,12 +156,12 @@ Two dashboard ConfigMaps in `kube-prometheus-stack/config/` carry `grafana_dashb
 
 | ConfigMap | Dashboard (UID) | Contents |
 |-----------|-----------------|----------|
-| `rag-system-overview-grafana-dashboard-ConfigMap.yaml` | RAG System Overview (`rag-overview`) | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution |
-| `rag-system-audit-grafana-dashboard-ConfigMap.yaml` | RAG System Audit Logs (`rag-audit`) | Login/query/ingest stats and Loki log panels for auth, query, ingest, and all namespace events |
+| `webrag-overview-grafana-dashboard-ConfigMap.yaml` | WebRAG Overview (`webrag-overview`) | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution |
+| `webrag-audit-grafana-dashboard-ConfigMap.yaml` | WebRAG Audit Logs (`webrag-audit`) | Login/query/ingest stats and Loki log panels for auth, query, ingest, and all namespace events |
 
 In the audit dashboard, stat panels use `... or vector(0)` so empty Loki query windows render `0` instead of `N/A`. Ingest counters are sourced from `app="webrag-worker-ingest"` log events (`ingest_started`, `ingest_completed`, `ingest_failed`) because ingest execution happens in the worker process.
 
-The app sidebar links "Dashboard ↗" → `https://grafana.nss.jkzl.eu/d/rag-overview` and "Audit Logs ↗" → `https://grafana.nss.jkzl.eu/d/rag-audit`. The in-app DashboardView has been removed.
+The app sidebar links "Dashboard ↗" → `https://grafana.nss.jkzl.eu/d/webrag-overview` and "Audit Logs ↗" → `https://grafana.nss.jkzl.eu/d/webrag-audit`. The in-app DashboardView has been removed.
 
 ## RKE2 Kubernetes component monitoring
 
@@ -184,18 +184,18 @@ All RAG alerts are routed to a shared Telegram group via two `AlertmanagerConfig
 
 | Alert | Source | File | Trigger |
 |-------|--------|------|---------|
-| `RagCaptchaIncident` | Prometheus | `rag-captcha-PrometheusRule.yaml` | `rag_captcha_incidents_total` counter increases |
-| `RagCaptchaBlock` | Loki | `loki-rules-ConfigMap.yaml` | `captcha_detected` log event in `webrag` |
-| `RagIngestFailed` | Loki | `loki-rules-ConfigMap.yaml` | `ingest_failed` log event in `webrag` |
-| `RagApiDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `webrag-api` replicas available == 0 for 1 m |
-| `RagFrontendDown` | Prometheus | `rag-availability-PrometheusRule.yaml` | `webrag-frontend` replicas available == 0 for 1 m |
+| `WebragCaptchaIncident` | Prometheus | `webrag-captcha-PrometheusRule.yaml` | `rag_captcha_incidents_total` counter increases |
+| `WebRAGCaptchaBlock` | Loki | `loki-rules-ConfigMap.yaml` | `captcha_detected` log event in `webrag` |
+| `WebRAGIngestFailed` | Loki | `loki-rules-ConfigMap.yaml` | `ingest_failed` log event in `webrag` |
+| `WebRAGApiDown` | Prometheus | `webrag-availability-PrometheusRule.yaml` | `webrag-api` replicas available == 0 for 1 m |
+| `WebRAGFrontendDown` | Prometheus | `webrag-availability-PrometheusRule.yaml` | `webrag-frontend` replicas available == 0 for 1 m |
 
 ### Routing
 
 Alerts are split across two `AlertmanagerConfig` objects to avoid accidentally capturing unrelated system alerts:
 
-- `alertmanager-captcha-AlertmanagerConfig.yaml` — matches `rag_app: incident`, `repeatInterval: 4h`
-- `rag-availability-AlertmanagerConfig.yaml` — matches `rag_app: availability`, `repeatInterval: 1h`
+- `alertmanager-captcha-AlertmanagerConfig.yaml` — matches `webrag: incident`, `repeatInterval: 4h`
+- `webrag-availability-AlertmanagerConfig.yaml` — matches `webrag: availability`, `repeatInterval: 1h`
 
 ### Loki ruler — `namespace` label requirement
 

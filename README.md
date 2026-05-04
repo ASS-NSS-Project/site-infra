@@ -307,15 +307,15 @@ Logs are collected by Grafana Alloy (Deployment, `alloy` namespace) via the Kube
 
 Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into Loki at `/var/loki/rules/fake/`.
 
-### rag_app Loki labels
+### webrag Loki labels
 
-Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `webrag` namespace with a `rag_app` label for easy querying:
+Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `webrag` namespace with a `webrag` label for easy querying:
 
-| `rag_app` value | Events captured | Example LogQL |
+| `webrag` value | Events captured | Example LogQL |
 |-----------------|-----------------|---------------|
-| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="webrag", rag_app="audit"}` |
-| `incident` | `captcha_detected` | `{namespace="webrag", rag_app="incident"}` |
-| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="webrag", rag_app="pipeline"}` |
+| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="webrag", webrag="audit"}` |
+| `incident` | `captcha_detected` | `{namespace="webrag", webrag="incident"}` |
+| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="webrag", webrag="pipeline"}` |
 
 ### CAPTCHA alerting (Telegram)
 

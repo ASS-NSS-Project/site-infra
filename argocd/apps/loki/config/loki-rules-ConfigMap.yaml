@@ -8,29 +8,29 @@ data:
   # Mounted at /var/loki/rules/fake/rules.yaml
   rules.yaml: |
     groups:
-      - name: rag-captcha
+      - name: webrag-captcha
         rules:
-          - alert: RagCaptchaBlock
+          - alert: WebRAGCaptchaBlock
             expr: |
               sum(count_over_time({namespace="webrag"} | json | event = `captcha_detected` [5m])) > 0
             for: 0m
             labels:
               severity: warning
-              rag_app: incident
+              webrag: incident
               namespace: monitoring
             annotations:
               summary: "CAPTCHA block detected in RAG ingest pipeline"
               description: "One or more ingest jobs were blocked by a CAPTCHA in the last 5 minutes. Check the Incidents page."
 
-      - name: rag-ingest
+      - name: webrag-ingest
         rules:
-          - alert: RagIngestFailed
+          - alert: WebRAGIngestFailed
             expr: |
               sum(count_over_time({namespace="webrag"} | json | event = `ingest_failed` [5m])) > 0
             for: 0m
             labels:
               severity: warning
-              rag_app: incident
+              webrag: incident
               namespace: monitoring
             annotations:
               summary: "RAG ingest job failed"

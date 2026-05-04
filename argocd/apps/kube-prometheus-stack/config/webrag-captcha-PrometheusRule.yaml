@@ -1,19 +1,19 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: rag-captcha-alerts
+  name: webrag-captcha-alerts
   namespace: monitoring
   labels:
     release: kube-prometheus-stack
 spec:
   groups:
-    - name: rag.captcha
+    - name: webrag.captcha
       rules:
-        - alert: RagCaptchaIncident
+        - alert: WebragCaptchaIncident
           expr: increase(rag_captcha_incidents_total[5m]) > 0
           for: 0m
           labels:
-            rag_app: incident
+            webrag: incident
             severity: warning
           annotations:
             summary: "CAPTCHA block detected during RAG ingest"

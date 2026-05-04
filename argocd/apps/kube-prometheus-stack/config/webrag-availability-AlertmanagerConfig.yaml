@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
-  name: rag-availability-alerts
+  name: webrag-availability-alerts
   namespace: monitoring
   labels:
     alertmanagerConfig: "true"
@@ -13,7 +13,7 @@ spec:
     repeatInterval: 1h
     receiver: telegram-availability
     matchers:
-      - name: rag_app
+      - name: webrag
         value: availability
   receivers:
     - name: telegram-availability

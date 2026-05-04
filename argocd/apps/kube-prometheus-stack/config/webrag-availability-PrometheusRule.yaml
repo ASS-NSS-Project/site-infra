@@ -1,30 +1,30 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: rag-availability-alerts
+  name: webrag-availability-alerts
   namespace: monitoring
   labels:
     release: kube-prometheus-stack
 spec:
   groups:
-    - name: rag.availability
+    - name: webrag.availability
       rules:
-        - alert: RagApiDown
+        - alert: WebRAGApiDown
           expr: kube_deployment_status_replicas_available{namespace="webrag", deployment="webrag-api"} == 0
           for: 1m
           labels:
-            rag_app: availability
+            webrag: availability
             severity: critical
           annotations:
-            summary: "RAG API is down"
+            summary: "WebRAG API is down"
             description: "No webrag-api replicas are available. The RAG system is not operational."
 
-        - alert: RagFrontendDown
+        - alert: WebRAGFrontendDown
           expr: kube_deployment_status_replicas_available{namespace="webrag", deployment="webrag-frontend"} == 0
           for: 1m
           labels:
-            rag_app: availability
+            webrag: availability
             severity: critical
           annotations:
-            summary: "RAG Frontend is down"
+            summary: "WebRAG Frontend is down"
             description: "No webrag-frontend replicas are available. The UI is unreachable."
