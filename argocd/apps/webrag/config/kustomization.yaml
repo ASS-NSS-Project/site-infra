@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - webrag-api-Deployment.yaml
+  - webrag-api-PersistentVolumeClaim.yaml
+  - webrag-api-Service.yaml
+  - webrag-api-ServiceMonitor.yaml
+  - webrag-frontend-Deployment.yaml
+  - webrag-frontend-nginx-ConfigMap.yaml
+  - webrag-frontend-Service.yaml
+  - webrag-pg-Cluster.yaml
+  - webrag-secrets-ExternalSecret.yaml
+  - webrag-system-HTTPRoute.yaml
+  - webrag-worker-embed-headless-Service.yaml
+  - webrag-worker-embed-Service.yaml
+  - webrag-worker-embed-ServiceMonitor.yaml
+  - webrag-worker-embed-StatefulSet.yaml
+  - webrag-worker-ingest-headless-Service.yaml
+  - webrag-worker-ingest-Service.yaml
+  - webrag-worker-ingest-ServiceMonitor.yaml
+  - webrag-worker-ingest-StatefulSet.yaml
+
+images:
+  - name: ghcr.io/ass-nss-project/webrag-backend
+    newTag: kost-ffcb4db
+  - name: ghcr.io/ass-nss-project/webrag-frontend
+    newTag: kost-ffcb4db

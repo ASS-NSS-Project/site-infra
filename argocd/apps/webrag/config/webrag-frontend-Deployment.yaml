@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/ass-nss-project/webrag-frontend:kost-7e99321   
+          image: ghcr.io/ass-nss-project/webrag-frontend
           ports:
             - containerPort: 80
           resources:

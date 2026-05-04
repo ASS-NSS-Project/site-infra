@@ -224,6 +224,24 @@ The `/api/*` allowlist rules are placed before the catch-all frontend rule so Ga
 
 ---
 
+## webrag — image tag management (Kustomize)
+
+`apps/webrag/config/kustomization.yaml` lists all resources in the `config/` directory and uses Kustomize's `images` transformer to set the container image tags in a single place. ArgoCD auto-detects the `kustomization.yaml` and switches from plain-manifest mode to Kustomize mode — no change to the Application manifest is needed.
+
+To promote a new build, edit only `kustomization.yaml`:
+
+```yaml
+images:
+  - name: ghcr.io/ass-nss-project/webrag-backend
+    newTag: kost-<sha>   # api Deployment + embed worker + ingest worker
+  - name: ghcr.io/ass-nss-project/webrag-frontend
+    newTag: kost-<sha>   # frontend Deployment
+```
+
+The `image:` lines in the individual `*-Deployment.yaml` / `*-StatefulSet.yaml` files are kept as readable defaults; Kustomize overrides them at render time.
+
+---
+
 ## webrag workers — StatefulSets
 
 `apps/webrag/config/webrag-worker-ingest-StatefulSet.yaml` and `webrag-worker-embed-StatefulSet.yaml` are **StatefulSets** (not Deployments). The BGE-M3 model cache uses a `ReadWriteOnce` Longhorn volume, and RWO volumes cannot be shared across Deployment pods. A StatefulSet with `volumeClaimTemplates` creates one independent PVC per replica:
