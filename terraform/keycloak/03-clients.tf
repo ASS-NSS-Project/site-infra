@@ -114,16 +114,6 @@ resource "keycloak_group_roles" "webrag_admin_realm_management" {
   role_ids   = [data.keycloak_role.realm_admin.id]
 }
 
-moved {
-  from = keycloak_group_roles.admin_realm_management
-  to   = keycloak_group_roles.rag_admin_realm_management
-}
-
-moved {
-  from = keycloak_group_roles.rag_admin_realm_management
-  to   = keycloak_group_roles.webrag_admin_realm_management
-}
-
 # RabbitMQ
 # PUBLIC client — no client secret required.
 # Token validation uses Keycloak's JWKS endpoint (public key, no secret).
@@ -161,16 +151,6 @@ resource "keycloak_group_roles" "webrag_admin_rabbitmq" {
   group_id   = keycloak_group.webrag_admin.id
   role_ids   = [keycloak_role.rabbitmq_administrator.id]
   exhaustive = false
-}
-
-moved {
-  from = keycloak_group_roles.admin_rabbitmq
-  to   = keycloak_group_roles.rag_admin_rabbitmq
-}
-
-moved {
-  from = keycloak_group_roles.rag_admin_rabbitmq
-  to   = keycloak_group_roles.webrag_admin_rabbitmq
 }
 
 # Map client roles → rabbitmq_scopes claim with "rabbitmq.tag:" prefix.

@@ -61,16 +61,6 @@ resource "vault_policy" "webrag_admin" {
   EOT
 }
 
-moved {
-  from = vault_policy.admin
-  to   = vault_policy.rag_admin
-}
-
-moved {
-  from = vault_policy.rag_admin
-  to   = vault_policy.webrag_admin
-}
-
 # --- Group mapping: Keycloak "webrag_admin" → vault-admin policy ---
 # vault_identity_group creates a Vault external group.
 # vault_identity_group_alias links the Keycloak group name to the OIDC backend accessor,
@@ -82,28 +72,9 @@ resource "vault_identity_group" "webrag_admin" {
   policies = [vault_policy.webrag_admin.name]
 }
 
-moved {
-  from = vault_identity_group.admin
-  to   = vault_identity_group.rag_admin
-}
-
-moved {
-  from = vault_identity_group.rag_admin
-  to   = vault_identity_group.webrag_admin
-}
-
 resource "vault_identity_group_alias" "webrag_admin" {
   name           = "webrag_admin"
   mount_accessor = vault_jwt_auth_backend.oidc.accessor
   canonical_id   = vault_identity_group.webrag_admin.id
 }
 
-moved {
-  from = vault_identity_group_alias.admin
-  to   = vault_identity_group_alias.rag_admin
-}
-
-moved {
-  from = vault_identity_group_alias.rag_admin
-  to   = vault_identity_group_alias.webrag_admin
-}
