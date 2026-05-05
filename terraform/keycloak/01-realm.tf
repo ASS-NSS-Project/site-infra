@@ -14,28 +14,28 @@ resource "keycloak_realm" "main" {
 
 # --- RAG application groups ---
 
-# rag_admin — full access to inside the main realm (ASS-NSS-Project)
-resource "keycloak_group" "rag_admin" {
+# webrag_admin — full access to inside the main realm (ASS-NSS-Project)
+resource "keycloak_group" "webrag_admin" {
   realm_id = keycloak_realm.main.id
-  name     = "rag_admin"
+  name     = "webrag_admin"
 }
 
-# rag_curator — source/pipeline/incident management
-resource "keycloak_group" "rag_curator" {
+# webrag_curator — source/pipeline/incident management
+resource "keycloak_group" "webrag_curator" {
   realm_id = keycloak_realm.main.id
-  name     = "rag_curator"
+  name     = "webrag_curator"
 }
 
-# rag_analyst — experiments, model testing, index quality evaluation
-resource "keycloak_group" "rag_analyst" {
+# webrag_analyst — experiments, model testing, index quality evaluation
+resource "keycloak_group" "webrag_analyst" {
   realm_id = keycloak_realm.main.id
-  name     = "rag_analyst"
+  name     = "webrag_analyst"
 }
 
-# rag_user — standard end user; submits queries, views answers
-resource "keycloak_group" "rag_user" {
+# webrag_user — standard end user; submits queries, views answers
+resource "keycloak_group" "webrag_user" {
   realm_id = keycloak_realm.main.id
-  name     = "rag_user"
+  name     = "webrag_user"
 }
 
 # --- Group memberships ---
@@ -51,8 +51,8 @@ required_actions = [] 👈 Without this, Keycloak applies the realm's default UP
                          prompt on first login.
 */
 
-resource "keycloak_user" "rag_admin" {
-  for_each         = toset(var.rag_admin_members)
+resource "keycloak_user" "webrag_admin" {
+  for_each         = toset(var.webrag_admin_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -61,14 +61,14 @@ resource "keycloak_user" "rag_admin" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "rag_admin" {
+resource "keycloak_group_memberships" "webrag_admin" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.rag_admin.id
-  members  = [for u in keycloak_user.rag_admin : u.username]
+  group_id = keycloak_group.webrag_admin.id
+  members  = [for u in keycloak_user.webrag_admin : u.username]
 }
 
-resource "keycloak_user" "rag_curator" {
-  for_each         = toset(var.rag_curator_members)
+resource "keycloak_user" "webrag_curator" {
+  for_each         = toset(var.webrag_curator_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -77,14 +77,14 @@ resource "keycloak_user" "rag_curator" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "rag_curator" {
+resource "keycloak_group_memberships" "webrag_curator" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.rag_curator.id
-  members  = [for u in keycloak_user.rag_curator : u.username]
+  group_id = keycloak_group.webrag_curator.id
+  members  = [for u in keycloak_user.webrag_curator : u.username]
 }
 
-resource "keycloak_user" "rag_analyst" {
-  for_each         = toset(var.rag_analyst_members)
+resource "keycloak_user" "webrag_analyst" {
+  for_each         = toset(var.webrag_analyst_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -93,14 +93,14 @@ resource "keycloak_user" "rag_analyst" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "rag_analyst" {
+resource "keycloak_group_memberships" "webrag_analyst" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.rag_analyst.id
-  members  = [for u in keycloak_user.rag_analyst : u.username]
+  group_id = keycloak_group.webrag_analyst.id
+  members  = [for u in keycloak_user.webrag_analyst : u.username]
 }
 
-resource "keycloak_user" "rag_user" {
-  for_each         = toset(var.rag_user_members)
+resource "keycloak_user" "webrag_user" {
+  for_each         = toset(var.webrag_user_members)
   realm_id         = keycloak_realm.main.id
   username         = each.value
   email            = each.value
@@ -109,8 +109,8 @@ resource "keycloak_user" "rag_user" {
   required_actions = []
 }
 
-resource "keycloak_group_memberships" "rag_user" {
+resource "keycloak_group_memberships" "webrag_user" {
   realm_id = keycloak_realm.main.id
-  group_id = keycloak_group.rag_user.id
-  members  = [for u in keycloak_user.rag_user : u.username]
+  group_id = keycloak_group.webrag_user.id
+  members  = [for u in keycloak_user.webrag_user : u.username]
 }

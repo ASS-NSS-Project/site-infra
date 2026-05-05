@@ -99,7 +99,7 @@ data "keycloak_openid_client" "realm_management" {
   client_id = "realm-management"
 }
 
-# --- rag_admin group: full realm management ---
+# --- webrag_admin group: full realm management ---
 
 data "keycloak_role" "realm_admin" {
   realm_id  = keycloak_realm.main.id
@@ -107,16 +107,21 @@ data "keycloak_role" "realm_admin" {
   name      = "realm-admin"
 }
 
-resource "keycloak_group_roles" "rag_admin_realm_management" {
+resource "keycloak_group_roles" "webrag_admin_realm_management" {
   realm_id   = keycloak_realm.main.id
-  group_id   = keycloak_group.rag_admin.id
+  group_id   = keycloak_group.webrag_admin.id
   exhaustive = false
   role_ids   = [data.keycloak_role.realm_admin.id]
 }
 
 moved {
   from = keycloak_group_roles.admin_realm_management
-  to   = keycloak_group_roles.rag_admin_realm_management
+  to   = keycloak_group_roles.webrag_admin_realm_management
+}
+
+moved {
+  from = keycloak_group_roles.rag_admin_realm_management
+  to   = keycloak_group_roles.webrag_admin_realm_management
 }
 
 # RabbitMQ
@@ -150,21 +155,26 @@ resource "keycloak_role" "rabbitmq_administrator" {
   name      = "administrator"
 }
 
-# Assign the administrator role to the rag_admin group
-resource "keycloak_group_roles" "rag_admin_rabbitmq" {
+# Assign the administrator role to the webrag_admin group
+resource "keycloak_group_roles" "webrag_admin_rabbitmq" {
   realm_id   = keycloak_realm.main.id
-  group_id   = keycloak_group.rag_admin.id
+  group_id   = keycloak_group.webrag_admin.id
   role_ids   = [keycloak_role.rabbitmq_administrator.id]
   exhaustive = false
 }
 
 moved {
   from = keycloak_group_roles.admin_rabbitmq
-  to   = keycloak_group_roles.rag_admin_rabbitmq
+  to   = keycloak_group_roles.webrag_admin_rabbitmq
+}
+
+moved {
+  from = keycloak_group_roles.rag_admin_rabbitmq
+  to   = keycloak_group_roles.webrag_admin_rabbitmq
 }
 
 # Map client roles → rabbitmq_scopes claim with "rabbitmq.tag:" prefix.
-# For the rag_admin group this produces: rabbitmq_scopes = ["rabbitmq.tag:administrator"]
+# For the webrag_admin group this produces: rabbitmq_scopes = ["rabbitmq.tag:administrator"]
 # For everyone else the claim is absent → no management tag → access denied.
 resource "keycloak_generic_protocol_mapper" "rabbitmq_roles_scope_mapper" {
   realm_id        = keycloak_realm.main.id

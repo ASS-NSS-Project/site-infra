@@ -17,8 +17,8 @@ oauth2_proxy_cookie_secret = ""
 # Group members — Gmail addresses. Users are pre-created in Keycloak and their Google identity
 # is linked automatically on first login.
 admin_members       = ["admin@example.com"]   # realm admin — full infra + Keycloak access
-rag_admin_members   = []                       # RAG app admin + Keycloak RAG group management + Grafana
-rag_curator_members = []                       # source/pipeline/incident management
-rag_analyst_members = []                       # experiments and queries
-rag_user_members    = []                       # query only
+webrag_admin_members   = []                    # RAG app admin + Keycloak RAG group management + Grafana
+webrag_curator_members = []                    # source/pipeline/incident management
+webrag_analyst_members = []                    # experiments and queries
+webrag_user_members    = []                    # query only
 
