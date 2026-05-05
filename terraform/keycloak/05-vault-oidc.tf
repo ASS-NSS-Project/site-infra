@@ -63,7 +63,7 @@ resource "vault_policy" "webrag_admin" {
 
 moved {
   from = vault_policy.admin
-  to   = vault_policy.webrag_admin
+  to   = vault_policy.rag_admin
 }
 
 moved {
@@ -84,7 +84,7 @@ resource "vault_identity_group" "webrag_admin" {
 
 moved {
   from = vault_identity_group.admin
-  to   = vault_identity_group.webrag_admin
+  to   = vault_identity_group.rag_admin
 }
 
 moved {
@@ -100,7 +100,7 @@ resource "vault_identity_group_alias" "webrag_admin" {
 
 moved {
   from = vault_identity_group_alias.admin
-  to   = vault_identity_group_alias.webrag_admin
+  to   = vault_identity_group_alias.rag_admin
 }
 
 moved {

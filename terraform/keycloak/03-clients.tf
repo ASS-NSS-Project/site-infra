@@ -116,7 +116,7 @@ resource "keycloak_group_roles" "webrag_admin_realm_management" {
 
 moved {
   from = keycloak_group_roles.admin_realm_management
-  to   = keycloak_group_roles.webrag_admin_realm_management
+  to   = keycloak_group_roles.rag_admin_realm_management
 }
 
 moved {
@@ -165,7 +165,7 @@ resource "keycloak_group_roles" "webrag_admin_rabbitmq" {
 
 moved {
   from = keycloak_group_roles.admin_rabbitmq
-  to   = keycloak_group_roles.webrag_admin_rabbitmq
+  to   = keycloak_group_roles.rag_admin_rabbitmq
 }
 
 moved {
