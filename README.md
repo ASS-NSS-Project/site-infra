@@ -217,18 +217,18 @@ All UIs are protected by Keycloak (Google SSO). Users log in via Google and are 
 
 | Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager / Qdrant | RAG System role |
 |-------|--------|---------|-------|-----------------------------------------------|-----------------|
-| `rag_admin` | full admin | Admin | full access | allowed | `rag_admin` |
-| `rag_curator` | — | — | no access | blocked | `rag_curator` |
-| `rag_analyst` | — | Viewer | no access | blocked | `rag_analyst` |
-| `rag_user` | — | — | no access | blocked | `rag_user` |
+| `webrag_admin` | full admin | Admin | full access | allowed | `webrag_admin` |
+| `webrag_curator` | — | — | no access | blocked | `webrag_curator` |
+| `webrag_analyst` | — | Viewer | no access | blocked | `webrag_analyst` |
+| `webrag_user` | — | — | no access | blocked | `webrag_user` |
 
 To add a user, put their Gmail address in the corresponding `*_members` variable in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
 
-`rag_admin` holds the `realm-admin` Keycloak role — full console access across the entire realm.
+`webrag_admin` holds the `realm-admin` Keycloak role — full console access across the entire realm.
 
 ### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager, Qdrant)
 
-These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `rag_admin` Keycloak group can access them.
+These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `webrag_admin` Keycloak group can access them.
 
 ```text
 Browser → longhorn.nss.jkzl.eu
@@ -238,7 +238,7 @@ Browser → longhorn.nss.jkzl.eu
   → Browser follows 302 to Keycloak (client_id=traefik, redirect_uri=oauth2.nss.jkzl.eu/oauth2/callback)
   → User authenticates via Google identity broker
   → Keycloak → oauth2.nss.jkzl.eu/oauth2/callback
-  → oauth2-proxy checks groups claim → user in rag_admin → sets .nss.jkzl.eu cookie → 302 back to original URL
+  → oauth2-proxy checks groups claim → user in webrag_admin → sets .nss.jkzl.eu cookie → 302 back to original URL
   → forwardAuth: GET /oauth2/auth with cookie → 200
   → Traefik forwards to Longhorn backend
 ```

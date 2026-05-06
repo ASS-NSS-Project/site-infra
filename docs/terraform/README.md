@@ -24,15 +24,15 @@ Four groups are defined in `01-realm.tf`. Access per service is enforced at the 
 
 | Group | Purpose |
 |-------|---------|
-| `rag_admin` | Full infrastructure access: Keycloak realm-admin, Grafana Admin, Vault admin, RabbitMQ admin, RAG app admin |
-| `rag_curator` | Source / pipeline / incident management |
-| `rag_analyst` | Experiments, model testing, index quality evaluation; Grafana Viewer |
-| `rag_user` | Standard end user — submits queries, views answers |
+| `webrag_admin` | Full infrastructure access: Keycloak realm-admin, Grafana Admin, Vault admin, RabbitMQ admin, RAG app admin |
+| `webrag_curator` | Source / pipeline / incident management |
+| `webrag_analyst` | Experiments, model testing, index quality evaluation; Grafana Viewer |
+| `webrag_user` | Standard end user — submits queries, views answers |
 
 Users are pre-created by Gmail address via `keycloak_user` resources. Each user has `required_actions = []` to prevent Keycloak from prompting for profile completion on first login. On first Google login, Keycloak matches by email and links the Google identity automatically. Add Gmail addresses to the corresponding `*_members` variable in `terraform.tfvars` and re-apply. If a user already logged in before being added, import them first:
 
 ```bash
-terraform import 'keycloak_user.rag_admin["their@gmail.com"]' <realm-id>/users/<user-id>
+terraform import 'keycloak_user.webrag_admin["their@gmail.com"]' <realm-id>/users/<user-id>
 ```
 
 ## File conventions
@@ -80,7 +80,7 @@ terraform/
 
 ## SSO for internal services (Longhorn, Prometheus, Alertmanager, Qdrant)
 
-Longhorn, Prometheus, Alertmanager, and Qdrant do not have native OIDC support. They are protected by **oauth2-proxy** acting as a Traefik ForwardAuth middleware. Unauthenticated requests are redirected to Keycloak (via the `traefik` OIDC client created in `03-clients.tf`). Only users in the `rag_admin` Keycloak group can access these UIs.
+Longhorn, Prometheus, Alertmanager, and Qdrant do not have native OIDC support. They are protected by **oauth2-proxy** acting as a Traefik ForwardAuth middleware. Unauthenticated requests are redirected to Keycloak (via the `traefik` OIDC client created in `03-clients.tf`). Only users in the `webrag_admin` Keycloak group can access these UIs.
 
 ### How the credentials flow
 
