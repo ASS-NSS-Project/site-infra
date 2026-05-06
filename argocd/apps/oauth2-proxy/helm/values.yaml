@@ -6,7 +6,7 @@ extraArgs:
   oidc-issuer-url: "https://keycloak.nss.jkzl.eu/realms/ass-nss-project"
   redirect-url: "https://oauth2.nss.jkzl.eu/oauth2/callback"
   email-domain: "*"
-  allowed-group: rag_admin
+  allowed-group: webrag_admin
   oidc-groups-claim: groups
   scope: "openid email profile"
   upstream: "file:///dev/null"

@@ -35,7 +35,7 @@ configs:
         - email
   rbac:
     policy.csv: |
-      g, rag_admin, role:admin
+      g, webrag_admin, role:admin
     policy.default: ''
 
 controller:
