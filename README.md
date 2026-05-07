@@ -41,7 +41,7 @@ Load balancer VIP `10.8.0.100` — ports 6443 (K8s API), 9345 (RKE2 join, cluste
 
 ## Layers
 
-- [terraform](docs/terraform/README.md) — four root modules: gcp, openstack, vault, keycloak
+- [terraform](docs/terraform/README.md) — six root modules: gcp, openstack, cloudflare, du-cesnet, vault, keycloak
 - [ansible](docs/ansible/README.md) — OS baseline, RKE2, ArgoCD bootstrap
 - [argocd](docs/argocd/README.md) — app-of-apps, sync waves, ExternalSecret patterns
 - [.github](docs/.github/README.md) — GitHub Actions jobs and what each enforces
@@ -85,14 +85,14 @@ gcloud auth application-default login
 # place clouds.yaml in terraform/openstack/clouds.yaml
 ```
 
-### 1. terraform/gcp, terraform/openstack, terraform/metacentrum-s3
+### 1. terraform/gcp, terraform/openstack, terraform/du-cesnet
 
 These three modules are independent — run them in parallel or in any order:
 
 ```bash
 cd terraform/gcp && terraform init && terraform apply
 cd terraform/openstack && terraform init && terraform apply
-cd terraform/metacentrum-s3 && terraform init && terraform apply  # creates Longhorn S3 backup bucket
+cd terraform/du-cesnet && terraform init && terraform apply  # creates Longhorn S3 backup bucket
 ```
 
 Note the ingress LB IP for the next step:
@@ -189,7 +189,7 @@ Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes
 | `secret/oidc/webrag` | `webrag-secrets` (`keycloak-client-id/secret`) | `webrag` | ESO |
 | `secret/oidc/rag-rbac-sa` | `webrag-secrets` (`keycloak-admin-client-id/secret`) | `webrag` | ESO |
 | `secret/rag` | `webrag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `webrag` | ESO |
-| `secret/longhorn-s3` | `longhorn-s3-backup` | `longhorn-system` | ESO |
+| `secret/longhorn/s3-backup` | `longhorn-s3-backup` | `longhorn-system` | ESO |
 | `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` | ESO |
 
 ## DNS records
@@ -280,13 +280,12 @@ Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-ke
 
 ## Grafana dashboards
 
-Three dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces and places them in the **RAG System** folder via `defaultFolderName`):
+Two dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces and places them in the **RAG System** folder via `defaultFolderName`):
 
 | Dashboard | UID | ConfigMap | Panels |
 |-----------|-----|-----------|--------|
-| WebRAG — Overview | `rag-overview` | `rag-grafana-overview-dashboard` | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution; recent pipeline logs |
-| WebRAG — Metrics | `rag-metrics` | `rag-grafana-metrics-dashboard` | Prometheus stats + timeseries: jobs, error rates, latency, embeddings, CAPTCHA rate |
-| WebRAG — Audit | `rag-audit` | `rag-grafana-audit-dashboard` | Loki log panels: auth, query, and security events |
+| WebRAG — Overview | `webrag-overview` | `webrag-overview-grafana-dashboard` | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution; recent pipeline logs |
+| WebRAG — Audit | `webrag-audit` | `webrag-audit-grafana-dashboard` | Loki log panels: auth, query, and security events |
 
 All ConfigMaps live in `argocd/apps/kube-prometheus-stack/config/` and are applied by ArgoCD automatically.
 
@@ -354,7 +353,7 @@ Backups go to Metacentrum CESNET S3 (`https://s3.cl4.du.cesnet.cz`, bucket `long
 1. Create the bucket:
 
    ```bash
-   cd terraform/metacentrum-s3 && terraform apply -auto-approve
+   cd terraform/du-cesnet && terraform apply -auto-approve
    ```
 
 1. Store credentials in Vault:
@@ -369,7 +368,7 @@ ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `Backup
 
 ## RAG System Deployment
 
-The RAG application runs in the `webrag` namespace (ArgoCD wave 19-21) with resilient async architecture.
+The RAG application runs in the `webrag` namespace (ArgoCD wave 19) with resilient async architecture.
 
 ### Components
 
@@ -460,9 +459,8 @@ UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE
 - `webrag-worker-embed` on port 9091 (scraped by webrag-worker-embed-ServiceMonitor)
 
 **Grafana dashboards:**
-- **WebRAG — Overview** — Active sources, Qdrant size, open incidents, ingest activity
-- **WebRAG — Metrics** — Jobs, error rates, latency, embeddings, CAPTCHA rate
-- **WebRAG — Audit** — Auth, query, and security events
+- **WebRAG — Overview** (`webrag-overview`) — Active sources, Qdrant size, open incidents, ingest activity
+- **WebRAG — Audit** (`webrag-audit`) — Auth, query, and security events
 
 **Key metrics for resilient RAG:**
 - `rag_ingest_duration_seconds` — Should be <30s after changes
