@@ -31,6 +31,9 @@ spec:
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
+          env:
+            - name: TZ
+              value: Europe/Prague
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d/default.conf

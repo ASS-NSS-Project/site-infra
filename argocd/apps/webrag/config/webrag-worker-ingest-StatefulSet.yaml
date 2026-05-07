@@ -35,6 +35,8 @@ spec:
             - name: hf-cache
               mountPath: /root/.cache/huggingface
           env:
+            - name: TZ
+              value: Europe/Prague
             - name: HF_HUB_DISABLE_PROGRESS_BARS
               value: "1"
             - name: POSTGRES_USER
