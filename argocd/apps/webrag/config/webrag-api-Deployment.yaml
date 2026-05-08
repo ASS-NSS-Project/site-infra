@@ -89,6 +89,8 @@ spec:
             # Qdrant
             - name: QDRANT_URL
               value: "http://qdrant.qdrant.svc.cluster.local:6333"
+            - name: QDRANT_REPLICATION_FACTOR
+              value: "3"
             # S3 / MinIO
             - name: S3_ENDPOINT_URL
               valueFrom:
