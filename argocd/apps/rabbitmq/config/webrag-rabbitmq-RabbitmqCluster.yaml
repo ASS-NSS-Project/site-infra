@@ -4,7 +4,7 @@ metadata:
   name: webrag-rabbitmq
   namespace: webrag
 spec:
-  replicas: 1
+  replicas: 3
   resources:
     requests:
       cpu: 200m
