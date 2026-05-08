@@ -5,7 +5,7 @@ metadata:
   name: webrag-api
   namespace: webrag
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes: [ReadWriteMany]
   storageClassName: longhorn
   resources:
     requests:
