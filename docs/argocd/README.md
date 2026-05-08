@@ -203,6 +203,12 @@ Prometheus Operator wraps every `AlertmanagerConfig` sub-route with an implicit 
 
 ---
 
+## webrag — public documentation page
+
+`/user-docs/` is a static documentation page served by the frontend container without authentication. It is handled by the existing Traefik catch-all rule that forwards all unmatched paths to `webrag-frontend:80`. nginx's `try_files $uri $uri/ /index.html` directive serves `user-docs/index.html` directly when the file exists; no HTTPRoute or ConfigMap change is needed. The page is built into the frontend image at `public/user-docs/index.html` and Vite copies it to the distribution root verbatim.
+
+---
+
 ## webrag HTTPRoute — `/api` prefix
 
 `apps/webrag/config/webrag-system-HTTPRoute.yaml` exposes an allowlist of API prefixes under `/api` (`/api/auth`, `/api/sources`, `/api/query`, `/api/incidents`, `/api/documents`, `/api/experiments`, `/api/health`) and strips `/api` before forwarding (`URLRewrite` + `ReplacePrefixMatch: /`). This keeps script-friendly public API paths while preventing accidental exposure of internal-only paths such as `/metrics`.
