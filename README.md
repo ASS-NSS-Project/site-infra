@@ -1,576 +1,133 @@
 # Site Infrastructure
 
-Kubernetes cluster on OpenStack (Metacentrum MetaVO / e-INFRA CZ) using Terraform + Ansible + ArgoCD (GitOps).
+This repository defines the production Kubernetes platform for WebRAG on OpenStack e-INFRA CZ. It combines Terraform, Ansible, and ArgoCD GitOps to provision the cluster, bootstrap Kubernetes, and continuously reconcile platform and application services.
 
 ## Stack
 
 | Layer | Technology |
 |-------|------------|
-| Infrastructure | OpenStack (Metacentrum MetaVO, Brno) |
+| Infrastructure | OpenStack MetaVO / e-INFRA CZ |
 | Provisioning | Terraform |
 | Configuration | Ansible |
-| Kubernetes | RKE2 (3-node HA control plane + 4 workers) |
-| GitOps | ArgoCD |
-| Ingress | Traefik v3 (Gateway API, DaemonSet on CPs) |
-| TLS | cert-manager + Let's Encrypt HTTP-01 |
-| Storage | Longhorn (LVM over Cinder volumes) |
-| Secrets | HashiCorp Vault + External Secrets Operator (ESO) |
-| Database | CloudNativePG (CNPG) |
-| Identity | Keycloak (Keycloak Operator) |
-| SSO | oauth2-proxy + Traefik ForwardAuth (Keycloak OIDC) |
-| Monitoring | kube-prometheus-stack (Prometheus + Grafana + Alertmanager) |
-| Logging | Loki + Grafana Alloy |
-| Queue | RabbitMQ (RabbitMQ Cluster Operator) |
-| Vector DB | Qdrant (Helm) |
+| Kubernetes | RKE2, 3 control-plane nodes and 4 workers |
+| GitOps | ArgoCD app-of-apps on branch `kost` |
+| Ingress | Traefik v3 with Gateway API |
+| TLS | cert-manager and Let's Encrypt |
+| Storage | Longhorn over Cinder volumes |
+| Secrets | Vault and External Secrets Operator |
+| Database | CloudNativePG |
+| Identity | Keycloak, Google identity broker, oauth2-proxy ForwardAuth |
+| Observability | kube-prometheus-stack, Loki, Grafana Alloy |
+| App dependencies | RabbitMQ operator, Qdrant Helm chart |
 
-## Cluster layout
+## Cluster Specs
 
-| Node | Flavor | vCPU | RAM | Private IP | Extra storage |
-|------|--------|------|-----|------------|---------------|
-| cp-0 | c2.8core-16ram | 8 | 16 GB | 10.8.0.10 | 1 × 32 GB → `/var/lib/rancher/rke2` |
-| cp-1 | c2.8core-16ram | 8 | 16 GB | 10.8.0.11 | 1 × 32 GB → `/var/lib/rancher/rke2` |
-| cp-2 | c2.8core-16ram | 8 | 16 GB | 10.8.0.12 | 1 × 32 GB → `/var/lib/rancher/rke2` |
-| worker-0 | c2.8core-30ram | 8 | 30 GB | 10.8.0.20 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
-| worker-1 | c2.8core-30ram | 8 | 30 GB | 10.8.0.21 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
-| worker-2 | c2.8core-30ram | 8 | 30 GB | 10.8.0.22 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
-| worker-3 | c2.8core-30ram | 8 | 30 GB | 10.8.0.23 | 3 × 158 GB → LVM → `/var/lib/longhorn` |
+| Node pool | Nodes | Flavor | Total |
+|-----------|-------|--------|-------|
+| Control plane | `cp-0`, `cp-1`, `cp-2` | 8 vCPU, 16 GB RAM, 32 GB RKE2 volume | 24 vCPU, 48 GB RAM |
+| Workers | `worker-0` to `worker-3` | 8 vCPU, 30 GB RAM, 3 x 158 GB Longhorn volumes | 32 vCPU, 120 GB RAM |
 
-**Totals**: 7 instances / 56 vCPU / 168 GB RAM / 15 Cinder volumes / 1 992 GB
+Total capacity: **56 vCPU**, **168 GB RAM**, about **1,992 GB block storage**.
 
-Load balancer VIP `10.8.0.100` — ports 6443 (K8s API), 9345 (RKE2 join, cluster-only), 80/443 (ingress). cp-0 and the cluster LB have floating IPs.
+The Kubernetes API and ingress use the OpenStack load balancer VIP `10.8.0.100`. The public ingress hostname base is `nss.jkzl.eu`.
 
-## Layers
-
-- [terraform](docs/terraform/README.md) — six root modules: gcp, openstack, cloudflare, du-cesnet, vault, keycloak
-- [ansible](docs/ansible/README.md) — OS baseline, RKE2, ArgoCD bootstrap
-- [argocd](docs/argocd/README.md) — app-of-apps, sync waves, ExternalSecret patterns
-- [.github](docs/.github/README.md) — GitHub Actions jobs and what each enforces
-
-## Prerequisites
-
-- Terraform >= 1.11
-- Ansible >= 2.16 + Helm >= 3.0 in PATH
-- `terraform/openstack/clouds.yaml` — OpenStack application credentials (gitignored)
-- GCS credentials: `gcloud auth application-default login`
-
-```bash
-pip install -r requirements.txt
-ansible-galaxy collection install -r ansible/requirements.yml
-```
-
-## Deployment
+## Architecture
 
 ```text
-terraform/gcp + terraform/openstack → terraform/cloudflare → ansible → [ArgoCD auto-syncs] → vault operator init → terraform/vault → terraform/keycloak
+Terraform
+  |-- gcp: KMS for Vault auto-unseal
+  |-- openstack: network, VMs, volumes, load balancers, inventory
+  |-- du-cesnet: S3 buckets for backups and RAG artifacts
+  |-- cloudflare: DNS
+  |-- vault: KV v2 secrets and Kubernetes auth for ESO
+  |-- keycloak: realm, groups, OIDC clients, users
+
+Ansible
+  |-- OS baseline, storage dependencies
+  |-- RKE2 bootstrap
+  |-- ArgoCD install and root Application
+
+ArgoCD on branch kost
+  |-- storage -> TLS -> ingress -> Vault -> ESO
+  |-- CNPG -> Keycloak -> oauth2-proxy
+  |-- monitoring/logging
+  |-- RabbitMQ -> Qdrant -> WebRAG
 ```
 
-Each step gates the next — do not skip ahead.
-
-### 0. Prerequisites
-
-Create the GCS bucket for Terraform state (one-time, before any `terraform init`):
-
-```bash
-gcloud storage buckets create gs://enc-ass-nss-project \
-    --default-storage-class=STANDARD \
-    --location=US \
-    --uniform-bucket-level-access \
-    --public-access-prevention
-```
-
-Authenticate for GCS backend and OpenStack:
-
-```bash
-gcloud auth application-default login
-# place clouds.yaml in terraform/openstack/clouds.yaml
-```
-
-### 1. terraform/gcp, terraform/openstack, terraform/du-cesnet
-
-These three modules are independent — run them in parallel or in any order:
-
-```bash
-cd terraform/gcp && terraform init && terraform apply
-cd terraform/openstack && terraform init && terraform apply
-cd terraform/du-cesnet && terraform init && terraform apply  # creates Longhorn S3 backup bucket
-```
-
-Note the ingress LB IP for the next step:
-
-```bash
-terraform output ingress_lb_public_ip
-```
-
-### 2. terraform/cloudflare
-
-Creates the A record for `nss.jkzl.eu` and CNAME records for all subdomains. DNS must resolve before cert-manager can issue certificates.
-
-```bash
-cd terraform/cloudflare
-cp terraform.tfvars.example terraform.tfvars  # fill in cloudflare_api_token, cloudflare_zone_id (ingress_ip is written automatically by openstack)
-terraform init && terraform apply
-```
-
-### 3. Ansible
-
-```bash
-export KUBECONFIG=$(pwd)/ansible/artifacts/kubeconfig
-cd ansible && ansible-playbook site.yml
-```
-
-### 4. Wait for ArgoCD waves 1–6
-
-Waves 1–6 deploy storage, TLS, ingress, and Vault. Vault will stay `Degraded` until initialized — that is expected at this point. All other apps in this range should reach `Healthy`.
-
-```bash
-kubectl -n argocd get applications -w
-```
-
-Wait until `vault-helm` is `Synced` before continuing (it will not be `Healthy` yet).
-
-### 5. Vault init (one-time manual)
-
-```bash
-kubectl exec -n vault vault-helm-0 -- vault operator init
-```
-
-Save all recovery keys and the root token in a password manager. Vault auto-unseals via GCP KMS on every restart — the keys are only needed for break-glass recovery.
-
-### 6. terraform/vault
-
-```bash
-cd terraform/vault
-cp terraform.tfvars.example terraform.tfvars  # fill in vault_root_token
-terraform init && terraform apply
-```
-
-This pushes all service credentials into Vault. ESO will now sync them into Kubernetes — wait for waves 7–9 (`vault-config`, `eso-helm`, `eso-config`) to become `Healthy` before continuing.
-
-### 7. terraform/keycloak
-
-Register a Google OAuth app first (GCP Console → APIs & Services → Credentials → Create OAuth 2.0 Client ID, redirect URI: `https://keycloak.nss.jkzl.eu/realms/ass-nss-project/broker/google/endpoint`), then:
-
-```bash
-cd terraform/keycloak
-cp terraform.tfvars.example terraform.tfvars  # fill in keycloak + vault + google credentials + group members
-terraform init && terraform apply
-```
-
-This also creates the `rag-rbac-sa` service account (`03-clients.tf`) and pushes its credentials to Vault (`secret/oidc/rag-rbac-sa`). ESO syncs them into the `webrag` deployment as `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`, enabling role changes made in the WebRAG UI to be synced back to Keycloak group membership.
-
-## Teardown
-
-Destroy in reverse order to respect dependencies:
-
-```bash
-cd terraform/keycloak && terraform destroy
-cd terraform/vault && terraform destroy
-cd terraform/openstack && terraform destroy
-cd terraform/gcp && terraform destroy
-```
-
-Delete the GCS state bucket last (this is irreversible):
-
-```bash
-gcloud storage rm -r gs://enc-ass-nss-project
-```
-
-## Secrets management
-
-Credentials live in Vault (KV v2, path `secret/`) and are synced into Kubernetes by ESO — no static secrets in git.
-
-| Vault path | Kubernetes Secret | Namespace | Synced by |
-|------------|-------------------|-----------|-----------|
-| `secret/grafana` | `grafana-credentials` | `monitoring` | ESO |
-| `secret/keycloak` | `keycloak-credentials` | `keycloak` | ESO |
-| `secret/oidc/argocd` | `argocd-oidc-secret` | `argocd` | ESO |
-| `secret/oidc/grafana` | `grafana-oidc-secret` | `monitoring` | ESO |
-| `secret/oidc/traefik` | `traefik-keycloak-credentials` | `traefik` | ESO |
-| `secret/oidc/webrag` | `webrag-secrets` (`keycloak-client-id/secret`) | `webrag` | ESO |
-| `secret/oidc/rag-rbac-sa` | `webrag-secrets` (`keycloak-admin-client-id/secret`) | `webrag` | ESO |
-| `secret/rag` | `webrag-secrets` (LLM/VLM/S3/JWT/admin credentials) | `webrag` | ESO |
-| `secret/longhorn/s3-backup` | `longhorn-s3-backup` | `longhorn-system` | ESO |
-| `secret/alertmanager/telegram` | `alertmanager-telegram` | `monitoring` | ESO |
-
-## DNS records
-
-Managed by `terraform/cloudflare`. One A record at the apex, all subdomains are CNAMEs to it.
-
-| Hostname | Type | Target |
-|----------|------|--------|
-| `nss.jkzl.eu` | A | Ingress LB floating IP |
-| `webrag.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `rabbitmq.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `argocd.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `longhorn.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `vault.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `keycloak.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `grafana.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `oauth2.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `prometheus.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `qdrant.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-| `alertmanager.nss.jkzl.eu` | CNAME | `nss.jkzl.eu` |
-
-## SSO
-
-All UIs are protected by Keycloak (Google SSO). Users log in via Google and are assigned to one of four groups managed by `terraform/keycloak`:
-
-| Group | ArgoCD | Grafana | Vault | Longhorn / Prometheus / Alertmanager / Qdrant | RAG System role |
-|-------|--------|---------|-------|-----------------------------------------------|-----------------|
-| `webrag_admin` | full admin | Admin | full access | allowed | `webrag_admin` |
-| `webrag_curator` | — | — | no access | blocked | `webrag_curator` |
-| `webrag_analyst` | — | Viewer | no access | blocked | `webrag_analyst` |
-| `webrag_user` | — | — | no access | blocked | `webrag_user` |
-
-To add a user, put their Gmail address in the corresponding `*_members` variable in `terraform/keycloak/terraform.tfvars` and re-run `terraform apply`. Users are pre-created in Keycloak before their first login.
-
-`webrag_admin` holds the `realm-admin` Keycloak role — full console access across the entire realm.
-
-### oauth2-proxy auth flow (Longhorn, Prometheus, Alertmanager, Qdrant)
-
-These services have no native OIDC support and are protected by oauth2-proxy (`argocd/apps/oauth2-proxy/`) acting as a ForwardAuth gate via Traefik. Only users in the `webrag_admin` Keycloak group can access them.
+## Deployment Order
 
 ```text
-Browser → longhorn.nss.jkzl.eu
-  → Traefik: chain middleware (errors outer + forwardAuth inner)
-  → forwardAuth: GET oauth2-proxy /oauth2/auth → 401 (no session)
-  → errors catches 401: GET oauth2-proxy /oauth2/sign_in?rd=<original-url> → 302
-  → Browser follows 302 to Keycloak (client_id=traefik, redirect_uri=oauth2.nss.jkzl.eu/oauth2/callback)
-  → User authenticates via Google identity broker
-  → Keycloak → oauth2.nss.jkzl.eu/oauth2/callback
-  → oauth2-proxy checks groups claim → user in webrag_admin → sets .nss.jkzl.eu cookie → 302 back to original URL
-  → forwardAuth: GET /oauth2/auth with cookie → 200
-  → Traefik forwards to Longhorn backend
+terraform/gcp + terraform/openstack + terraform/du-cesnet
+  -> terraform/cloudflare
+  -> ansible site.yml
+  -> ArgoCD sync waves
+  -> Vault operator init
+  -> terraform/vault
+  -> terraform/keycloak
 ```
 
-Subsequent requests skip Keycloak entirely — the shared `.nss.jkzl.eu` cookie covers all protected subdomains.
+Each step gates the next. ArgoCD self-heals from git; rollback by `git revert`, not by `argocd app rollback`.
 
-## TLS
+## Production Domains
 
-Three ClusterIssuers in `argocd/apps/cert-manager/config/`: `letsencrypt-staging` (test first), `letsencrypt-prod` (rate-limited: 50 certs/domain/week), `selfsigned-ca` (offline/dev).
+| Hostname | Service |
+|----------|---------|
+| `webrag.nss.jkzl.eu` | WebRAG UI and API |
+| `rabbitmq.nss.jkzl.eu` | RabbitMQ management |
+| `argocd.nss.jkzl.eu` | ArgoCD |
+| `vault.nss.jkzl.eu` | Vault |
+| `keycloak.nss.jkzl.eu` | Keycloak |
+| `grafana.nss.jkzl.eu` | Grafana |
+| `oauth2.nss.jkzl.eu` | oauth2-proxy callback |
+| `prometheus.nss.jkzl.eu` | Prometheus, admin-only |
+| `alertmanager.nss.jkzl.eu` | Alertmanager, admin-only |
+| `longhorn.nss.jkzl.eu` | Longhorn, admin-only |
+| `qdrant.nss.jkzl.eu` | Qdrant dashboard, admin-only |
 
-Always test with staging first — DNS and port 80 routing must be reachable for HTTP-01 challenge.
+## Secrets and Identity
 
-## Adding a new subdomain
+Secrets are never committed. Runtime credentials live in Vault KV v2 under `secret/*` and are synced into Kubernetes by External Secrets Operator.
 
-**Via Gateway API (HTTPRoute)** — no middleware needed:
+Keycloak groups drive access:
 
-1. Add DNS A record
-2. Add HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
-3. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
-4. Add `HTTPRoute` in `argocd/apps/<app>/config/<app>-HTTPRoute.yaml`
+| Group | WebRAG role | Infrastructure access |
+|-------|-------------|-----------------------|
+| `webrag_admin` | Admin | ArgoCD admin, Grafana admin, Vault admin, protected infra UIs |
+| `webrag_curator` | Curator | WebRAG source/pipeline/incident management |
+| `webrag_analyst` | Analyst | WebRAG experiments and Grafana viewer |
+| `webrag_user` | User | Query-only WebRAG access |
 
-**With keycloakopenid authentication** — for apps that need Keycloak SSO via the plugin middleware:
+Longhorn, Prometheus, Alertmanager, and Qdrant do not have native OIDC. They are protected by oauth2-proxy through Traefik ForwardAuth and admit only `webrag_admin`.
 
-1. Add DNS A record
-2. Add HTTPS listener in `argocd/apps/traefik/config/traefik-gateway-Gateway.yaml`
-3. Add `Certificate` in `argocd/apps/cert-manager/config/<name>-tls-Certificate.yaml` (namespace: `traefik`)
-4. Add a `Middleware` CRD (plugin: keycloakopenid) in `argocd/apps/<app>/config/<app>-auth-Middleware.yaml`
-5. Add `HTTPRoute` referencing the middleware via `ExtensionRef`
+## WebRAG Deployment
 
-Push to `kost` — ArgoCD applies automatically.
+WebRAG runs in the `webrag` namespace:
 
-## Vault
+| Resource | Type | Purpose |
+|----------|------|---------|
+| `webrag-api` | Deployment | FastAPI API and scheduler |
+| `webrag-worker-ingest` | StatefulSet | Web scraping and document creation |
+| `webrag-worker-embed` | StatefulSet | BGE-M3 embedding and Qdrant upsert |
+| `webrag-frontend` | Deployment | Vue SPA and nginx |
+| `webrag-pg` | CNPG Cluster | PostgreSQL source of truth |
 
-UI: `https://vault.nss.jkzl.eu` — login via OIDC (leave role blank) or root token (break-glass only).
+Images are promoted by editing `argocd/apps/webrag/config/kustomization.yaml`.
 
-Auto-unseals via GCP KMS (`enc-ass-nss-project / vault-keyring / vault-unseal-key`) on every restart. OIDC auth is configured by `terraform/keycloak/05-vault-oidc.tf` — re-running it after a cluster rebuild restores access.
+## Documentation
 
-> Vault data lives on a Longhorn PVC. The GCP KMS key ring is permanent — import it back into Terraform state on a full rebuild.
+- [Terraform modules](docs/terraform/README.md)
+- [Ansible bootstrap](docs/ansible/README.md)
+- [ArgoCD applications and sync waves](docs/argocd/README.md)
+- [Operations runbook](docs/operations/README.md)
+- [GitHub Actions](docs/.github/README.md)
 
-## Grafana dashboards
+## Repository Layout
 
-Two dashboards are provisioned automatically via ConfigMap (Grafana sidecar watches for `grafana_dashboard: "1"` label across all namespaces and places them in the **RAG System** folder via `defaultFolderName`):
-
-| Dashboard | UID | ConfigMap | Panels |
-|-----------|-----|-----------|--------|
-| WebRAG — Overview | `webrag-overview` | `webrag-overview-grafana-dashboard` | Active sources, Qdrant size, open incidents, total jobs; 24 h ingest bar chart; strategy distribution; recent pipeline logs |
-| WebRAG — Audit | `webrag-audit` | `webrag-audit-grafana-dashboard` | Loki log panels: auth, query, and security events |
-
-All ConfigMaps live in `argocd/apps/kube-prometheus-stack/config/` and are applied by ArgoCD automatically.
-
-## ArgoCD
-
-UI: `https://argocd.nss.jkzl.eu`
-
-Initial admin password (before SSO):
-
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d
+```text
+infra/
+├── terraform/       # Root modules for cloud/platform dependencies
+├── ansible/         # RKE2 and ArgoCD bootstrap
+├── argocd/          # App-of-apps and application manifests
+├── docs/            # Layer and operations docs
+└── requirements.txt # Ansible Python requirements
 ```
-
-## Logging and alerting
-
-Logs are collected by Grafana Alloy (Deployment, `alloy` namespace) via the Kubernetes API and shipped to Loki (SingleBinary, `monitoring` namespace). Loki's ruler evaluates LogQL alert rules and forwards firing alerts to Alertmanager.
-
-Rules live in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml`, mounted into Loki at `/var/loki/rules/fake/`.
-
-### webrag Loki labels
-
-Alloy's pipeline (`argocd/apps/alloy/helm/values.yaml`) tags structured JSON logs from the `webrag` namespace with a `webrag` label for easy querying:
-
-| `webrag` value | Events captured | Example LogQL |
-|-----------------|-----------------|---------------|
-| `audit` | `login_success`, `login_failed`, `user_registered`, `keycloak_role_synced` | `{namespace="webrag", webrag="audit"}` |
-| `incident` | `captcha_detected` | `{namespace="webrag", webrag="incident"}` |
-| `pipeline` | `ingest_*`, `embedding_*`, `search_*` | `{namespace="webrag", webrag="pipeline"}` |
-
-### CAPTCHA alerting (Telegram)
-
-Firing condition: any `captcha_detected` log event in the `webrag` namespace within the past 5 minutes. Defined in `argocd/apps/loki/config/loki-rules-ConfigMap.yaml` (`rag-captcha` group). Alertmanager routes it via `argocd/apps/kube-prometheus-stack/config/alertmanager-captcha-AlertmanagerConfig.yaml` to a Telegram bot.
-
-**Provisioning**: credentials are pushed to Vault via Terraform (`terraform/vault/01-vault.tf`, resource `vault_kv_secret_v2.alertmanager_telegram`). Add `telegram_bot_token` and `telegram_chat_id` to `terraform.tfvars` and run `terraform apply`.
-
-ESO syncs `bot_token` → `bot-token` and `chat_id` → `chat-id` in the `alertmanager-telegram` Secret. The `AlertmanagerConfig` reads `botToken` and `chatIDRef` from that Secret (prometheus-operator ≥0.75 `chatIDRef` field — available in kube-prometheus-stack ≥68).
-
-### Simulate a log alert
-
-```bash
-# Start — alert fires within ~1 minute
-kubectl run simulate --image=busybox --restart=Never -- sh -c 'while true; do echo "SIMULATE_ALERT test"; sleep 5; done'
-
-# Stop — alert resolves within ~1 minute
-kubectl delete pod simulate
-```
-
-The `SimulatedAlert` rule fires within ~1 minute — check `https://alertmanager.nss.jkzl.eu`.
-
-```bash
-pkill -f "port-forward.*3100"
-```
-
-## Longhorn
-
-UI: `https://longhorn.nss.jkzl.eu` (keycloakopenid protected — requires Keycloak login). Default StorageClass: `longhorn`. Usable capacity: ~333 GB (2-replica default across 4 workers).
-
-### S3 backups
-
-Backups go to Metacentrum CESNET S3 (`https://s3.cl4.du.cesnet.cz`, bucket `longhorn-backup`). A recurring job runs daily at 02:00 UTC and retains 7 backups.
-
-**Setup** (once per cluster build):
-
-1. Create the bucket:
-
-   ```bash
-   cd terraform/du-cesnet && terraform apply -auto-approve
-   ```
-
-1. Store credentials in Vault:
-
-   ```bash
-   cd terraform/vault && terraform apply -auto-approve
-   ```
-
-ESO syncs the credentials into `longhorn-system/longhorn-s3-backup`. The `BackupTarget` and `RecurringJob` CRs are managed by ArgoCD from `argocd/apps/longhorn/config/`.
-
----
-
-## RAG System Deployment
-
-The RAG application runs in the `webrag` namespace (ArgoCD wave 19) with resilient async architecture.
-
-### Components
-
-| Resource | Type | Purpose | Replicas |
-|----------|------|---------|----------|
-| `webrag-api` | Deployment | FastAPI API + scheduler (healing jobs) | 2 |
-| `webrag-worker-ingest` | StatefulSet | Ingest worker (scraping, 30s) | 3 |
-| `webrag-worker-embed` | StatefulSet | Embedding worker (BGE-M3, 1-5min) | 1 |
-| `webrag-frontend` | Deployment | Vue 3 SPA + nginx | 2 |
-| `webrag-pg` | CNPG Cluster | PostgreSQL 16 with metadata + chunks | 3 (HA) |
-
-### Architecture
-
-```
-User → webrag.nss.jkzl.eu
-  → Traefik Gateway
-  → Frontend (Vue 3 SPA)
-  → API (/api/* rewritten to /*)
-      ├─ Queries → Qdrant (vector search) OR Postgres (keyword fallback)
-      ├─ Sources → Postgres
-      └─ Scheduler → Healing jobs (5-30 min)
-
-API creates IngestJob
-  → RabbitMQ "ingest" queue
-  → Ingest Worker (30s)
-      ├─ Scrapes web page
-      ├─ Stores to S3 (document.md + chunks.json)
-      └─ Publishes to "embeddings" queue
-
-Embedding Worker (1-5 min, background)
-  → Loads chunks from Postgres
-  → Embeds with BGE-M3
-  → Upserts to Qdrant
-  → Updates chunk status
-
-Healing Jobs (background, 5-30 min)
-  → Detects stuck/failed embeddings
-  → Detects Qdrant drift
-  → Auto-requeues for re-embedding
-```
-
-### Storage
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Metadata** | CNPG Postgres | Documents, chunks with status tracking |
-| **Content** | CESNET S3 (2 RAG buckets + Longhorn backup bucket) | Evidence, markdown, chunks.json |
-| **Vectors** | Qdrant | Rebuilable hot cache for fast retrieval |
-
-**S3 Buckets:**
-- `rag-evidence-prod` — Screenshots, HTML dumps (evidence)
-- `rag-documents-prod` — Processed markdown, chunks.json
-
-### Resilience Features
-
-- **5-minute SLA:** New sources queryable in 30s (keyword search), vectors in 5 min
-- **Keyword fallback:** Postgres `tsvector` search if Qdrant down (no 502 errors)
-- **Auto-healing:** 4 background jobs detect and fix drift every 5-30 minutes
-- **S3 as source of truth:** Qdrant completely rebuilable from S3/Postgres
-
-### Initial Setup (One-Time)
-
-After first deployment, run the SQL migration to enable full-text search:
-
-```bash
-kubectl exec -n webrag webrag-pg-1 -c postgres -- psql -U app -d rag -c "
-CREATE OR REPLACE FUNCTION chunks_text_vector_update() RETURNS trigger AS \$\$
-BEGIN
-  NEW.text_vector := to_tsvector('english', COALESCE(NEW.text, ''));
-  RETURN NEW;
-END;
-\$\$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS chunks_text_vector_trigger ON chunks;
-CREATE TRIGGER chunks_text_vector_trigger
-  BEFORE INSERT OR UPDATE OF text ON chunks
-  FOR EACH ROW EXECUTE FUNCTION chunks_text_vector_update();
-
-UPDATE chunks SET text_vector = to_tsvector('english', COALESCE(text, '')) WHERE text_vector IS NULL;
-"
-```
-
-### Monitoring
-
-**Prometheus metrics:**
-- `webrag-api` on port 8000 (scraped by webrag-api-ServiceMonitor)
-- `webrag-worker-ingest` on port 9090 (scraped by webrag-worker-ingest-ServiceMonitor)
-- `webrag-worker-embed` on port 9091 (scraped by webrag-worker-embed-ServiceMonitor)
-
-**Grafana dashboards:**
-- **WebRAG — Overview** (`webrag-overview`) — Active sources, Qdrant size, open incidents, ingest activity
-- **WebRAG — Audit** (`webrag-audit`) — Auth, query, and security events
-
-**Key metrics for resilient RAG:**
-- `rag_ingest_duration_seconds` — Should be <30s after changes
-- `rag_embedding_duration_seconds` — BGE-M3 embedding time
-- `rag_chunks_embedded_total` — Counter of embedded chunks
-- `rag_qdrant_collection_size` — Gauge (should match Postgres count within 10%)
-
-### Scaling
-
-**Ingest throughput:**
-```bash
-kubectl scale statefulset -n webrag webrag-worker-ingest --replicas=5
-```
-
-**Embedding throughput:**
-```bash
-kubectl scale statefulset -n webrag webrag-worker-embed --replicas=2
-```
-
-Each worker replica gets its own `hf-cache` PVC (ReadWriteOnce) for BGE-M3 weights.
-
----
-
-## LLM Inference Architecture
-
-### Why CERIT-SC AIaaS Instead of Local Models?
-
-The RAG system uses **CERIT-SC AIaaS** (e-INFRA GPU cluster) for LLM and VLM inference rather than running models locally on the Kubernetes cluster. This architectural decision is driven by three factors: **hardware constraints**, **performance requirements**, and **operational complexity**.
-
-#### Cluster Hardware Limitations
-
-**Available resources:**
-- Workers: 4 nodes × (8 vCPU, 30 GB RAM) = 32 vCPU, 120 GB RAM total
-- GPU: **None** (CPU-only VMs)
-- Storage: Longhorn persistent volumes (no NVMe for model weights)
-
-**Local deployment feasibility:**
-
-| Model Size | Quant | RAM | CPU Tokens/sec | Response Time (200 tokens) | Quality | Verdict |
-|------------|-------|-----|----------------|---------------------------|---------|---------|
-| Qwen2.5 7B | Q4_K_M | 4.5 GB | 8-12 tok/s | 16-25 seconds | Good | ⚠️ Slow UX |
-| Llama 3.3 8B | Q4_K_M | 5 GB | 6-10 tok/s | 20-33 seconds | Good | ⚠️ Slow UX |
-| Qwen2.5 14B | Q4_K_M | 9 GB | 2-5 tok/s | 40-100 seconds | Very good | ❌ Unusable |
-| Qwen3.5 122B | — | >70 GB | <1 tok/s | 200+ seconds | Excellent | ❌ Not viable |
-
-**Reality:** CPU inference on 7B-8B models delivers **8-12 tokens/second**, resulting in **20-30 second latencies** for typical responses. This is acceptable for batch processing or offline experiments, but creates a poor user experience for interactive queries where users expect sub-5-second responses.
-
-**Comparison:**
-- **AIaaS (GPU):** 1-3 seconds for 200-token response (Qwen3.5 122B on A100/H100)
-- **Local CPU:** 20-30 seconds for 200-token response (Qwen2.5 7B on Xeon)
-- **Speedup:** 10-15× faster with AIaaS
-
-#### Why Not Metacentrum Grid?
-
-Metacentrum Grid provides **batch job scheduling** on HPC clusters with GPU access. While Grid nodes have powerful GPUs (NVIDIA A100, A40), the architecture is fundamentally incompatible with real-time RAG queries:
-
-**Batch scheduling model:**
-1. Submit job to PBS/Slurm queue
-2. Wait for resource allocation (queue time: minutes to hours)
-3. Job runs on allocated node
-4. Results returned after completion
-
-**RAG system requirements:**
-- **Interactive queries:** User submits question, expects answer in <5 seconds
-- **Always-on service:** API must respond 24/7 without queue delays
-- **Unpredictable load:** Query patterns are bursty and user-driven
-
-**Incompatibility:**
-- ❌ **Queue wait time:** Users cannot wait minutes for resource allocation before their query starts
-- ❌ **No persistent services:** Grid is for batch jobs, not long-running HTTP servers
-- ❌ **Cold start:** Each query would need to load the model from scratch (30-60s overhead)
-- ❌ **Resource waste:** GPU allocation charged per job, not per token (expensive for short queries)
-
-Grid is designed for **computational workloads** (training, large-scale inference batches), not **latency-sensitive web services**.
-
-#### AIaaS Advantages
-
-**CERIT-SC AIaaS** is purpose-built for real-time inference:
-
-| Feature | Benefit |
-|---------|---------|
-| **GPU-accelerated** | 80-150 tok/s (vs 8-12 tok/s on CPU) |
-| **Always-on API** | No queue wait, instant responses |
-| **Hot models** | Pre-loaded in VRAM, no cold start |
-| **OpenAI-compatible** | Drop-in replacement, no custom integration |
-| **Multiple models** | Qwen3.5 122B, DeepSeek V3.2, GPT-OSS 120B available |
-| **e-INFRA credits** | Free for academic/student projects |
-| **No maintenance** | Managed service, auto-scaling, monitoring included |
-
-**Performance:**
-- Qwen3.5 122B: 80-150 tok/s on A100/H100 GPUs
-- Response time: 1-3 seconds for 200 tokens
-- Quality: State-of-art (122B >> 7B)
-
-#### Custom Endpoint Flexibility
-
-The RAG UI includes a **custom endpoint feature** that lets users bring their own LLM providers:
-- OpenAI (GPT-4.1, GPT-4o, o4-mini)
-- Anthropic (Claude Opus 4.7, Sonnet 4.6)
-- Google Gemini (2.5 Pro/Flash, 3.1 Pro)
-- Any OpenAI-compatible API (Groq, DeepSeek, local Ollama)
-
-Users can choose their own speed/quality/cost trade-off without changing the deployment. The custom endpoint UI persists the base URL and model name (not the API key) in browser localStorage for convenience.
-
-#### When to Consider Local Models
-
-Local CPU inference becomes viable only when:
-1. **AIaaS quota exhausted** and cannot obtain more credits
-2. **Offline deployment** required (air-gapped environment)
-3. **Batch workloads** where 20-30s latency is acceptable (experiments, bulk processing)
-4. **GPU access** via dedicated Metacentrum allocation (not Grid) — vLLM on A100 can run 70B models at 30-50 tok/s
-
-For interactive RAG queries, **AIaaS remains the optimal choice** given current hardware constraints.
