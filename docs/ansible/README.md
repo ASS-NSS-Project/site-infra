@@ -23,7 +23,8 @@ Generated/gitignored:
 
 `site.yml` runs 4 plays in order. Run individual plays with tags:
 
-- `--tags system` — timezone, NTP, users, SSH keys, open-iscsi, LVM disk setup
+- `--tags system` — timezone, NTP, users, SSH keys, LVM disk setup
+- `--tags storage` — install open-iscsi and nfs-common on all nodes (required by Longhorn block + RWX volumes)
 - `--tags rke2` — RKE2 init on cp-0, join on cp-1/cp-2, agent on workers
 - `--tags argocd` — Gateway API CRDs + ArgoCD Helm install
 - `--tags argocd,apps` — bootstrap secrets, AppProjects, root Application
@@ -36,7 +37,7 @@ Generated/gitignored:
 
 All roles use the `local.` prefix — follow this for any new ones.
 
-`local.system` handles OS baseline for all nodes: timezone, NTP, users, SSH keys, open-iscsi. Disk setup is dispatched by group: workers get LVM over 3 Cinder volumes for Longhorn, control plane nodes get a single extra disk for RKE2.
+`local.system` handles OS baseline for all nodes: timezone, NTP, users, SSH keys. Disk setup is dispatched by group: workers get LVM over 3 Cinder volumes for Longhorn, control plane nodes get a single extra disk for RKE2.
 
 `local.rke2` dispatches by group and inventory position: cp-0 runs init, cp-1/cp-2 run join, workers run the agent. Join tasks gate on port 9345 being reachable on the LB VIP — all nodes can start in parallel.
 
