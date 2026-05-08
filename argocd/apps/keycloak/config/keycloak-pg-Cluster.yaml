@@ -4,7 +4,7 @@ metadata:
   name: keycloak-pg
   namespace: keycloak
 spec:
-  instances: 1
+  instances: 3
   resources:
     requests:
       cpu: 100m
