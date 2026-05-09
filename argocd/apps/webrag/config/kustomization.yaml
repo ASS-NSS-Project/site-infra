@@ -23,7 +23,7 @@ resources:
 
 images:
   - name: ghcr.io/ass-nss-project/webrag-backend
-    newTag: kost-52353c2 
+    newTag: kost-52353c2
   - name: ghcr.io/ass-nss-project/webrag-frontend
-    newTag: kost-3163574
+    newTag: kost-6302a79
 
