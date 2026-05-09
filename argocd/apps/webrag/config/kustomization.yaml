@@ -6,6 +6,7 @@ resources:
   - webrag-api-PersistentVolumeClaim.yaml
   - webrag-api-Service.yaml
   - webrag-api-ServiceMonitor.yaml
+  - webrag-docs-redirect-HTTPRoute.yaml
   - webrag-frontend-Deployment.yaml
   - webrag-frontend-nginx-ConfigMap.yaml
   - webrag-frontend-Service.yaml
@@ -26,4 +27,3 @@ images:
     newTag: kost-52353c2
   - name: ghcr.io/ass-nss-project/webrag-frontend
     newTag: kost-6302a79
-

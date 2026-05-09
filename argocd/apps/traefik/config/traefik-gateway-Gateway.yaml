@@ -145,6 +145,19 @@ spec:
           - name: nss-webrag-tls
             namespace: traefik
 
+    - name: websecure-webrag-docs
+      port: 443
+      protocol: HTTPS
+      hostname: docs.webrag.nss.jkzl.eu
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: nss-webrag-docs-tls
+            namespace: traefik
+
     - name: websecure-rabbitmq
       port: 443
       protocol: HTTPS

@@ -15,6 +15,7 @@ locals {
   subdomains = [
     "alertmanager",
     "argocd",
+    "docs.webrag",
     "grafana",
     "keycloak",
     "longhorn",
