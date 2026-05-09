@@ -96,6 +96,8 @@ Each step gates the next. ArgoCD self-heals from git; rollback by `git revert`, 
 
 Secrets are never committed. Runtime credentials live in Vault KV v2 under `secret/*` and are synced into Kubernetes by External Secrets Operator.
 
+Production Keycloak must expose the Google identity provider on the login page, because WebRAG user documentation tells users to choose Google when Keycloak offers it.
+
 Keycloak groups drive access:
 
 | Group | WebRAG role | Infrastructure access |
